@@ -1,0 +1,58 @@
+﻿@model SeoManagement.Web.Models.ViewModels.SEOProjectViewModel
+
+<div class="row">
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Chi tiết dự án SEO</h4>
+                <p class="card-description">Thông tin chi tiết của dự án SEO</p>
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <p>@error.ErrorMessage</p>
+                        }
+                    </div>
+                }
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>ID dự án:</strong> @Model.ProjectID</p>
+                        <p><strong>Tên dự án:</strong> @Model.ProjectName</p>
+                        <p><strong>Người dùng:</strong> @ViewBag.UserName</p>
+                        <p><strong>Mô tả:</strong> @Model.Description</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Ngày bắt đầu:</strong> @Model.StartDate.ToString("dd MMM yyyy")</p>
+                        <p><strong>Ngày kết thúc:</strong> @(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("dd MMM yyyy") : "Chưa xác định")</p>
+                        <p>
+                            <strong>Trạng thái:</strong>
+                            @switch (Model.Status.ToLower())
+                            {
+                                case "pending":
+                                    <label class="badge badge-danger">Pending</label>
+                                    break;
+                                case "in progress":
+                                    <label class="badge badge-warning">In Progress</label>
+                                    break;
+                                case "fixed":
+                                    <label class="badge badge-info">Fixed</label>
+                                    break;
+                                case "completed":
+                                    <label class="badge badge-success">Completed</label>
+                                    break;
+                                default:
+                                    <label class="badge badge-secondary">@Model.Status</label>
+                                    break;
+                            }
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a asp-action="Edit" asp-route-id="@Model.ProjectID" class="btn btn-warning">Sửa</a>
+                    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

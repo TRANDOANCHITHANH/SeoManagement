@@ -1,0 +1,96 @@
+﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Models.ViewModels.SEOProjectViewModel>
+
+<div class="row">
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Danh sách dự án SEO</h4>
+                <p class="card-description">Quản lý các dự án SEO</p>
+                <div class="mb-3">
+                    <a asp-action="Create" class="btn btn-primary">Tạo dự án mới</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên dự án</th>
+                                <th>Mô tả</th>
+                                
+                                <th>Ngày bắt đầu</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var project in Model.Items)
+                            {
+                                <tr>
+                                    <td>@project.ProjectID</td>
+                                    <td>@project.ProjectName</td>
+                                    <td>@project.Description</td>
+                                 
+                                    <td>@project.StartDate.ToString("dd MMM yyyy")</td>
+                                    <td>
+                                        @switch (project.Status.ToLower())
+                                        {
+                                            case "pending":
+                                                <label class="badge badge-danger">Pending</label>
+                                                break;
+                                            case "in progress":
+                                                <label class="badge badge-warning">In progress</label>
+                                                break;
+                                            case "fixed":
+                                                <label class="badge badge-info">Fixed</label>
+                                                break;
+                                            case "completed":
+                                                <label class="badge badge-success">Completed</label>
+                                                break;
+                                            default:
+                                                <label class="badge badge-secondary">@project.Status</label>
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@project.ProjectID" class="btn btn-sm btn-info">Xem</a>
+                                        <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-sm btn-warning">Sửa</a>
+                                        <button onclick="confirmDelete(@project.ProjectID)" class="btn btn-sm btn-danger">Xóa</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination mt-3">
+                    <p>Trang @Model.PageNumber / @Model.TotalPages (Tổng: @Model.TotalItems dự án)</p>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            @if (Model.PageNumber > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.PageNumber - 1, pageSize = Model.PageSize })">Trang trước</a>
+                                </li>
+                            }
+                            @if (Model.PageNumber < Model.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.PageNumber + 1, pageSize = Model.PageSize })">Trang sau</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(id) {
+            if (confirm("Bạn có chắc chắn muốn xóa dự án này?")) {
+                window.location.href = '@Url.Action("Delete", "SEOProjects")/' + id;
+            }
+        }
+    </script>
+}

@@ -101,7 +101,7 @@ namespace SeoManagement.Api.Controllers
 					IsActive = userDto.IsActive
 				};
 
-				await _userService.CreateUserAsync(user, "DefaultPassword@123", userDto.Role);
+				await _userService.CreateUserAsync(user, "12345678aA@", userDto.Role);
 				userDto.UserId = user.Id;
 				return CreatedAtAction(nameof(GetById), new { id = user.Id }, userDto);
 			}

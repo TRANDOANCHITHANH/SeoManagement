@@ -44,7 +44,7 @@
                                     <input asp-for="RememberMe" class="form-check-input" />
                                     <label asp-for="RememberMe" class="form-check-label">Ghi nhớ tôi</label>
                                 </div>
-                                <a href="#" class="auth-link text-black">Forgot password?</a>
+                                <a href="@Url.Action("ForgotPassword","Account")" class="auth-link text-black">Forgot password?</a>
                             </div>
                             <div class="mb-2 d-grid gap-2">
                                 <button type="button" class="btn btn-block btn-facebook auth-form-btn">

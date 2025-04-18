@@ -5,6 +5,7 @@ using SeoManagement.Core.Interfaces;
 using SeoManagement.Infrastructure.Data;
 using SeoManagement.Infrastructure.Repositories;
 using SeoManagement.Infrastructure.Services;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISEOProjectRepository, SEOProjectRepository>();
 builder.Services.AddScoped<ISEOProjectService, SEOProjectService>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll", builder =>
@@ -49,6 +51,12 @@ builder.Services.AddCors(options =>
 	});
 });
 
+builder.Host.UseSerilog((context, configuration) =>
+{
+	configuration
+		.ReadFrom.Configuration(context.Configuration)
+		.WriteTo.File("logs/app.log", rollingInterval: RollingInterval.Day);
+});
 
 var app = builder.Build();
 

@@ -6,7 +6,7 @@ using SeoManagement.Web.Models.ViewModels;
 
 namespace SeoManagement.Web.Controllers
 {
-	[Authorize(Policy = "AdminOnly")]
+	//[Authorize(Policy = "AdminOnly")]
 	public class UsersController : Controller
 	{
 		private readonly IUserService _userService;
@@ -19,7 +19,7 @@ namespace SeoManagement.Web.Controllers
 
 		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 5)
 		{
-			var response = await _httpClient.GetFromJsonAsync<PagedResultViewModel<ApplicationUser>>($"https://localhost:7186/api/users?pageNumber={pageNumber}&pageSize={pageSize}");
+			var response = await _httpClient.GetFromJsonAsync<PagedResultViewModel<UserViewModel>>($"https://localhost:7186/api/users?pageNumber={pageNumber}&pageSize={pageSize}");
 			return View(response);
 		}
 

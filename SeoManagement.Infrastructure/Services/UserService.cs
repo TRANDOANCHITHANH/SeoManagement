@@ -9,22 +9,17 @@ namespace SeoManagement.Infrastructure.Services
 	{
 		private readonly UserManager<ApplicationUser> _userManager;
 		private readonly RoleManager<IdentityRole<int>> _roleManager;
-
-		public UserService(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole<int>> roleManager)
+		private readonly IUserRepository _userRepository;
+		public UserService(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole<int>> roleManager, IUserRepository userRepository)
 		{
 			_userManager = userManager;
 			_roleManager = roleManager;
+			_userRepository = userRepository;
 		}
 
-		public async Task<(IEnumerable<ApplicationUser>, int)> GetPagedAsync(int pageNumber, int pageSize)
+		public async Task<(IEnumerable<ApplicationUser>, int TotalItems)> GetPagedAsync(int pageNumber, int pageSize)
 		{
-			var query = _userManager.Users;
-			var totalItems = await query.CountAsync();
-			var users = await query
-				.Skip((pageNumber - 1) * pageSize)
-				.Take(pageSize)
-				.ToListAsync();
-			return (users, totalItems);
+			return await _userRepository.GetPagedAsync(pageNumber, pageSize);
 		}
 
 		public async Task<ApplicationUser> GetByIdAsync(int id)

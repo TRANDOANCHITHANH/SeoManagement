@@ -1,4 +1,4 @@
-﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Core.Entities.ApplicationUser>
+﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Models.ViewModels.UserViewModel>
 
 <div class="row">
     <div class="col-lg-12 grid-margin stretch-card">
@@ -23,10 +23,10 @@
                             @foreach (var user in Model.Items)
                             {
                                 <tr>
-                                    <td>@user.Id</td>
+                                    <td>@user.UserID</td>
                                     <td>@user.FullName</td>
                                     <td>@user.Email</td>
-                                    <td></td>
+                                    <td>@user.Role</td>
                                     <td>@user.CreatedDate.ToString("dd MMM yyyy")</td>
                                     <td>
                                         @if (user.IsActive)
@@ -39,9 +39,9 @@
                                         }
                                     </td>
                                     <td>
-                                        <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-info">Xem</a>
-                                        <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">Sửa</a>
-                                        <button onclick="confirmDelete(@user.Id)" class="btn btn-sm btn-danger">Xóa</button>
+                                        <a asp-action="Details" asp-route-id="@user.UserID" class="btn btn-sm btn-info">Xem</a>
+                                        <a asp-action="Edit" asp-route-id="@user.UserID" class="btn btn-sm btn-warning">Sửa</a>
+                                        <button onclick="confirmDelete(@user.UserID)" class="btn btn-sm btn-danger">Xóa</button>
                                     </td>
                                 </tr>
                             }

@@ -8,7 +8,7 @@ namespace SeoManagement.Api.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	[Authorize(Policy = "AdminOnly")]
+	//[Authorize(Policy = "AdminOnly")]
 	public class UsersController : ControllerBase
 	{
 		private readonly IUserService _userService;

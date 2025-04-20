@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SeoManagement.API.Models.Dtos;
 using SeoManagement.Core.Entities;
 using SeoManagement.Core.Interfaces;

@@ -24,11 +24,21 @@ namespace SeoManagement.Infrastructure.Services
 
 		public async Task CreateSEOProjectAsync(SEOProject project)
 		{
+			if (project.StartDate > DateTime.Now)
+				throw new ArgumentException("Start date cannot be in the future");
+
 			await _seoProjectRepository.AddAsync(project);
 		}
 
 		public async Task UpdateSEOProjectAsync(SEOProject project)
 		{
+			var existing = await _seoProjectRepository.GetByIdAsync(project.ProjectID);
+			if (existing == null)
+				throw new KeyNotFoundException("Project not found");
+
+			if (existing.Status == ProjectStatus.Completed && project.Status != ProjectStatus.Completed)
+				throw new InvalidOperationException("Cannot modify completed projects");
+
 			await _seoProjectRepository.UpdateAsync(project);
 		}
 
@@ -36,5 +46,6 @@ namespace SeoManagement.Infrastructure.Services
 		{
 			await _seoProjectRepository.DeleteAsync(projectId);
 		}
+
 	}
 }

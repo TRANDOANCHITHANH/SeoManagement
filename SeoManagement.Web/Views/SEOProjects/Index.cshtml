@@ -1,4 +1,5 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Models.ViewModels.SEOProjectViewModel>
+@using SeoManagement.Web.Models.ViewModels
 
 <div class="row">
     <div class="col-lg-12 grid-margin stretch-card">
@@ -30,24 +31,18 @@
                                     <td>@project.ProjectName</td>
                                     <td>@project.Description</td>
                                  
-                                    <td>@project.StartDate.ToString("dd MMM yyyy")</td>
+                                    <td>@project.StartDate</td>
                                     <td>
-                                        @switch (project.Status.ToLower())
+                                        @switch (project.Status)
                                         {
-                                            case "pending":
-                                                <label class="badge badge-danger">Pending</label>
+                                            case ProjectStatus.Active:
+                                                <span class="badge bg-success">Hoạt động</span>
                                                 break;
-                                            case "in progress":
-                                                <label class="badge badge-warning">In progress</label>
+                                            case ProjectStatus.Completed:
+                                                <span class="badge bg-secondary">Đã hoàn thành</span>
                                                 break;
-                                            case "fixed":
-                                                <label class="badge badge-info">Fixed</label>
-                                                break;
-                                            case "completed":
-                                                <label class="badge badge-success">Completed</label>
-                                                break;
-                                            default:
-                                                <label class="badge badge-secondary">@project.Status</label>
+                                            case ProjectStatus.Pending:
+                                                <span class="badge bg-warning">Chờ xử lý</span>
                                                 break;
                                         }
                                     </td>
@@ -55,6 +50,19 @@
                                         <a asp-action="Details" asp-route-id="@project.ProjectID" class="btn btn-sm btn-info">Xem</a>
                                         <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-sm btn-warning">Sửa</a>
                                         <button onclick="confirmDelete(@project.ProjectID)" class="btn btn-sm btn-danger">Xóa</button>
+                                    </td>
+
+                                    <td>
+                                        <form asp-action="UpdateStatus" method="post">
+                                            <input type="hidden" name="id" value="@project.ProjectID" />
+                                            <select name="status" class="form-select-sm"
+                                                    onchange="this.form.submit()"
+                                            @(project.Status == ProjectStatus.Completed ? "disabled" : "")>
+                                                <option value="Active" selected="@(project.Status == ProjectStatus.Active)">Hoạt động</option>
+                                                <option value="Pending" selected="@(project.Status == ProjectStatus.Pending)">Chờ xử lý</option>
+                                                <option value="Completed">Hoàn thành</option>
+                                            </select>
+                                        </form>
                                     </td>
                                 </tr>
                             }

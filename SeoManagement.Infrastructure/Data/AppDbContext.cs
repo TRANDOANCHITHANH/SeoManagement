@@ -21,6 +21,7 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<Prediction> Predictions { get; set; }
 		public DbSet<Guide> Guides { get; set; }
 		public DbSet<SystemConfig> SystemConfigs { get; set; }
+		public DbSet<Site> Sites { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

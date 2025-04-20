@@ -1,5 +1,5 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.SEOProjectViewModel
-
+@using SeoManagement.Web.Models.ViewModels
 <div class="row">
     <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
@@ -27,25 +27,23 @@
                         <p><strong>Ngày kết thúc:</strong> @(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("dd MMM yyyy") : "Chưa xác định")</p>
                         <p>
                             <strong>Trạng thái:</strong>
-                            @switch (Model.Status.ToLower())
+                            @switch (Model.Status)
                             {
-                                case "pending":
-                                    <label class="badge badge-danger">Pending</label>
+                                case ProjectStatus.Pending:
+                                    <label class="badge bg-warning">Chờ xử lý</label>
                                     break;
-                                case "in progress":
-                                    <label class="badge badge-warning">In Progress</label>
+                                case ProjectStatus.Active:
+                                    <label class="badge bg-success">Hoạt động</label>
                                     break;
-                                case "fixed":
-                                    <label class="badge badge-info">Fixed</label>
-                                    break;
-                                case "completed":
-                                    <label class="badge badge-success">Completed</label>
+                                case ProjectStatus.Completed:
+                                    <label class="badge bg-secondary">Đã hoàn thành</label>
                                     break;
                                 default:
-                                    <label class="badge badge-secondary">@Model.Status</label>
+                                    <label class="badge bg-danger">Không xác định</label>
                                     break;
                             }
                         </p>
+
                     </div>
                 </div>
                 <div class="mt-3">

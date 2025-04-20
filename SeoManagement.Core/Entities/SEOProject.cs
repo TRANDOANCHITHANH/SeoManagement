@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SeoManagement.Core.Entities
 {
+	public enum ProjectStatus { Active, Completed, Pending }
+
 	public class SEOProject
 	{
 		[Key]
@@ -12,7 +14,7 @@ namespace SeoManagement.Core.Entities
 		public int UserId { get; set; }
 
 		[Required]
-		[StringLength(100)]
+		[StringLength(100, MinimumLength = 5)]
 		public string ProjectName { get; set; }
 
 		[StringLength(500)]
@@ -22,8 +24,7 @@ namespace SeoManagement.Core.Entities
 
 		public DateTime? EndDate { get; set; }
 
-		[StringLength(20)]
-		public string Status { get; set; } // Active, Completed, Pending
+		public ProjectStatus Status { get; set; }
 
 		// Navigation properties
 		[ForeignKey("UserId")]

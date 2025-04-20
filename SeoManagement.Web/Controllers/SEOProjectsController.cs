@@ -11,7 +11,7 @@ namespace SeoManagement.Web.Controllers
 			_httpClient = httpClient;
 		}
 
-		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 5)
+		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10)
 		{
 			var response = await _httpClient.GetFromJsonAsync<PagedResultViewModel<SEOProjectViewModel>>($"https://localhost:7186/api/seoprojects?pageNumber={pageNumber}&pageSize={pageSize}");
 			if (response == null)
@@ -125,21 +125,30 @@ namespace SeoManagement.Web.Controllers
 
 			try
 			{
-				var response = await _httpClient.PutAsJsonAsync($"https://localhost:7186/api/seoprojects/{id}", project);
-				if (response.IsSuccessStatusCode)
+				if (project.EndDate < project.StartDate)
 				{
-					return RedirectToAction(nameof(Index));
+					ModelState.AddModelError("EndDate", "Ngày kết thúc không thể trước ngày bắt đầu");
+					ViewBag.Users = await GetUsers();
+					return View(project);
 				}
 
-				var errorContent = await response.Content.ReadAsStringAsync();
-				ModelState.AddModelError("", $"Có lỗi xảy ra khi cập nhật dự án SEO: {response.StatusCode} - {errorContent}");
+				var response = await _httpClient.PutAsJsonAsync($"https://localhost:7186/api/seoprojects/{id}", project);
+				if (!response.IsSuccessStatusCode)
+				{
+					var errorContent = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+					ModelState.AddModelError("", errorContent?.Detail ?? "Lỗi không xác định");
+					ViewBag.Users = await GetUsers();
+					return View(project);
+				}
+
+				return RedirectToAction(nameof(Index));
 			}
 			catch (Exception ex)
 			{
 				ModelState.AddModelError("", $"Lỗi khi cập nhật dự án SEO: {ex.Message}");
 			}
 
-			ViewBag.Users = await GetUsers() ?? new List<UserViewModel>(); // Đảm bảo không null
+			ViewBag.Users = await GetUsers() ?? new List<UserViewModel>();
 			return View(project);
 		}
 
@@ -154,6 +163,25 @@ namespace SeoManagement.Web.Controllers
 			return NotFound();
 		}
 
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> UpdateStatus(int id, [FromForm] ProjectStatus status)
+		{
+			try
+			{
+				var response = await _httpClient.PutAsJsonAsync(
+					$"https://localhost:7186/api/seoprojects/{id}/status",
+					new { Status = status }
+				);
 
+				return response.IsSuccessStatusCode
+					? RedirectToAction(nameof(Details), new { id })
+					: BadRequest();
+			}
+			catch
+			{
+				return StatusCode(500);
+			}
+		}
 	}
 }

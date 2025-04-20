@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SeoManagement.API.Models.Dtos;
 using SeoManagement.Core.Entities;
 using SeoManagement.Core.Interfaces;
@@ -10,26 +11,19 @@ namespace SeoManagement.API.Controllers
 	public class SEOProjectsController : ControllerBase
 	{
 		private readonly ISEOProjectService _seoProjectService;
+		private readonly ILogger<SEOProjectsController> _logger;
 
-		public SEOProjectsController(ISEOProjectService seoProjectService)
+		public SEOProjectsController(ISEOProjectService seoProjectService, ILogger<SEOProjectsController> logger)
 		{
 			_seoProjectService = seoProjectService;
+			_logger = logger;
 		}
 
 		[HttpGet]
 		public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
 		{
 			var (projects, totalItems) = await _seoProjectService.GetPagedAsync(pageNumber, pageSize);
-			var projectDtos = projects.Select(project => new SEOProjectDto
-			{
-				ProjectID = project.ProjectID,
-				UserID = project.UserId,
-				ProjectName = project.ProjectName,
-				Description = project.Description,
-				StartDate = project.StartDate,
-				EndDate = project.EndDate,
-				Status = project.Status
-			}).ToList();
+			var projectDtos = projects.Select(ConvertToDto).ToList();
 
 			var result = new PagedResultDto<SEOProjectDto>
 			{
@@ -40,6 +34,20 @@ namespace SeoManagement.API.Controllers
 			};
 
 			return Ok(result);
+		}
+
+		private SEOProjectDto ConvertToDto(SEOProject project)
+		{
+			return new SEOProjectDto
+			{
+				ProjectID = project.ProjectID,
+				UserID = project.UserId,
+				ProjectName = project.ProjectName,
+				Description = project.Description,
+				StartDate = project.StartDate,
+				EndDate = project.EndDate,
+				Status = project.Status
+			};
 		}
 
 		[HttpGet("{id}")]
@@ -61,24 +69,58 @@ namespace SeoManagement.API.Controllers
 			return Ok(projectDto);
 		}
 
+
+		[HttpPut("{id}/status")]
+		public async Task<IActionResult> UpdateProjectStatus(int id, [FromBody] ProjectStatusUpdateDto statusDto)
+		{
+			try
+			{
+				var project = await _seoProjectService.GetByIdAsync(id);
+				if (project == null) return NotFound();
+
+				if (!Enum.IsDefined(typeof(ProjectStatus), statusDto.Status))
+					return BadRequest("Invalid status value");
+
+				project.Status = statusDto.Status;
+				await _seoProjectService.UpdateSEOProjectAsync(project);
+
+				return NoContent();
+			}
+			catch (InvalidOperationException ex)
+			{
+				return BadRequest(ex.Message);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error updating status for project {ProjectId}", id);
+				return StatusCode(500, "Internal server error");
+			}
+		}
+
 		[HttpPost]
 		public async Task<IActionResult> Create([FromBody] SEOProjectDto projectDto)
 		{
 			if (!ModelState.IsValid) return BadRequest(ModelState);
 
-			var project = new SEOProject
+			try
 			{
-				UserId = projectDto.UserID,
-				ProjectName = projectDto.ProjectName,
-				Description = projectDto.Description,
-				StartDate = projectDto.StartDate,
-				EndDate = projectDto.EndDate,
-				Status = projectDto.Status
-			};
+				var project = new SEOProject
+				{
+					UserId = projectDto.UserID,
+					ProjectName = projectDto.ProjectName.Trim(),
+					Description = projectDto.Description?.Trim(),
+					StartDate = projectDto.StartDate,
+					EndDate = projectDto.EndDate,
+					Status = projectDto.Status
+				};
 
-			await _seoProjectService.CreateSEOProjectAsync(project);
-			projectDto.ProjectID = project.ProjectID;
-			return CreatedAtAction(nameof(GetById), new { id = project.ProjectID }, projectDto);
+				await _seoProjectService.CreateSEOProjectAsync(project);
+				return CreatedAtAction(nameof(GetById), new { id = project.ProjectID }, ConvertToDto(project));
+			}
+			catch (DbUpdateException ex)
+			{
+				return StatusCode(500, $"Database error: {ex.Message}");
+			}
 		}
 
 		[HttpPut("{id}")]

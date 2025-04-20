@@ -16,7 +16,11 @@ namespace SeoManagement.Infrastructure.Repositories
 
 		public async Task<(List<SEOProject> Items, int TotalItems)> GetPagedAsync(int pageNumber, int pageSize)
 		{
-			var query = _context.SEOProjects.AsQueryable();
+			var query = _context.SEOProjects
+								.Include(p => p.Keywords)
+								.Include(p => p.Backlinks)
+								.OrderBy(p => p.ProjectID)
+								.AsNoTracking();
 			var totalItems = await query.CountAsync();
 			var items = await query
 				.Skip((pageNumber - 1) * pageSize)
@@ -27,7 +31,10 @@ namespace SeoManagement.Infrastructure.Repositories
 
 		public async Task<SEOProject> GetByIdAsync(int projectId)
 		{
-			return await _context.SEOProjects.FindAsync(projectId);
+			return await _context.SEOProjects
+				.Include(p => p.Keywords)
+				.Include(p => p.Backlinks)
+				.FirstOrDefaultAsync(p => p.ProjectID == projectId);
 		}
 
 		public async Task AddAsync(SEOProject project)

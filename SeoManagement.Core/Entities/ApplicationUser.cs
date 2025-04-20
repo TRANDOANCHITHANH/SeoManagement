@@ -18,5 +18,6 @@ namespace SeoManagement.Core.Entities
 		// Navigation properties
 		public virtual ICollection<SEOProject> SEOProjects { get; set; }
 		public virtual ICollection<Guide> Guides { get; set; }
+		public List<Site> Sites { get; set; } = new List<Site>();
 	}
 }

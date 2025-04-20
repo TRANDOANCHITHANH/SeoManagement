@@ -20,6 +20,25 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
 	.AddEntityFrameworkStores<AppDbContext>()
 	.AddDefaultTokenProviders();
+
+builder.Services.Configure<IdentityOptions>(options =>
+{
+	// Password settings
+	options.Password.RequireDigit = true;
+	options.Password.RequireLowercase = true;
+	options.Password.RequireNonAlphanumeric = false;
+	options.Password.RequireUppercase = true;
+	options.Password.RequiredLength = 6;
+
+	// Lockout settings
+	options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+	options.Lockout.MaxFailedAccessAttempts = 5;
+	options.Lockout.AllowedForNewUsers = true;
+
+	// User settings
+	options.User.RequireUniqueEmail = true;
+});
+
 builder.Services.AddAuthentication(options =>
 {
 	options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;

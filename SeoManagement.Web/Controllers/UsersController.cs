@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SeoManagement.Core.Entities;
 using SeoManagement.Core.Interfaces;
 using SeoManagement.Web.Models.ViewModels;
 
 namespace SeoManagement.Web.Controllers
 {
 	//[Authorize(Policy = "AdminOnly")]
+	[Authorize]
 	public class UsersController : Controller
 	{
 		private readonly IUserService _userService;
@@ -17,6 +17,7 @@ namespace SeoManagement.Web.Controllers
 			_httpClient = httpClient;
 		}
 
+		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 5)
 		{
 			var response = await _httpClient.GetFromJsonAsync<PagedResultViewModel<UserViewModel>>($"https://localhost:7186/api/users?pageNumber={pageNumber}&pageSize={pageSize}");

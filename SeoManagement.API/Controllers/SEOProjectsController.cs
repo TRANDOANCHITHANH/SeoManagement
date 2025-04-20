@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using SeoManagement.API.Models.Dtos;
 using SeoManagement.Core.Entities;
@@ -98,10 +99,9 @@ namespace SeoManagement.API.Controllers
 		}
 
 		[HttpPost]
+		[ValidateModel]
 		public async Task<IActionResult> Create([FromBody] SEOProjectDto projectDto)
 		{
-			if (!ModelState.IsValid) return BadRequest(ModelState);
-
 			try
 			{
 				var project = new SEOProject
@@ -124,6 +124,7 @@ namespace SeoManagement.API.Controllers
 		}
 
 		[HttpPut("{id}")]
+
 		public async Task<IActionResult> Update(int id, [FromBody] SEOProjectDto projectDto)
 		{
 			if (id != projectDto.ProjectID) return BadRequest();
@@ -150,6 +151,17 @@ namespace SeoManagement.API.Controllers
 
 			await _seoProjectService.DeleteSEOProjectAsync(id);
 			return NoContent();
+		}
+
+		public class ValidateModelAttribute : ActionFilterAttribute
+		{
+			public override void OnActionExecuting(ActionExecutingContext context)
+			{
+				if (!context.ModelState.IsValid)
+				{
+					context.Result = new BadRequestObjectResult(context.ModelState);
+				}
+			}
 		}
 	}
 }

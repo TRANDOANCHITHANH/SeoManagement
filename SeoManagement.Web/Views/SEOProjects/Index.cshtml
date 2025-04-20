@@ -1,5 +1,8 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Models.ViewModels.SEOProjectViewModel>
 @using SeoManagement.Web.Models.ViewModels
+@{
+    ViewData["Title"] = "Danh Sách Dự Án SEO";
+}
 
 <div class="row">
     <div class="col-lg-12 grid-margin stretch-card">
@@ -7,9 +10,26 @@
             <div class="card-body">
                 <h4 class="card-title">Danh sách dự án SEO</h4>
                 <p class="card-description">Quản lý các dự án SEO</p>
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success" role="alert">
+                        @TempData["Success"]
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @TempData["Error"]
+                    </div>
+                }
                 <div class="mb-3">
                     <a asp-action="Create" class="btn btn-primary">Tạo dự án mới</a>
                 </div>
+                @if(Model.Items == null || !Model.Items.Any())
+                {
+                    <p>Chưa có dự án nào. Vui lòng tạo dự án mới.</p>
+                }else{
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
@@ -69,25 +89,26 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="pagination mt-3">
-                    <p>Trang @Model.PageNumber / @Model.TotalPages (Tổng: @Model.TotalItems dự án)</p>
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination">
-                            @if (Model.PageNumber > 1)
-                            {
-                                <li class="page-item">
-                                    <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.PageNumber - 1, pageSize = Model.PageSize })">Trang trước</a>
-                                </li>
-                            }
-                            @if (Model.PageNumber < Model.TotalPages)
-                            {
-                                <li class="page-item">
-                                    <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.PageNumber + 1, pageSize = Model.PageSize })">Trang sau</a>
-                                </li>
-                            }
-                        </ul>
-                    </nav>
-                </div>
+                
+                 var totalPages = (int)Math.Ceiling((double)Model.TotalItems / Model.PageSize);
+                 var currentPage = Model.PageNumber;
+                 <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" asp-route-pageSize="@Model.PageSize">Trước</a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-pageSize="@Model.PageSize">@i</a>
+                    </li>
+                }
+                <li class="page-item @(currentPage == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-pageSize="@Model.PageSize">Sau</a>
+                </li>
+            </ul>
+        </nav>
+                }
             </div>
         </div>
     </div>

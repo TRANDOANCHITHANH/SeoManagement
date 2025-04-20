@@ -60,25 +60,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            $('form').validate({
-                rules: {
-                    EndDate: {
-                        greaterThanStartDate: true
-                    }
-                },
-                messages: {
-                    EndDate: {
-                        greaterThanStartDate: "Ngày kết thúc phải sau ngày bắt đầu"
-                    }
-                }
-            });
-
-            $.validator.addMethod('greaterThanStartDate', function(value, element) {
-                var startDate = $('[name="StartDate"]').val();
-                return Date.parse(value) > Date.parse(startDate);
-            });
-        });
-    </script>
 }

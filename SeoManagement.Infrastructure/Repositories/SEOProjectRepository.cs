@@ -31,22 +31,48 @@ namespace SeoManagement.Infrastructure.Repositories
 
 		public async Task<SEOProject> GetByIdAsync(int projectId)
 		{
-			return await _context.SEOProjects
+			var project = await _context.SEOProjects
 				.Include(p => p.Keywords)
 				.Include(p => p.Backlinks)
 				.FirstOrDefaultAsync(p => p.ProjectID == projectId);
+
+			if (project == null)
+			{
+				throw new KeyNotFoundException($"Không tìm thấy project với ID {projectId}.");
+			}
+			return project;
 		}
 
 		public async Task AddAsync(SEOProject project)
 		{
-			await _context.SEOProjects.AddAsync(project);
-			await _context.SaveChangesAsync();
+			using var transaction = await _context.Database.BeginTransactionAsync();
+			try
+			{
+				await _context.SEOProjects.AddAsync(project);
+				await _context.SaveChangesAsync();
+				await transaction.CommitAsync();
+			}
+			catch
+			{
+				await transaction.RollbackAsync();
+				throw;
+			}
 		}
 
 		public async Task UpdateAsync(SEOProject project)
 		{
-			_context.SEOProjects.Update(project);
-			await _context.SaveChangesAsync();
+			using var transaction = await _context.Database.BeginTransactionAsync();
+			try
+			{
+				_context.SEOProjects.Update(project);
+				await _context.SaveChangesAsync();
+				await transaction.CommitAsync();
+			}
+			catch
+			{
+				await transaction.RollbackAsync();
+				throw;
+			}
 		}
 
 		public async Task DeleteAsync(int projectId)

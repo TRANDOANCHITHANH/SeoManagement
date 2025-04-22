@@ -14,13 +14,18 @@ namespace SeoManagement.Infrastructure.Repositories
 			_context = context;
 		}
 
-		public async Task<(List<SEOProject> Items, int TotalItems)> GetPagedAsync(int pageNumber, int pageSize)
+		public async Task<(List<SEOProject> Items, int TotalItems)> GetPagedAsync(int pageNumber, int pageSize, int? userId = null)
 		{
 			var query = _context.SEOProjects
 								.Include(p => p.Keywords)
 								.Include(p => p.Backlinks)
 								.OrderBy(p => p.ProjectID)
 								.AsNoTracking();
+
+			if (userId.HasValue)
+			{
+				query = query.Where(p => p.UserId == userId.Value);
+			}
 			var totalItems = await query.CountAsync();
 			var items = await query
 				.Skip((pageNumber - 1) * pageSize)

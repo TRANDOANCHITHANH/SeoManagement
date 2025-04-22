@@ -21,7 +21,7 @@ namespace SeoManagement.Web.Controllers
 			_userManager = userManager;
 		}
 
-		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 1)
+		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10)
 		{
 			var user = await _userManager.GetUserAsync(User);
 
@@ -31,7 +31,7 @@ namespace SeoManagement.Web.Controllers
 				return RedirectToAction("Login", "Account");
 			}
 
-			var response = await _httpClient.GetFromJsonAsync<PagedResultViewModel<SEOProjectViewModel>>($"/api/seoprojects?pageNumber={pageNumber}&pageSize={pageSize}");
+			var response = await _httpClient.GetFromJsonAsync<PagedResultViewModel<SEOProjectViewModel>>($"/api/seoprojects?pageNumber={pageNumber}&pageSize={pageSize}&userId={user.Id}");
 			if (response == null)
 			{
 				return View(new PagedResultViewModel<SEOProjectViewModel> { Items = new List<SEOProjectViewModel>() });
@@ -114,11 +114,10 @@ namespace SeoManagement.Web.Controllers
 
 			try
 			{
-
-
 				var response = await _httpClient.PostAsJsonAsync("/api/seoprojects", project);
 				if (response.IsSuccessStatusCode)
 				{
+					TempData["Success"] = "Tạo dự án thành công.";
 					return RedirectToAction(nameof(Index));
 				}
 

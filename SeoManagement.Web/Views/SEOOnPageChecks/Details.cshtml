@@ -1,0 +1,54 @@
+﻿@using SeoManagement.Web.Models.ViewModels
+@model SeoManagement.Web.Models.ViewModels.SEOOnPageCheckViewModel
+
+@{
+    ViewData["Title"] = "Chi Tiết Kiểm Tra SEO On-Page";
+    var analysisResult = ViewBag.AnalysisResult as SEOOnPageAnalysisResultViewModel;
+}
+
+<div class="row">
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Chi Tiết Kiểm Tra SEO On-Page</h4>
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @TempData["Error"]
+                    </div>
+                }
+                <dl class="row">
+                    <dt class="col-sm-3">URL</dt>
+                    <dd class="col-sm-9">@Model.Url</dd>
+                    <dt class="col-sm-3">Tiêu Đề</dt>
+                    <dd class="col-sm-9">@Model.Title</dd>
+                    <dt class="col-sm-3">Meta Description</dt>
+                    <dd class="col-sm-9">@Model.MetaDescription</dd>
+                    <dt class="col-sm-3">Từ Khóa Chính</dt>
+                    <dd class="col-sm-9">@Model.MainKeyword</dd>
+                    <dt class="col-sm-3">Số Lượng Từ</dt>
+                    <dd class="col-sm-9">@Model.WordCount</dd>
+                    <dt class="col-sm-3">Ngày Tạo</dt>
+                    <dd class="col-sm-9">@Model.CreatedAt.ToString("dd/MM/yyyy")</dd>
+                </dl>
+
+                @if (analysisResult != null)
+                {
+                    <h5>Kết Quả Phân Tích SEO On-Page</h5>
+                    <p>@analysisResult.Summary</p>
+                    <ul>
+                        <li>Tiêu đề có độ dài tối ưu (30-60 ký tự): <strong>@(analysisResult.IsTitleLengthOptimal ? "Có" : "Không")</strong></li>
+                        <li>Meta Description có độ dài tối ưu (120-160 ký tự): <strong>@(analysisResult.IsMetaDescriptionLengthOptimal ? "Có" : "Không")</strong></li>
+                        <li>Tiêu đề chứa từ khóa chính: <strong>@(analysisResult.IsMainKeywordInTitle ? "Có" : "Không")</strong></li>
+                        <li>Meta Description chứa từ khóa chính: <strong>@(analysisResult.IsMainKeywordInMetaDescription ? "Có" : "Không")</strong></li>
+                        <li>Số lượng từ đủ (ít nhất 300 từ): <strong>@(analysisResult.IsWordCountSufficient ? "Có" : "Không")</strong></li>
+                    </ul>
+                }
+
+                <div class="mt-3">
+                    <a asp-action="Index" asp-route-projectId="@Model.ProjectID" class="btn btn-secondary">Quay Lại</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -69,7 +69,7 @@
                                     <td>
                                         <a asp-action="Details" asp-route-id="@project.ProjectID" class="btn btn-sm btn-info">Xem</a>
                                         <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-sm btn-warning">Sửa</a>
-                                        <button onclick="confirmDelete(@project.ProjectID)" class="btn btn-sm btn-danger">Xóa</button>
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteModal(@project.ProjectID, '@project.ProjectName')">Xóa</button>
                                     </td>
 
                                     <td>
@@ -114,12 +114,32 @@
     </div>
 </div>
 
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa dự án</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa dự án <strong id="projectName"></strong> không? Hành động này không thể hoàn tác.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <a id="confirmDeleteBtn" class="btn btn-danger">Xóa</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        function confirmDelete(id) {
-            if (confirm("Bạn có chắc chắn muốn xóa dự án này?")) {
-                window.location.href = '@Url.Action("Delete", "SEOProjects")/' + id;
-            }
+        function showDeleteModal(projectId, projectName) {
+            document.getElementById('projectName').textContent = projectName;
+            document.getElementById('confirmDeleteBtn').setAttribute('href', '@Url.Action("Delete", "SEOProjects")/' + projectId);
+
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'), {});
+            deleteModal.show();
         }
     </script>
 }

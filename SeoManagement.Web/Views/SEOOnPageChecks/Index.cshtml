@@ -1,0 +1,120 @@
+﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Models.ViewModels.SEOOnPageCheckViewModel>
+@using SeoManagement.Web.Models.ViewModels
+@{
+    ViewData["Title"] = "Danh Sách Kiểm Tra SEO On-Page";
+    var projectId = ViewBag.ProjectId;
+}
+
+<div class="row">
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Danh Sách Kiểm Tra SEO On-Page</h4>
+                <p class="card-description">Quản lý kiểm tra SEO On-Page cho dự án</p>
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success" role="alert">
+                        @TempData["Success"]
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @TempData["Error"]
+                    </div>
+                }
+                <div class="mb-3">
+                    <a asp-action="Create" asp-route-projectId="@projectId" class="btn btn-primary">Thêm Kiểm Tra Mới</a>
+                    <a asp-controller="SEOProjects" asp-action="Index" class="btn btn-secondary">Quay Lại Dự Án</a>
+                </div>
+                @if(Model.Items == null || !Model.Items.Any())
+                {
+                    <p>Chưa có kiểm tra SEO On-Page nào. Vui lòng thêm kiểm tra mới.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>URL</th>
+                                    <th>Tiêu Đề</th>
+                                    <th>Từ Khóa Chính</th>
+                                    <th>Ngày Tạo</th>
+                                    <th>Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var check in Model.Items)
+                                {
+                                    <tr>
+                                        <td>@check.CheckID</td>
+                                        <td>@check.Url</td>
+                                        <td>@check.Title</td>
+                                        <td>@check.MainKeyword</td>
+                                        <td>@check.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <a asp-action="Details" asp-route-id="@check.CheckID" class="btn btn-sm btn-info">Xem</a>
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteModal(@check.CheckID, '@check.Url', @projectId)">Xóa</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                        var totalPages = (int)Math.Ceiling((double)Model.TotalItems / Model.PageSize);
+                        var currentPage = Model.PageNumber;
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-projectId="@projectId" asp-route-pageNumber="@(currentPage - 1)" asp-route-pageSize="@Model.PageSize">Trước</a>
+                            </li>
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-projectId="@projectId" asp-route-pageNumber="@i" asp-route-pageSize="@Model.PageSize">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-projectId="@projectId" asp-route-pageNumber="@(currentPage + 1)" asp-route-pageSize="@Model.PageSize">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Modal cho xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa kiểm tra SEO On-Page</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa kiểm tra SEO On-Page cho URL <strong id="checkUrl"></strong> không? Hành động này không thể hoàn tác.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <a id="confirmDeleteBtn" class="btn btn-danger">Xóa</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showDeleteModal(checkId, checkUrl, projectId) {
+            document.getElementById('checkUrl').textContent = checkUrl;
+            document.getElementById('confirmDeleteBtn').setAttribute('href', '@Url.Action("Delete", "SEOOnPageChecks")/' + checkId + '?projectId=' + projectId);
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'), {});
+            deleteModal.show();
+        }
+    </script>
+}

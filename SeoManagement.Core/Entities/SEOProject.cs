@@ -34,5 +34,6 @@ namespace SeoManagement.Core.Entities
 		public virtual ICollection<Backlink> Backlinks { get; set; }
 		public virtual ICollection<Report> Reports { get; set; }
 		public virtual ICollection<KeywordGroup> KeywordGroups { get; set; }
+		public virtual ICollection<SEOOnPageCheck> SEOOnPageChecks { get; set; }
 	}
 }

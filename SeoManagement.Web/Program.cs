@@ -61,6 +61,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISEOProjectRepository, SEOProjectRepository>();
 builder.Services.AddScoped<ISEOProjectService, SEOProjectService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddScoped<ISEOOnPageCheckService, SEOOnPageCheckService>();
+
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll", builder =>

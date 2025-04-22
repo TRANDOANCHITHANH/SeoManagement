@@ -22,6 +22,7 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<Guide> Guides { get; set; }
 		public DbSet<SystemConfig> SystemConfigs { get; set; }
 		public DbSet<Site> Sites { get; set; }
+		public DbSet<SEOOnPageCheck> SEOOnPageChecks { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -86,8 +87,12 @@ namespace SeoManagement.Infrastructure.Data
 					.WithOne(co => co.Content)
 					.HasForeignKey(co => co.ContentID)
 					.OnDelete(DeleteBehavior.Cascade);
-
 			});
+
+			modelBuilder.Entity<SEOOnPageCheck>()
+				.HasOne(c => c.Project)
+				.WithMany(p => p.SEOOnPageChecks)
+				.HasForeignKey(c => c.ProjectID);
 		}
 	}
 }

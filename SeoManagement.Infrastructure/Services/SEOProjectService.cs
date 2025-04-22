@@ -12,9 +12,9 @@ namespace SeoManagement.Infrastructure.Services
 			_seoProjectRepository = repository;
 		}
 
-		public async Task<(List<SEOProject> Items, int TotalItems)> GetPagedAsync(int pageNumber, int pageSize)
+		public async Task<(List<SEOProject> Items, int TotalItems)> GetPagedAsync(int pageNumber, int pageSize, int? userId = null)
 		{
-			return await _seoProjectRepository.GetPagedAsync(pageNumber, pageSize);
+			return await _seoProjectRepository.GetPagedAsync(pageNumber, pageSize, userId);
 		}
 
 		public async Task<SEOProject> GetByIdAsync(int projectId)

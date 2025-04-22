@@ -17,4 +17,8 @@
     <ProjectReference Include="..\SeoManagement.Infrastructure\SeoManagement.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Utilities\" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,51 @@
+﻿@model SeoManagement.Web.Models.ViewModels.SEOOnPageCheckViewModel
+
+@{
+    ViewData["Title"] = "Thêm Kiểm Tra SEO On-Page";
+}
+
+<div class="row">
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Thêm Kiểm Tra SEO On-Page</h4>
+                <form asp-action="Create" method="post">
+                    <input type="hidden" asp-for="ProjectID" />
+                    <div class="form-group">
+                        <label asp-for="Url" class="form-label"></label>
+                        <input asp-for="Url" class="form-control" placeholder="Nhập URL của trang web" />
+                        <span asp-validation-for="Url" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Title" class="form-label"></label>
+                        <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề trang" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="MetaDescription" class="form-label"></label>
+                        <textarea asp-for="MetaDescription" class="form-control" placeholder="Nhập meta description"></textarea>
+                        <span asp-validation-for="MetaDescription" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="MainKeyword" class="form-label"></label>
+                        <input asp-for="MainKeyword" class="form-control" placeholder="Nhập từ khóa chính" />
+                        <span asp-validation-for="MainKeyword" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="WordCount" class="form-label"></label>
+                        <input asp-for="WordCount" class="form-control" type="number" placeholder="Nhập số lượng từ" />
+                        <span asp-validation-for="WordCount" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary me-2">Thêm</button>
+                        <a asp-action="Index" asp-route-projectId="@Model.ProjectID" class="btn btn-secondary">Quay Lại</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

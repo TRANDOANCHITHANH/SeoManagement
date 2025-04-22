@@ -36,6 +36,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISEOProjectRepository, SEOProjectRepository>();
 builder.Services.AddScoped<ISEOProjectService, SEOProjectService>();
+builder.Services.AddScoped<ISEOOnPageCheckService, SEOOnPageCheckService>();
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll", builder =>

@@ -21,9 +21,9 @@ namespace SeoManagement.API.Controllers
 		}
 
 		[HttpGet]
-		public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+		public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] int? userId = null)
 		{
-			var (projects, totalItems) = await _seoProjectService.GetPagedAsync(pageNumber, pageSize);
+			var (projects, totalItems) = await _seoProjectService.GetPagedAsync(pageNumber, pageSize, userId);
 			var projectDtos = projects.Select(ConvertToDto).ToList();
 
 			var result = new PagedResultDto<SEOProjectDto>

@@ -47,6 +47,8 @@
                     </div>
                 </div>
                 <div class="mt-3">
+                    <a asp-controller="SEOOnPageChecks" asp-action="Index" asp-route-projectId="@Model.ProjectID" class="btn btn-primary">Xem kiểm tra SEO On-Page</a>
+                    <a asp-controller="Keywords" asp-action="Index" asp-route-projectId="@Model.ProjectID" class="btn btn-primary btn-sm">Xem từ khóa</a>
                     <a asp-action="Edit" asp-route-id="@Model.ProjectID" class="btn btn-warning">Sửa</a>
                     <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
                 </div>

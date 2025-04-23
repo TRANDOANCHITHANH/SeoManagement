@@ -1,0 +1,99 @@
+﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Models.ViewModels.KeywordViewModel>
+
+@{
+    ViewData["Title"] = "Danh sách từ khóa";
+    var projectId = ViewBag.ProjectId;
+    var projectName = ViewBag.ProjectName ?? "Không xác định";
+}
+
+<h2>Danh sách từ khóa - Dự án: @projectName</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<p>
+    <a asp-action="Create" asp-route-projectId="@projectId" class="btn btn-primary">Thêm từ khóa mới</a>
+    <a asp-controller="SEOProjects" asp-action="Index" class="btn btn-secondary">Quay lại danh sách dự án</a>
+    <a asp-controller="SEOOnPageChecks" asp-action="Index" asp-route-projectId="@projectId" class="btn btn-secondary">Xem kiểm tra SEO On-Page</a>
+</p>
+
+@if (Model.Items == null || !Model.Items.Any())
+{
+    <p>Không có từ khóa nào cho dự án này.</p>
+}
+else
+{
+     <div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Từ khóa</th>
+                <th>Thứ hạng hiện tại</th>
+                <th>Lưu lượng tìm kiếm</th>
+                <th>Độ cạnh tranh</th>
+                <th>Ý định tìm kiếm</th>
+                <th>Ngày tạo</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var keyword in Model.Items)
+            {
+                <tr>
+                    <td>@keyword.KeywordName</td>
+                    <td>@(keyword.CurrentRank.HasValue ? keyword.CurrentRank.ToString() : "N/A")</td>
+                    <td>@(keyword.SearchVolume.HasValue ? keyword.SearchVolume.ToString() : "N/A")</td>
+                    <td>@(keyword.Competition.HasValue ? keyword.Competition.Value.ToString("F2") : "N/A")</td>
+                    <td>@(keyword.SearchIntent ?? "N/A")</td>
+                    <td>@keyword.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@keyword.KeywordID" class="btn btn-info btn-sm">Chi tiết</a>
+                        <a asp-action="Edit" asp-route-id="@keyword.KeywordID" class="btn btn-warning btn-sm">Chỉnh sửa</a>
+                        <a asp-action="Delete" asp-route-id="@keyword.KeywordID" asp-route-projectId="@keyword.ProjectID" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa từ khóa này?')">Xóa</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    </div>
+    var totalPages = (int)Math.Ceiling((double)Model.TotalItems / Model.PageSize);
+    var currentPage = Model.PageNumber;
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" asp-route-pageSize="@Model.PageSize">Trước</a>
+            </li>
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-pageSize="@Model.PageSize">@i</a>
+                </li>
+            }
+            <li class="page-item @(currentPage == Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-pageSize="@Model.PageSize">Sau</a>
+            </li>
+        </ul>
+    </nav>
+}
+
+@section Scripts {
+    <style>
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+}

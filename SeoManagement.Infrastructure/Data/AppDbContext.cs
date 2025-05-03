@@ -23,6 +23,7 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<SystemConfig> SystemConfigs { get; set; }
 		public DbSet<Site> Sites { get; set; }
 		public DbSet<SEOOnPageCheck> SEOOnPageChecks { get; set; }
+		public DbSet<IndexCheckerUrl> IndexCheckerUrls { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -78,6 +79,11 @@ namespace SeoManagement.Infrastructure.Data
 					.WithOne(r => r.Project)
 					.HasForeignKey(r => r.ProjectID)
 					.OnDelete(DeleteBehavior.Cascade);
+
+				entity.HasMany(p => p.IndexCheckerUrls)
+				.WithOne(u => u.Project)
+				.HasForeignKey(u => u.ProjectID)
+				.OnDelete(DeleteBehavior.Cascade);
 
 			});
 			// Cấu hình mối quan hệ cho Content

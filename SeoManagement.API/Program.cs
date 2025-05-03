@@ -5,12 +5,17 @@ using SeoManagement.Core.Interfaces;
 using SeoManagement.Infrastructure.Data;
 using SeoManagement.Infrastructure.Repositories;
 using SeoManagement.Infrastructure.Services;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+	.AddJsonOptions(options =>
+	{
+		options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+	});
 builder.Services.AddDbContext<AppDbContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
@@ -39,7 +44,8 @@ builder.Services.AddScoped<ISEOProjectService, SEOProjectService>();
 builder.Services.AddScoped<ISEOOnPageCheckService, SEOOnPageCheckService>();
 builder.Services.AddScoped<IKeywordRepository, KeywordRepository>();
 builder.Services.AddScoped<IKeywordService, KeywordService>();
-
+builder.Services.AddScoped<IIndexCheckerUrlRepository, IndexCheckerUrlRepository>();
+builder.Services.AddScoped<IIndexCheckerUrlService, IndexCheckerUrlService>();
 
 builder.Services.AddCors(options =>
 {

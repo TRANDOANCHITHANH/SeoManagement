@@ -20,3 +20,7 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.content-wrapper {
+    padding: 1.5rem !important;
+}

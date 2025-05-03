@@ -1,5 +1,4 @@
-﻿using SeoManagement.Core.Entities;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SeoManagement.API.Models.Dtos
 {
@@ -7,7 +6,7 @@ namespace SeoManagement.API.Models.Dtos
 	{
 		public int ProjectID { get; set; }
 
-		[Range(1, int.MaxValue)]
+		//[Range(1, int.MaxValue)]
 		public int UserID { get; set; }
 
 		[Required]
@@ -17,6 +16,8 @@ namespace SeoManagement.API.Models.Dtos
 		[StringLength(500)]
 		public string Description { get; set; }
 
+		public string ProjectType { get; set; }
+
 		[DataType(DataType.DateTime)]
 		public DateTime StartDate { get; set; } = DateTime.Now;
 
@@ -24,6 +25,6 @@ namespace SeoManagement.API.Models.Dtos
 		public DateTime? EndDate { get; set; }
 
 		[Required]
-		public ProjectStatus Status { get; set; }
+		public int Status { get; set; }
 	}
 }

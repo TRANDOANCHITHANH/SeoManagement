@@ -53,6 +53,11 @@ namespace SeoManagement.Infrastructure.Repositories
 			using var transaction = await _context.Database.BeginTransactionAsync();
 			try
 			{
+				var userExists = await _context.Users.AnyAsync(u => u.Id == project.UserId);
+				if (!userExists)
+				{
+					throw new InvalidOperationException($"User with ID {project.UserId} does not exist.");
+				}
 				await _context.SEOProjects.AddAsync(project);
 				await _context.SaveChangesAsync();
 				await transaction.CommitAsync();

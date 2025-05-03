@@ -64,7 +64,17 @@ builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<ISEOOnPageCheckService, SEOOnPageCheckService>();
 builder.Services.AddScoped<IKeywordRepository, KeywordRepository>();
 builder.Services.AddScoped<IKeywordService, KeywordService>();
-
+builder.Services.AddHttpClient<GoogleCustomSearchService>();
+builder.Services.AddScoped<IIndexCheckerUrlRepository, IndexCheckerUrlRepository>();
+builder.Services.AddScoped<IIndexCheckerUrlService, IndexCheckerUrlService>();
+builder.Services.AddScoped<GoogleCustomSearchService>(sp =>
+{
+	var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+	var configuration = sp.GetRequiredService<IConfiguration>();
+	var apiKey = configuration["GoogleCustomSearch:ApiKey"];
+	var searchEngineId = configuration["GoogleCustomSearch:SearchEngineId"];
+	return new GoogleCustomSearchService(httpClient, apiKey, searchEngineId);
+});
 
 builder.Services.AddCors(options =>
 {

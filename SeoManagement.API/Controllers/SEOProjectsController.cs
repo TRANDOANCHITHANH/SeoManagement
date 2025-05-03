@@ -45,6 +45,7 @@ namespace SeoManagement.API.Controllers
 				UserID = project.UserId,
 				ProjectName = project.ProjectName,
 				Description = project.Description,
+				ProjectType = project.ProjectType,
 				StartDate = project.StartDate,
 				EndDate = project.EndDate,
 				Status = project.Status
@@ -63,6 +64,7 @@ namespace SeoManagement.API.Controllers
 				UserID = project.UserId,
 				ProjectName = project.ProjectName,
 				Description = project.Description,
+				ProjectType = project.ProjectType,
 				StartDate = project.StartDate,
 				EndDate = project.EndDate,
 				Status = project.Status
@@ -82,7 +84,7 @@ namespace SeoManagement.API.Controllers
 				if (!Enum.IsDefined(typeof(ProjectStatus), statusDto.Status))
 					return BadRequest("Invalid status value");
 
-				project.Status = statusDto.Status;
+				project.Status = (int)statusDto.Status;
 				await _seoProjectService.UpdateSEOProjectAsync(project);
 
 				return NoContent();
@@ -111,7 +113,8 @@ namespace SeoManagement.API.Controllers
 					Description = projectDto.Description?.Trim(),
 					StartDate = projectDto.StartDate,
 					EndDate = projectDto.EndDate,
-					Status = projectDto.Status
+					Status = projectDto.Status,
+					ProjectType = projectDto.ProjectType ?? "IndexChecker"
 				};
 
 				await _seoProjectService.CreateSEOProjectAsync(project);

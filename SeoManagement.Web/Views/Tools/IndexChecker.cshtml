@@ -1,0 +1,63 @@
+﻿@model SeoManagement.Web.Models.ViewModels.SEOProjectViewModel
+
+@{
+    ViewData["Title"] = "Kiểm tra Index";
+    var projectId = ViewBag.ProjectId as int?;
+    var results = ViewBag.Results as List<(string Url, bool IsIndexed, string Error)>;
+    var urls = ViewBag.Urls as string;
+}
+
+<h2>Kiểm tra Index cho Dự án ID: @(projectId ?? 0)</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<a asp-controller="Tools" asp-action="Index" class="btn btn-primary mb-3">Quay lại danh sách dự án</a>
+
+<div class="mb-3">
+    <a asp-action="CreateIndexCheckerProject" class="btn btn-primary">Tạo Dự án Mới</a>
+</div>
+
+<div class="mb-3">
+    <h4>Kiểm tra Index</h4>
+    <form asp-action="IndexChecker" method="post">
+        <input type="hidden" name="projectId" value="@projectId" />
+        <div class="form-group">
+            <label>Nhập danh sách URL (mỗi URL trên một hàng):</label>
+            <textarea name="urls" class="form-control" rows="5" placeholder="Nhập URL, mỗi URL trên một dòng">@urls</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Kiểm tra</button>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-info mt-2">Quay lại trang chủ</a>
+    </form>
+</div>
+
+@if (results != null && results.Any())
+{
+    <h4>Kết quả kiểm tra</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>URL</th>
+                <th>Đã được index</th>
+                <th>Lỗi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var result in results)
+            {
+                <tr>
+                    <td>@result.Url</td>
+                    <td>@(result.IsIndexed ? "Có" : "Không")</td>
+                    <td>@(result.Error ?? "Không có lỗi")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -36,8 +36,8 @@ namespace SeoManagement.Infrastructure.Services
 			if (existing == null)
 				throw new KeyNotFoundException("Project not found");
 
-			if (existing.Status == ProjectStatus.Completed && project.Status != ProjectStatus.Completed)
-				throw new InvalidOperationException("Cannot modify completed projects");
+			//if (existing.Status == ProjectStatus.Completed && project.Status != ProjectStatus.Completed)
+			//	throw new InvalidOperationException("Cannot modify completed projects");
 
 			await _seoProjectRepository.UpdateAsync(project);
 		}

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SeoManagement.Core.Entities
 {
-	public enum ProjectStatus { Active, Completed, Pending }
+	public enum ProjectStatus { Active = 0, Completed = 1, Pending = 2 }
 
 	public class SEOProject
 	{
@@ -20,11 +20,13 @@ namespace SeoManagement.Core.Entities
 		[StringLength(500)]
 		public string Description { get; set; }
 
+		public string ProjectType { get; set; }
+
 		public DateTime StartDate { get; set; } = DateTime.Now;
 
 		public DateTime? EndDate { get; set; }
 
-		public ProjectStatus Status { get; set; }
+		public int Status { get; set; }
 
 		// Navigation properties
 		[ForeignKey("UserId")]
@@ -35,5 +37,6 @@ namespace SeoManagement.Core.Entities
 		public virtual ICollection<Report> Reports { get; set; }
 		public virtual ICollection<KeywordGroup> KeywordGroups { get; set; }
 		public virtual ICollection<SEOOnPageCheck> SEOOnPageChecks { get; set; }
+		public virtual ICollection<IndexCheckerUrl> IndexCheckerUrls { get; set; }
 	}
 }

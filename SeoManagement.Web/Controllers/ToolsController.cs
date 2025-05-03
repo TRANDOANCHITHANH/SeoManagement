@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
 using SeoManagement.Core.Interfaces;
@@ -69,24 +70,71 @@ namespace SeoManagement.Web.Controllers
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> IndexChecker(string urls, int? projectId = null)
+		public async Task<IActionResult> IndexChecker(string urls, int? projectId = null, string inputType = "manual", IFormFile excelFile = null)
 		{
-			if (string.IsNullOrWhiteSpace(urls))
+			List<string> urlList = new List<string>();
+
+			if (inputType == "excel" && excelFile != null && excelFile.Length > 0)
 			{
-				TempData["Error"] = "Vui lòng nhập ít nhất một URL để kiểm tra.";
-				return View(new SEOProjectViewModel());
+				try
+				{
+					using (var stream = new MemoryStream())
+					{
+						await excelFile.CopyToAsync(stream);
+						using (var workbook = new XLWorkbook(stream))
+						{
+							var worksheet = workbook.Worksheets.FirstOrDefault();
+							if (worksheet == null)
+							{
+								TempData["Error"] = "File Excel không hợp lệ hoặc không chứa dữ liệu.";
+								return View(new SEOProjectViewModel());
+							}
+
+							int lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
+							for (int row = 2; row <= lastRow; row++)
+							{
+								var url = worksheet.Cell(row, 1).GetValue<string>()?.Trim();
+								if (!string.IsNullOrWhiteSpace(url))
+								{
+									urlList.Add(url);
+									_logger.LogInformation("Read URL from Excel: {Url}", url);
+								}
+							}
+
+							if (!urlList.Any())
+							{
+								TempData["Error"] = "File Excel không chứa URL hợp lệ.";
+								return View(new SEOProjectViewModel());
+							}
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Lỗi khi đọc file Excel: {Message}", ex.Message);
+					TempData["Error"] = "Đã xảy ra lỗi khi đọc file Excel: " + ex.Message;
+					return View(new SEOProjectViewModel());
+				}
 			}
-
-			var urlList = urls.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
-							 .Select(url => url.Trim())
-							 .Where(url => !string.IsNullOrWhiteSpace(url))
-							 .Distinct()
-							 .ToList();
-
-			if (!urlList.Any())
+			else
 			{
-				TempData["Error"] = "Không có URL hợp lệ để kiểm tra.";
-				return View(new SEOProjectViewModel());
+				if (string.IsNullOrWhiteSpace(urls))
+				{
+					TempData["Error"] = "Vui lòng nhập ít nhất một URL để kiểm tra.";
+					return View(new SEOProjectViewModel());
+				}
+
+				urlList = urls.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+							  .Select(url => url.Trim())
+							  .Where(url => !string.IsNullOrWhiteSpace(url))
+							  .Distinct()
+							  .ToList();
+
+				if (!urlList.Any())
+				{
+					TempData["Error"] = "Không có URL hợp lệ để kiểm tra.";
+					return View(new SEOProjectViewModel());
+				}
 			}
 
 			for (int i = 0; i < urlList.Count; i++)
@@ -106,7 +154,7 @@ namespace SeoManagement.Web.Controllers
 					try
 					{
 						bool isIndexed = await _searchService.CheckIfIndexedAsync(url);
-						results.Add((url, isIndexed, null));
+						results.Add((url, isIndexed, ""));
 
 						if (projectId.HasValue)
 						{
@@ -141,10 +189,22 @@ namespace SeoManagement.Web.Controllers
 					}
 					await Task.Delay(100);
 				}
+				if (projectId.HasValue)
+				{
+					var allResults = await _indexCheckerUrlService.GetByProjectIdAsync(projectId.Value);
+					var combinedResults = allResults
+						.Select(r => (r.Url, r.IsIndexed ?? false, r.ErrorMessage))
+						.Concat(results)
+						.DistinctBy(r => r.Url)
+						.ToList();
+					ViewBag.Results = combinedResults;
+				}
+				else
+				{
+					ViewBag.Results = results;
+				}
+				ViewBag.Urls = string.Join("\n", urlList);
 
-				// Optionally, you can save the results to the project (e.g., store in DB or log them)
-				ViewBag.Urls = urls;
-				ViewBag.Results = results;
 				ViewBag.ProjectId = projectId;
 				return View(new SEOProjectViewModel());
 			}
@@ -156,53 +216,6 @@ namespace SeoManagement.Web.Controllers
 			}
 		}
 
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Create(SEOProjectViewModel project)
-		{
-			if (!ModelState.IsValid)
-			{
-				ViewBag.Users = await GetUsers() ?? new List<UserViewModel>();
-				return View(project);
-			}
-
-
-			var user = await _userManager.GetUserAsync(User);
-			if (user == null)
-			{
-				TempData["Error"] = "Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.";
-				return RedirectToAction("Login", "Account");
-			}
-
-			if (project.EndDate < project.StartDate)
-			{
-				ModelState.AddModelError("EndDate", "Ngày kết thúc không thể trước ngày bắt đầu");
-				ViewBag.Users = await GetUsers();
-				return View(project);
-			}
-
-			try
-			{
-				var response = await _httpClient.PostAsJsonAsync("/api/seoprojects", project);
-				if (response.IsSuccessStatusCode)
-				{
-					TempData["Success"] = "Tạo dự án thành công.";
-					return RedirectToAction(nameof(Index));
-				}
-
-				var errorContent = await response.Content.ReadAsStringAsync();
-				_logger.LogError("Lỗi khi tạo dự án SEO: {ErrorContent}", errorContent);
-				ModelState.AddModelError("", $"Có lỗi xảy ra khi tạo dự án SEO. Vui lòng thử lại");
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError("Lỗi khi tạo dự án SEO");
-				ModelState.AddModelError("", $"Lỗi khi tạo dự án SEO: {ex.Message}");
-			}
-
-			ViewBag.Users = await GetUsers() ?? new List<UserViewModel>();
-			return View(project);
-		}
 
 		public async Task<List<UserViewModel>> GetUsers()
 		{

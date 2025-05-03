@@ -24,7 +24,7 @@
                     </div>
                 }
                 <div class="mb-3">
-                    <a asp-action="Create" class="btn btn-primary">Tạo dự án mới</a>
+                    <a asp-action="CreateIndexCheckerProject" class="btn btn-primary">Tạo dự án mới</a>
                 </div>
                 @if (Model.Items == null || !Model.Items.Any())
                 {
@@ -67,22 +67,8 @@
                                             }
                                         </td>
                                         <td>
-                                            <a asp-action="Details" asp-route-id="@project.ProjectID" class="btn btn-sm btn-info">Xem</a>
-                                            <a asp-controller="Tools" asp-action="IndexChecker" asp-route-projectId="@project.ProjectID" class="btn btn-primary btn-sm">Kiểm tra Index</a>
-                                            <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-sm btn-warning">Sửa</a>
+                                            <a asp-controller="Tools" asp-action="IndexChecker" asp-route-projectId="@project.ProjectID" class="btn btn-primary btn-sm">Mở</a>
                                             <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteModal(@project.ProjectID, '@project.ProjectName')">Xóa</button>
-                                        </td>
-                                        <td>
-                                            <form asp-action="UpdateStatus" method="post">
-                                                <input type="hidden" name="id" value="@project.ProjectID" />
-                                                <select name="status" class="form-select-sm"
-                                                        onchange="this.form.submit()"
-                                                @(project.Status == ProjectStatus.Completed ? "disabled" : "")>
-                                                    <option value="Active" selected="@(project.Status == ProjectStatus.Active)">Hoạt động</option>
-                                                    <option value="Pending" selected="@(project.Status == ProjectStatus.Pending)">Chờ xử lý</option>
-                                                    <option value="Completed">Hoàn thành</option>
-                                                </select>
-                                            </form>
                                         </td>
                                     </tr>
                                 }

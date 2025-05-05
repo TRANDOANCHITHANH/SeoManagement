@@ -1,14 +1,19 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Models.ViewModels.SEOProjectViewModel>
 @using SeoManagement.Web.Models.ViewModels
 @{
-    ViewData["Title"] = "Danh Sách Dự Án SEO";
+    ViewData["Title"] = ViewBag.ProjectType switch
+    {
+        "IndexChecker" => "Danh Sách Dự Án Kiểm Tra Index",
+        "SEOOnPage" => "Danh Sách Dự Án Kiểm Tra SEO On-Page",
+        _ => "Danh Sách Dự Án SEO"
+    };
 }
 
 <div class="row">
     <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Danh sách dự án SEO</h4>
+                <h4 class="card-title">@ViewData["Title"]</h4>
                 <p class="card-description">Quản lý các dự án SEO</p>
                 @if (TempData["Success"] != null)
                 {
@@ -24,91 +29,102 @@
                     </div>
                 }
                 <div class="mb-3">
-                    <a asp-action="Create" class="btn btn-primary">Tạo dự án mới</a>
+                    @if (string.IsNullOrEmpty(ViewBag.ProjectType) || ViewBag.ProjectType == "IndexChecker")
+                    {
+                        <a asp-action="CreateIndexCheckerProject" class="btn btn-primary">Tạo dự án Link Index Checker</a>
+                    }
+                    @if (string.IsNullOrEmpty(ViewBag.ProjectType) || ViewBag.ProjectType == "SEOOnPage")
+                    {
+                        <a asp-controller="SEOOnPageChecks" asp-action="CreateSEOOnPageProject" class="btn btn-primary">Tạo dự án SEO On-Page</a>
+                    }
                 </div>
-                @if(Model.Items == null || !Model.Items.Any())
+                @if (Model.Items == null || !Model.Items.Any())
                 {
                     <p>Chưa có dự án nào. Vui lòng tạo dự án mới.</p>
-                }else{
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Tên dự án</th>
-                                <th>Mô tả</th>
-                                
-                                <th>Ngày bắt đầu</th>
-                                <th>Trạng thái</th>
-                                <th>Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var project in Model.Items)
-                            {
-                                <tr>
-                                    <td>@project.ProjectID</td>
-                                    <td>@project.ProjectName</td>
-                                    <td>@project.Description</td>
-                                 
-                                    <td>@project.StartDate</td>
-                                    <td>
-                                        @switch (project.Status)
-                                        {
-                                            case ProjectStatus.Active:
-                                                <span class="badge bg-success">Hoạt động</span>
-                                                break;
-                                            case ProjectStatus.Completed:
-                                                <span class="badge bg-secondary">Đã hoàn thành</span>
-                                                break;
-                                            case ProjectStatus.Pending:
-                                                <span class="badge bg-warning">Chờ xử lý</span>
-                                                break;
-                                        }
-                                    </td>
-                                    <td>
-                                        <a asp-action="Details" asp-route-id="@project.ProjectID" class="btn btn-sm btn-info">Xem</a>
-                                            <a asp-controller="Keywords" asp-action="Index" asp-route-projectId="@project.ProjectID" class="btn btn-primary btn-sm">Xem từ khóa</a>
-                                        <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-sm btn-warning">Sửa</a>
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteModal(@project.ProjectID, '@project.ProjectName')">Xóa</button>
-                                    </td>
-
-                                    <td>
-                                        <form asp-action="UpdateStatus" method="post">
-                                            <input type="hidden" name="id" value="@project.ProjectID" />
-                                            <select name="status" class="form-select-sm"
-                                                    onchange="this.form.submit()"
-                                            @(project.Status == ProjectStatus.Completed ? "disabled" : "")>
-                                                <option value="Active" selected="@(project.Status == ProjectStatus.Active)">Hoạt động</option>
-                                                <option value="Pending" selected="@(project.Status == ProjectStatus.Pending)">Chờ xử lý</option>
-                                                <option value="Completed">Hoàn thành</option>
-                                            </select>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-                
-                 var totalPages = (int)Math.Ceiling((double)Model.TotalItems / Model.PageSize);
-                 var currentPage = Model.PageNumber;
-            <nav aria-label="Page navigation">
-            <ul class="pagination">
-                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" asp-route-pageSize="@Model.PageSize">Trước</a>
-                </li>
-                @for (int i = 1; i <= Model.TotalPages; i++)
-                {
-                    <li class="page-item @(i == currentPage ? "active" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-pageSize="@Model.PageSize">@i</a>
-                    </li>
                 }
-                <li class="page-item @(currentPage == Model.TotalPages ? "disabled" : "")">
-                    <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-pageSize="@Model.PageSize">Sau</a>
-                </li>
-            </ul>
-        </nav>
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên dự án</th>
+                                    <th>Mô tả</th>
+                                    <th>Ngày bắt đầu</th>
+                                    <th>Trạng thái</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var project in Model.Items)
+                                {
+                                    <tr>
+                                        <td>@project.ProjectID</td>
+                                        <td>@project.ProjectName</td>
+                                        <td>@project.Description</td>
+                                        <td>@project.StartDate.ToString("dd MMM yyyy")</td>
+                                        <td>
+                                            @switch (project.Status)
+                                            {
+                                                case ProjectStatus.Active:
+                                                    <span class="badge bg-success">Hoạt động</span>
+                                                    break;
+                                                case ProjectStatus.Completed:
+                                                    <span class="badge bg-secondary">Đã hoàn thành</span>
+                                                    break;
+                                                case ProjectStatus.Pending:
+                                                    <span class="badge bg-warning">Chờ xử lý</span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (project.ProjectType == "SEOOnPage")
+                                            {
+                                                <a asp-controller="SEOOnPageChecks" asp-action="Index" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra SEO On-Page</a>
+                                            }
+                                            else if (project.ProjectType == "IndexChecker")
+                                            {
+                                                <a asp-controller="Tools" asp-action="IndexChecker" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra Index</a>
+                                            }
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteModal(@project.ProjectID, '@project.ProjectName')">Xóa</button>
+                                        </td>
+                                        <td>
+                                            <form asp-action="UpdateStatus" method="post">
+                                                <input type="hidden" name="id" value="@project.ProjectID" />
+                                                <select name="status" class="form-select-sm"
+                                                        onchange="this.form.submit()"
+                                                @(project.Status == ProjectStatus.Completed ? "disabled" : "")>
+                                                    <option value="Active" selected="@(project.Status == ProjectStatus.Active)">Hoạt động</option>
+                                                    <option value="Pending" selected="@(project.Status == ProjectStatus.Pending)">Chờ xử lý</option>
+                                                    <option value="Completed">Hoàn thành</option>
+                                                </select>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    var totalPages = (int)Math.Ceiling((double)Model.TotalItems / Model.PageSize);
+                    var currentPage = Model.PageNumber;
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" asp-route-pageSize="@Model.PageSize" asp-route-projectType="@ViewBag.ProjectType">Trước</a>
+                            </li>
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-pageSize="@Model.PageSize" asp-route-projectType="@ViewBag.ProjectType">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-pageSize="@Model.PageSize" asp-route-projectType="@ViewBag.ProjectType">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
                 }
             </div>
         </div>

@@ -38,19 +38,13 @@
             </div>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="collapse" href="#tables" aria-expanded="false" aria-controls="tables">
-                <i class="menu-icon mdi mdi-table"></i>
-                <span class="menu-title">Tables</span>
-                <i class="menu-arrow"></i>
+            <a class="nav-link" asp-action="Index" asp-controller="SEOProjects" asp-route-projectType="SEOOnPage">
+                <i class="menu-icon fa fa-window-restore"></i>
+                <span class="menu-title">SEO On Page Check</span>
             </a>
-            <div class="collapse" id="tables">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item"> <a class="nav-link" href="../pages/tables/basic-table.html">Basic table</a></li>
-                </ul>
-            </div>
         </li>
         <li class="nav-item">
-            <a class="nav-link" asp-action="Index" asp-controller="Tools">
+            <a class="nav-link" asp-action="Index" asp-controller="SEOProjects" asp-route-projectType="IndexChecker">
                 <i class="menu-icon mdi mdi-file-document"></i>
                 <span class="menu-title">Link index checker</span>
             </a>

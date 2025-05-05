@@ -21,7 +21,7 @@ namespace SeoManagement.Web.Controllers
 			_userManager = userManager;
 		}
 
-		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10)
+		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10, string projectType = null)
 		{
 			var user = await _userManager.GetUserAsync(User);
 
@@ -30,13 +30,22 @@ namespace SeoManagement.Web.Controllers
 				TempData["Error"] = "Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.";
 				return RedirectToAction("Login", "Account");
 			}
-
 			var response = await _httpClient.GetFromJsonAsync<PagedResultViewModel<SEOProjectViewModel>>($"/api/seoprojects?pageNumber={pageNumber}&pageSize={pageSize}&userId={user.Id}");
 			if (response == null)
 			{
 				return View(new PagedResultViewModel<SEOProjectViewModel> { Items = new List<SEOProjectViewModel>() });
 			}
-			return View(response);
+
+			var projects = new PagedResultViewModel<SEOProjectViewModel>
+			{
+				Items = response.Items.Where(p => p.ProjectType == projectType).ToList(),
+				PageNumber = pageNumber,
+				PageSize = pageSize,
+				TotalItems = response.Items.Count(p => p.ProjectType == projectType)
+			};
+
+			ViewBag.ProjectType = projectType;
+			return View(projects);
 		}
 
 		public async Task<IActionResult> Details(int id)

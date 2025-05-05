@@ -168,6 +168,8 @@ namespace SeoManagement.Web.Controllers
 							};
 							await _indexCheckerUrlService.AddAsync(indexCheckerUrl);
 						}
+
+						TempData["Success"] = "Thêm URL thành công!";
 					}
 					catch (Exception ex)
 					{

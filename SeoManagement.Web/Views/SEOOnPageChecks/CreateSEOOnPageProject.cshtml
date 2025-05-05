@@ -1,7 +1,7 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.SEOProjectViewModel
 
 @{
-    ViewData["Title"] = "Tạo dự án Index Checker";
+    ViewData["Title"] = "Tạo dự án kiểm tra On Page";
 }
 
 <h2>Tạo dự án Index Checker</h2>
@@ -16,9 +16,9 @@
     <div class="alert alert-success">@TempData["Success"]</div>
 }
 
-<form asp-action="CreateIndexCheckerProject" method="post">
+<form asp-action="CreateSEOOnPageProject" method="post">
     @* <div asp-validation-summary="All" class="text-danger"></div> *@
-    <input type="hidden" asp-for="ProjectType" value="IndexChecker" />
+    <input type="hidden" asp-for="ProjectType" value="SEOOnPage" />
     <div class="form-group">
         <label asp-for="ProjectName">Tên dự án</label>
         <input asp-for="ProjectName" class="form-control" required />
@@ -49,7 +49,7 @@
         <span asp-validation-for="Status" class="text-danger"></span>
     </div>
     <button type="submit" class="btn btn-primary mt-2">Tạo dự án</button>
-    <a asp-action="IndexChecker" class="btn btn-secondary mt-2">Hủy</a>
+    <a asp-action="Index" class="btn btn-secondary mt-2">Hủy</a>
 </form>
 
 @section Scripts {

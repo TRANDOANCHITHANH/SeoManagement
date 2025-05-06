@@ -25,5 +25,15 @@ namespace SeoManagement.Infrastructure.Repositories
 				.Where(u => u.ProjectID == projectId)
 				.ToListAsync();
 		}
+
+		public async Task DeleteAsync(int id)
+		{
+			var indexCheckerUrl = await _context.IndexCheckerUrls.FindAsync(id);
+			if (indexCheckerUrl != null)
+			{
+				_context.IndexCheckerUrls.Remove(indexCheckerUrl);
+				await _context.SaveChangesAsync();
+			}
+		}
 	}
 }

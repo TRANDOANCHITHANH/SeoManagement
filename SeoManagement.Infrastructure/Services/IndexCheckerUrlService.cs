@@ -19,5 +19,10 @@ namespace SeoManagement.Infrastructure.Services
 		{
 			return await _repository.GetByProjectIdAsync(projectId);
 		}
+
+		public async Task DeleteAsync(int id)
+		{
+			await _repository.DeleteAsync(id);
+		}
 	}
 }

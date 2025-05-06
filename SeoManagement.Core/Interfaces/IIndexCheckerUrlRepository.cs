@@ -6,5 +6,6 @@ namespace SeoManagement.Core.Interfaces
 	{
 		Task AddAsync(IndexCheckerUrl url);
 		Task<List<IndexCheckerUrl>> GetByProjectIdAsync(int projectId);
+		Task DeleteAsync(int id);
 	}
 }

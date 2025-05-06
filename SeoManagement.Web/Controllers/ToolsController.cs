@@ -217,6 +217,38 @@ namespace SeoManagement.Web.Controllers
 			}
 		}
 
+		[HttpPost]
+		public async Task<IActionResult> DeleteUrl(int projectId, string url)
+		{
+			try
+			{
+				var user = await _userManager.GetUserAsync(User);
+				if (user == null)
+				{
+					TempData["Error"] = "Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.";
+					return RedirectToAction("Login", "Account");
+				}
+
+				var indexCheckerUrl = (await _indexCheckerUrlService.GetByProjectIdAsync(projectId))
+					.FirstOrDefault(u => u.Url == url);
+				if (indexCheckerUrl == null)
+				{
+					TempData["Error"] = "URL không tồn tại trong dự án.";
+					return RedirectToAction(nameof(IndexChecker), new { projectId });
+				}
+
+				await _indexCheckerUrlService.DeleteAsync(indexCheckerUrl.UrlID);
+
+				TempData["Success"] = "Xóa URL thành công!";
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Lỗi khi xóa URL: {Url} trong dự án: {ProjectId}", url, projectId);
+				TempData["Error"] = "Đã xảy ra lỗi khi xóa URL: " + ex.Message;
+			}
+
+			return RedirectToAction(nameof(IndexChecker), new { projectId });
+		}
 
 		public async Task<List<UserViewModel>> GetUsers()
 		{

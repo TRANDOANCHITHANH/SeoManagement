@@ -77,7 +77,7 @@
                                             <i class="fa fa-search"></i><span> </span>
                                         </button>
                                     </a>
-                                    <button type="button" class="btn btn-default btn-dangerous px-2">
+                                    <button type="button" class="btn btn-default btn-dangerous px-2" onclick="showDeleteModal('@result.Url')">
                                         <i class="fa fa-trash-o"></i><span> </span>
                                     </button>
                                 </div>
@@ -131,6 +131,28 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="deleteUrlModal" tabindex="-1" aria-labelledby="deleteUrlModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUrlModalLabel">Xác nhận xóa URL</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    Bạn có chắc chắn muốn xóa URL <strong id="urlToDelete"></strong> không? Hành động này không thể hoàn tác.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <form id="deleteUrlForm" asp-action="DeleteUrl" asp-controller="Tools" method="post">
+                        <input type="hidden" name="projectId" value="@projectId" />
+                        <input type="hidden" name="url" id="deleteUrlInput" />
+                        <button type="submit" class="btn btn-danger">Xóa</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -161,7 +183,6 @@
                 console.log('Updated inputType:', inputTypeHidden.value);
             }
 
-            // Thêm validation trước khi submit form
             document.getElementById('addUrlForm').addEventListener('submit', function (event) {
                 console.log('Form submitted with inputType:', inputTypeHidden.value);
                 if (inputTypeHidden.value === 'excel' && !document.getElementById('excelFile').files.length) {
@@ -170,5 +191,13 @@
                 }
             });
         });
+
+        function showDeleteModal(url) {
+            document.getElementById('urlToDelete').textContent = url;
+            document.getElementById('deleteUrlInput').value = url;
+
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteUrlModal'), {});
+            deleteModal.show();
+        }
     </script>
 }

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
 using SeoManagement.Web.Models.ViewModels;
-using System.Text.Json;
 
 namespace SeoManagement.Web.Controllers
 {
@@ -38,93 +37,6 @@ namespace SeoManagement.Web.Controllers
 			return View(response);
 		}
 
-		[HttpGet]
-		public IActionResult CreateSEOOnPageProject()
-		{
-			return View(new SEOProjectViewModel
-			{
-				ProjectType = "SEOOnPage",
-				StartDate = DateTime.Now,
-				EndDate = DateTime.Now.AddDays(30),
-				Status = Models.ViewModels.ProjectStatus.Active
-			});
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> CreateSEOOnPageProject(SEOProjectViewModel project)
-		{
-			if (!ModelState.IsValid)
-			{
-				return View(project);
-			}
-
-			if (project.EndDate < project.StartDate)
-			{
-				ModelState.AddModelError("EndDate", "Ngày kết thúc không thể trước ngày bắt đầu.");
-				return View(project);
-			}
-
-			var user = await _userManager.GetUserAsync(User);
-			if (user == null)
-			{
-				TempData["Error"] = "Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.";
-				return RedirectToAction("Login", "Account");
-			}
-
-			if (user.Id <= 0)
-			{
-				_logger.LogError("User ID không hợp lệ: {UserId}", user.Id);
-				TempData["Error"] = "User ID không hợp lệ. Vui lòng kiểm tra tài khoản của bạn.";
-				return View(project);
-			}
-
-			try
-			{
-				var projectDto = new
-				{
-					UserID = user.Id,
-					ProjectName = project.ProjectName,
-					Description = project.Description,
-					ProjectType = project.ProjectType,
-					StartDate = project.StartDate,
-					EndDate = project.EndDate,
-					Status = (int)project.Status,
-				};
-
-				var response = await _httpClient.PostAsJsonAsync("/api/seoprojects", projectDto);
-				if (response.IsSuccessStatusCode)
-				{
-					var responseContent = await response.Content.ReadAsStringAsync();
-					var createdProject = JsonSerializer.Deserialize<SEOProjectViewModel>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-					if (createdProject != null && createdProject.ProjectID > 0)
-					{
-						int projectId = createdProject.ProjectID;
-						TempData["Success"] = "Dự án SEO On-Page đã được tạo thành công!";
-						return RedirectToAction("Index", "SEOOnPageChecks", new { projectId });
-					}
-					else
-					{
-						_logger.LogError("Không thể lấy ProjectID từ response: {ResponseContent}", responseContent);
-						TempData["Error"] = "Không thể lấy ID của dự án mới tạo.";
-						return View(project);
-					}
-				}
-				else
-				{
-					var errorContent = await response.Content.ReadAsStringAsync();
-					_logger.LogError("Lỗi khi tạo dự án SEO On-Page: {ErrorContent}", errorContent);
-					TempData["Error"] = "Không thể tạo dự án. Vui lòng thử lại.";
-					return View(project);
-				}
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Lỗi khi tạo SEO On-Page Project.");
-				TempData["Error"] = "Đã xảy ra lỗi khi tạo dự án: " + ex.Message;
-				return View(project);
-			}
-		}
 
 		public IActionResult Create(int projectId)
 		{

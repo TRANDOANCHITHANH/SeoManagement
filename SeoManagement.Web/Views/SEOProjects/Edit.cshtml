@@ -17,17 +17,11 @@
                 }
                 <form asp-action="Edit" method="post">
                     <input type="hidden" asp-for="ProjectID" />
+                    <input type="hidden" asp-for="ProjectType" />
                     <div class="form-group">
                         <label asp-for="ProjectName">Tên dự án</label>
                         <input asp-for="ProjectName" class="form-control" placeholder="Nhập tên dự án" />
                         <span asp-validation-for="ProjectName" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="UserID">Người dùng</label>
-                        <select asp-for="UserID" class="form-control" asp-items="@(new SelectList(ViewBag.Users, "UserID", "FullName"))">
-                            <option value="">Chọn người dùng</option>
-                        </select>
-                        <span asp-validation-for="UserID" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="Description">Mô tả</label>

@@ -26,7 +26,7 @@
                 }
                 <div class="mb-3">
                     <a asp-action="Create" asp-route-projectId="@projectId" class="btn btn-primary">Thêm Kiểm Tra Mới</a>
-                    <a asp-controller="SEOProjects" asp-action="Index" class="btn btn-secondary">Quay Lại Dự Án</a>
+                    <a asp-controller="SEOProjects" asp-action="Index" asp-route-projectId="@projectId" class="btn btn-secondary">Quay Lại Dự Án</a>
                 </div>
                 @if(Model.Items == null || !Model.Items.Any())
                 {

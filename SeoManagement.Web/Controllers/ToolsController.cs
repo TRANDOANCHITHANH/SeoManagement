@@ -12,16 +12,18 @@ namespace SeoManagement.Web.Controllers
 	{
 		private readonly GoogleCustomSearchService _searchService;
 		private readonly IIndexCheckerUrlService _indexCheckerUrlService;
+		private readonly ISEOProjectService _projectService;
 		private readonly ILogger<ToolsController> _logger;
 		private readonly HttpClient _httpClient;
 		private readonly IConfiguration _configuration;
 		private readonly UserManager<ApplicationUser> _userManager;
 
 
-		public ToolsController(GoogleCustomSearchService searchService, IIndexCheckerUrlService indexCheckerUrlService, ILogger<ToolsController> logger, HttpClient httpClient, IConfiguration configuration, UserManager<ApplicationUser> userManager)
+		public ToolsController(GoogleCustomSearchService searchService, IIndexCheckerUrlService indexCheckerUrlService, ISEOProjectService projectService, ILogger<ToolsController> logger, HttpClient httpClient, IConfiguration configuration, UserManager<ApplicationUser> userManager)
 		{
 			_searchService = searchService;
 			_indexCheckerUrlService = indexCheckerUrlService;
+			_projectService = projectService;
 			_logger = logger;
 			_userManager = userManager;
 			_httpClient = httpClient;
@@ -63,7 +65,11 @@ namespace SeoManagement.Web.Controllers
 			if (projectId.HasValue)
 			{
 				var previousResults = await _indexCheckerUrlService.GetByProjectIdAsync(projectId.Value);
-				ViewBag.Results = previousResults.Select(r => (r.Url, r.IsIndexed ?? false, r.ErrorMessage)).ToList();
+				ViewBag.Results = previousResults.Select(r => (r.Url, r.IsIndexed ?? false, r.ErrorMessage, r.LastCheckedDate.HasValue ? r.LastCheckedDate.Value : DateTime.MinValue)).ToList();
+
+				var project = await _projectService.GetByIdAsync(projectId.Value);
+				ViewBag.ProjectName = project.ProjectName;
+				ViewBag.ProjectDescription = project.Description;
 			}
 			return View(new SEOProjectViewModel());
 		}
@@ -261,6 +267,57 @@ namespace SeoManagement.Web.Controllers
 
 			var result = await response.Content.ReadFromJsonAsync<PagedResultViewModel<UserViewModel>>();
 			return result?.Items ?? new List<UserViewModel>();
+		}
+
+		[HttpGet]
+		public async Task<IActionResult> ExportToExcel(int projectId)
+		{
+			try
+			{
+				var indexCheckerUrls = await _indexCheckerUrlService.GetByProjectIdAsync(projectId);
+				if (indexCheckerUrls == null || !indexCheckerUrls.Any())
+				{
+					TempData["Error"] = "Không có dữ liệu để xuất.";
+					return RedirectToAction(nameof(IndexChecker), new { projectId });
+				}
+
+				using (var workbook = new XLWorkbook())
+				{
+					var worksheet = workbook.Worksheets.Add("IndexCheckerResults");
+					var currentRow = 1;
+
+					worksheet.Cell(currentRow, 1).Value = "URL";
+					worksheet.Cell(currentRow, 2).Value = "Trạng thái Index";
+					worksheet.Cell(currentRow, 3).Value = "Lỗi (nếu có)";
+					worksheet.Cell(currentRow, 4).Value = "Ngày kiểm tra cuối";
+					worksheet.Range(currentRow, 1, currentRow, 4).Style.Font.Bold = true;
+
+					currentRow++;
+					foreach (var item in indexCheckerUrls)
+					{
+						worksheet.Cell(currentRow, 1).Value = item.Url;
+						worksheet.Cell(currentRow, 2).Value = item.IsIndexed.HasValue ? (item.IsIndexed.Value ? "Đã Index" : "Chưa Index") : "Chưa kiểm tra";
+						worksheet.Cell(currentRow, 3).Value = item.ErrorMessage ?? "Không có lỗi";
+						worksheet.Cell(currentRow, 4).Value = item.LastCheckedDate?.ToString("dd/MM/yyyy HH:mm:ss") ?? "Chưa kiểm tra";
+						currentRow++;
+					}
+
+					worksheet.Columns().AdjustToContents();
+
+					using (var stream = new MemoryStream())
+					{
+						workbook.SaveAs(stream);
+						var content = stream.ToArray();
+						return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"IndexChecker_Project_{projectId}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Lỗi khi xuất dữ liệu Excel cho dự án: {ProjectId}", projectId);
+				TempData["Error"] = "Đã xảy ra lỗi khi xuất dữ liệu: " + ex.Message;
+				return RedirectToAction(nameof(IndexChecker), new { projectId });
+			}
 		}
 	}
 }

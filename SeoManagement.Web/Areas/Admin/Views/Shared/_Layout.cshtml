@@ -30,16 +30,16 @@
         <div class="container-fluid page-body-wrapper">
             @await Html.PartialAsync("partials/_sidebar")
             <div class="main-panel">
-                 <div class="content-wrapper">
-                     <main role="main" class="pb-3">
-                         @RenderBody()
-                        </main>
-                 </div>
-                   @await Html.PartialAsync("partials/_footer")
-                 </div>
-         </div>
+                <div class="content-wrapper">
+                    <main role="main" class="pb-3">
+                        @RenderBody()
+                    </main>
+                </div>
+                @await Html.PartialAsync("partials/_footer")
+            </div>
+        </div>
     </div>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script> 
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     @* <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
     <script src="~/js/site.js" asp-append-version="true"></script>
 

@@ -24,7 +24,7 @@
                     </div>
                 }
                 <div class="mb-3">
-                    <a asp-action="CreateIndexCheckerProject" class="btn btn-primary">Tạo dự án mới</a>
+                    <a asp-action="Create" asp-route-projectType="IndexChecker" asp-controller="SeoProjects" class="btn btn-primary">Tạo dự án mới</a>
                 </div>
                 @if (Model.Items == null || !Model.Items.Any())
                 {

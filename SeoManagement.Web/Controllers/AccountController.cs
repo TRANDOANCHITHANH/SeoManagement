@@ -248,5 +248,49 @@ namespace SeoManagement.Web.Controllers
 		{
 			return View();
 		}
+
+		[HttpGet]
+		public IActionResult ChangePassword()
+		{
+			return View(new ChangePasswordViewModel());
+		}
+
+		[HttpPost]
+		public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+		{
+			if (!ModelState.IsValid)
+			{
+				return RedirectToAction("Profile");
+			}
+
+			var user = await _userManager.GetUserAsync(User);
+			if (user == null)
+			{
+				return RedirectToAction("Login");
+			}
+
+			var checkOldPassword = await _signInManager.CheckPasswordSignInAsync(user, model.OldPassword, false);
+			if (!checkOldPassword.Succeeded)
+			{
+				TempData["Error"] = "Mật khẩu cũ không đúng.";
+				return RedirectToAction("Profile");
+			}
+
+			if (model.NewPassword != model.ConfirmPassword)
+			{
+				TempData["Error"] = "Mật khẩu mới và xác nhận mật khẩu không khớp.";
+				return RedirectToAction("Profile");
+			}
+
+			var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+			if (result.Succeeded)
+			{
+				await _signInManager.RefreshSignInAsync(user);
+				TempData["Success"] = "Đổi mật khẩu thành công!";
+				return RedirectToAction("Profile");
+			}
+			TempData["Error"] = "Đổi mật khẩu thất bại: " + string.Join(", ", result.Errors.Select(e => e.Description));
+			return RedirectToAction("Profile");
+		}
 	}
 }

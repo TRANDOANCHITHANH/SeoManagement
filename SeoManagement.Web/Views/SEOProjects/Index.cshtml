@@ -3,8 +3,8 @@
 @{
     ViewData["Title"] = ViewBag.ProjectType switch
     {
-        "IndexChecker" => "Danh Sách Dự Án Kiểm Tra Index",
-        "SEOOnPage" => "Danh Sách Dự Án Kiểm Tra SEO On-Page",
+        "IndexChecker" => "Kiểm Tra Index",
+        "SEOOnPage" => "Kiểm Tra SEO On-Page",
         _ => "Danh Sách Dự Án SEO"
     };
 }
@@ -45,8 +45,8 @@
                 else
                 {
                     <div class="table-responsive">
-                        <table class="table">
-                            <thead>
+                        <table class="table table-hover table-bordered" id="urlTable">
+                            <thead class="table-light">
                                 <tr>
                                     <th>ID</th>
                                     <th>Tên dự án</th>
@@ -54,6 +54,7 @@
                                     <th>Ngày bắt đầu</th>
                                     <th>Trạng thái</th>
                                     <th>Hành động</th>
+                                    <th>Cập nhật trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -109,24 +110,24 @@
                         </table>
                     </div>
 
-                    var totalPages = (int)Math.Ceiling((double)Model.TotalItems / Model.PageSize);
-                    var currentPage = Model.PageNumber;
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination">
-                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                                <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" asp-route-pageSize="@Model.PageSize" asp-route-projectType="@ViewBag.ProjectType">Trước</a>
-                            </li>
-                            @for (int i = 1; i <= Model.TotalPages; i++)
-                            {
-                                <li class="page-item @(i == currentPage ? "active" : "")">
-                                    <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-pageSize="@Model.PageSize" asp-route-projectType="@ViewBag.ProjectType">@i</a>
-                                </li>
-                            }
-                            <li class="page-item @(currentPage == Model.TotalPages ? "disabled" : "")">
-                                <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-pageSize="@Model.PageSize" asp-route-projectType="@ViewBag.ProjectType">Sau</a>
-                            </li>
-                        </ul>
-                    </nav>
+                    @* var totalPages = (int)Math.Ceiling((double)Model.TotalItems / Model.PageSize); *@
+                    @* var currentPage = Model.PageNumber; *@
+                    @* <nav aria-label="Page navigation"> *@
+                    @*     <ul class="pagination"> *@
+                    @*         <li class="page-item @(currentPage == 1 ? "disabled" : "")"> *@
+                    @*             <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" asp-route-pageSize="@Model.PageSize" asp-route-projectType="@ViewBag.ProjectType">Trước</a> *@
+                    @*         </li> *@
+                    @*         @for (int i = 1; i <= Model.TotalPages; i++) *@
+                    @*         { *@
+                    @*             <li class="page-item @(i == currentPage ? "active" : "")"> *@
+                    @*                 <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-pageSize="@Model.PageSize" asp-route-projectType="@ViewBag.ProjectType">@i</a> *@
+                    @*             </li> *@
+                    @*         } *@
+                    @*         <li class="page-item @(currentPage == Model.TotalPages ? "disabled" : "")"> *@
+                    @*             <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-pageSize="@Model.PageSize" asp-route-projectType="@ViewBag.ProjectType">Sau</a> *@
+                    @*         </li> *@
+                    @*     </ul> *@
+                    @* </nav> *@
                 }
             </div>
         </div>

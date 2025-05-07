@@ -1,16 +1,90 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.UserViewModel
 
-<div class="container">
-    <h2>My Profile</h2>
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">User Information</h5>
-            <p><strong>Username:</strong> @Model.Username</p>
-            <p><strong>Email:</strong> @Model.Email</p>
-            <p><strong>Full Name:</strong> @Model.FullName</p>
-            <p><strong>Created Date:</strong> @Model.CreatedDate.ToString("dd MMM yyyy")</p>
-            <p><strong>Status:</strong> @(Model.IsActive ? "Active" : "Inactive")</p>
-            <a asp-action="Index" asp-controller="Home" class="btn btn-primary">Back to Home</a>
+<div class="row">
+    <div class="col-md-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Thông tin người dùng</h4>
+                <div class="d-flex align-items-center mb-4">
+                    <i class="mdi mdi-account-circle fs-40 text-primary me-3"></i>
+                    <div>
+                        <h5 class="mb-0">@Model.FullName</h5>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="mdi mdi-account fs-20 text-muted me-2"></i>
+                        <span><strong>Tên đăng nhập:</strong> @Model.Username</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="mdi mdi-email fs-20 text-muted me-2"></i>
+                        <span><strong>Email:</strong> @Model.Email</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="mdi mdi-calendar fs-20 text-muted me-2"></i>
+                        <span><strong>Ngày tạo:</strong> @Model.CreatedDate.ToString("dd MMM yyyy")</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="mdi mdi-check-circle fs-20 text-muted me-2"></i>
+                        <span>
+                            <strong>Trạng thái:</strong>
+                            <span class="@(Model.IsActive ? "text-success" : "text-danger")">
+                                @(Model.IsActive ? "Hoạt động" : "Không hoạt động")
+                            </span>
+                        </span>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <a asp-action="Index" asp-controller="Home" class="btn btn-primary">Quay lại Trang chủ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Đổi mật khẩu</h4>
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Success"]</div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger">@TempData["Error"]</div>
+                }
+                <form asp-action="ChangePassword" asp-controller="Account" method="post">
+                    <div class="form-group mb-3">
+                        <label for="oldPassword" class="form-label">Mật khẩu cũ</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="mdi mdi-lock fs-20 text-muted"></i></span>
+                            <input type="password" class="form-control" id="oldPassword" name="OldPassword" required placeholder="Nhập mật khẩu cũ" />
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="newPassword" class="form-label">Mật khẩu mới</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="mdi mdi-lock fs-20 text-muted"></i></span>
+                            <input type="password" class="form-control" id="newPassword" name="NewPassword" required placeholder="Nhập mật khẩu mới" />
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="mdi mdi-lock fs-20 text-muted"></i></span>
+                            <input type="password" class="form-control" id="confirmPassword" name="ConfirmPassword" required placeholder="Xác nhận mật khẩu mới" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Cập nhật mật khẩu</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+

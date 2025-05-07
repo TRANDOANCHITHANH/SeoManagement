@@ -3,12 +3,19 @@
 @{
     ViewData["Title"] = "Kiểm tra Index";
     var projectId = ViewBag.ProjectId as int?;
-    var results = ViewBag.Results as List<(string Url, bool IsIndexed, string Error)>;
+    var results = ViewBag.Results as List<(string Url, bool IsIndexed, string Error, DateTime LastCheckedDate)>;
     var urls = ViewBag.Urls as string;
+    var projectName = ViewBag.ProjectName;
+    var projectDescription = ViewBag.ProjectDescription;
+
+    int totalUrls = results?.Count ?? 0;
+    int indexedUrls = results?.Count(r => r.IsIndexed) ?? 0;
+    int notIndexedUrls = totalUrls - indexedUrls;
+    double indexRate = totalUrls > 0 ? (double)indexedUrls / totalUrls * 100 : 0;
 }
 
 <div class="container">
-    <h2 class="text-center mb-4">Kiểm tra Index cho Dự án #@(projectId ?? 0)</h2>
+    <h2 class="text-center mb-4">Kiểm tra Index cho Dự án #@(projectName)</h2>
 
     @if (TempData["Error"] != null)
     {
@@ -20,28 +27,76 @@
         <div class="alert alert-success text-center">@TempData["Success"]</div>
     }
 
-    <div class="d-flex justify-content-between mb-4">
+    @if (projectId.HasValue && results != null && results.Any())
+    {
+        <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px;">
+            <div class="card-body">
+                <h4 class="card-title">Tổng quan dự án</h4>
+                <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-2 rounded">
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Tên dự án:</span>
+                        <input type="text" class="form-control" value="@projectName" readonly />
+                    </div>
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Mô tả:</span>
+                        <input type="text" class="form-control" value="@projectDescription" readonly />
+                    </div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 bg-light text-center rounded shadow-sm transition-all" style="transition: transform 0.3s ease;">
+                            <div class="card-body">
+                                <h6 class="card-subtitle text-muted mb-2">Tổng liên kết</h6>
+                                <h3 class="card-title text-dark"><i class="fa fa-link me-2 text-primary"></i>@totalUrls</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 bg-light text-center rounded shadow-sm transition-all" style="transition: transform 0.3s ease;">
+                            <div class="card-body">
+                                <h6 class="card-subtitle text-muted mb-2">Index</h6>
+                                <h3 class="card-title text-success"><i class="fa fa-check-circle me-2"></i>@indexedUrls/@totalUrls</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 bg-light text-center rounded shadow-sm transition-all" style="transition: transform 0.3s ease;">
+                            <div class="card-body">
+                                <h6 class="card-subtitle text-muted mb-2">No Index</h6>
+                                <h3 class="card-title text-danger"><i class="fa fa-times-circle me-2"></i>@notIndexedUrls/@totalUrls</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    <div class="d-flex justify-content-end mb-4">
         <a asp-controller="Tools" asp-action="Index" class="btn btn-secondary">
             Quay lại danh sách dự án
-        </a>
-        <a asp-action="CreateIndexCheckerProject" class="btn btn-primary">
-            Tạo Dự án Mới
         </a>
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUrlModal">
             Thêm URL
         </button>
+        @if (projectId.HasValue)
+        {
+            <a asp-action="ExportToExcel" asp-route-projectId="@projectId" class="btn btn-info ms-2">
+                <i class="fa fa-download"></i> Xuất Excel
+            </a>
+        }
     </div>
 
     @if (results != null && results.Any())
     {
         <div class="card shadow p-4">
             <h4 class="mb-3">Danh sách link</h4>
-            <table class="table table-hover table-bordered">
+            <table id="urlTable" class="table table-hover table-bordered">
                 <thead class="table-light">
                     <tr>
                         <th>URL</th>
                         <th>Kiểm tra</th>
                         <th>Lỗi</th>
+                        <th>Ngày cập nhật</th>
                         <th>Hành động</th>
                     </tr>
                 </thead>
@@ -71,6 +126,16 @@
                                 }
                             </td>
                             <td>
+                                @if (result.LastCheckedDate != DateTime.MinValue)
+                                {
+                                    @result.LastCheckedDate.ToString("dd/MM/yyyy HH:mm:ss")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa kiểm tra</span>
+                                }
+                            </td>
+                            <td>
                                 <div class="flex items-center justify-center gap-2">
                                     <a href="https://google.com/search?q=site:@result.Url" target="_blank">
                                         <button type="button" class="btn btn-default px-2">
@@ -88,7 +153,10 @@
             </table>
         </div>
     }
-
+    else
+    {
+        <div class="alert alert-warning text-center">Không có URL nào trong danh sách.</div>
+    }
     <div class="modal fade" id="addUrlModal" tabindex="-1" aria-labelledby="addUrlModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

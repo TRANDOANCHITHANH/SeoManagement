@@ -24,3 +24,11 @@ body {
 .content-wrapper {
     padding: 1.5rem !important;
 }
+
+.page-body-wrapper {
+    padding-top:75px !important;
+}
+
+.navbar-brand img{
+    height:50px !important;
+}

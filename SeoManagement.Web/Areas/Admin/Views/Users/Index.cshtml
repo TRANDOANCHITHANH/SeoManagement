@@ -1,0 +1,228 @@
+﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Models.ViewModels.UserViewModel>
+
+<div class="page-header">
+    <h3 class="fw-bold mb-3">Users</h3>
+    <ul class="breadcrumbs mb-3">
+        <li class="nav-home">
+            <a href="#">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Users</a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Index</a>
+        </li>
+    </ul>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Basic</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="basic-datatables"
+                           class="display table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Họ tên</th> 
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Ngày tạo</th>
+                                <th>Trạng thái</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th>ID</th>
+                                <th>Họ tên</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Ngày tạo</th>
+                                <th>Trạng thái</th>
+                                <th>Action</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                             @foreach (var user in Model.Items)
+                            { 
+                                 <tr> 
+                                     <td>@user.UserID</td> 
+                                     <td>@user.FullName</td> 
+                                     <td>@user.Email</td> 
+                                     <td>@user.Role</td> 
+                                     <td>@user.CreatedDate.ToString("dd MMM yyyy")</td> 
+                                     <td> 
+                                         @if (user.IsActive) 
+                                         { 
+                                             <label class="badge badge-success">Active</label> 
+                                         } 
+                                         else 
+                                         { 
+                                             <label class="badge badge-danger">Inactive</label> 
+                                         } 
+                                     </td> 
+                                     <td>
+                                        <a asp-action="Edit" asp-route-id="@user.UserID" class="btn-link btn-primary"><i class="fa fa-edit"></i></a>
+                                        <button onclick="confirmDelete(@user.UserID)" class="btn-link btn-danger"><i class="fa fa-times"></i></button>
+                                    </td> 
+                                 </tr>
+                            } 
+                        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+ </div>
+
+
+@* <div class="row"> *@
+@*     <div class="col-lg-12 grid-margin stretch-card"> *@
+@*         <div class="card"> *@
+@*             <div class="card-body"> *@
+@*                 <h4 class="card-title">Danh sách người dùng</h4> *@
+@*                 <p class="card-description">Quản lý thông tin người dùng</p> *@
+@*                 <div class="table-responsive"> *@
+@*                     <table class="table"> *@
+@*                         <thead> *@
+@*                             <tr> *@
+@*                                 <th>ID</th> *@
+@*                                 <th>Họ tên</th> *@
+@*                                 <th>Email</th> *@
+@*                                 <th>Role</th> *@
+@*                                 <th>Ngày tạo</th> *@
+@*                                 <th>Trạng thái</th> *@
+@*                                 <th>Action</th> *@
+@*                             </tr> *@
+@*                         </thead> *@
+@*                         <tbody> *@
+@*                             @foreach (var user in Model.Items) *@
+@*                             { *@
+@*                                 <tr> *@
+@*                                     <td>@user.UserID</td> *@
+@*                                     <td>@user.FullName</td> *@
+@*                                     <td>@user.Email</td> *@
+@*                                     <td>@user.Role</td> *@
+@*                                     <td>@user.CreatedDate.ToString("dd MMM yyyy")</td> *@
+@*                                     <td> *@
+@*                                         @if (user.IsActive) *@
+@*                                         { *@
+@*                                             <label class="badge badge-success">Active</label> *@
+@*                                         } *@
+@*                                         else *@
+@*                                         { *@
+@*                                             <label class="badge badge-danger">Inactive</label> *@
+@*                                         } *@
+@*                                     </td> *@
+@*                                     <td> *@
+@*                                         <a asp-action="Details" asp-route-id="@user.UserID" class="btn btn-sm btn-info">Xem</a> *@
+@*                                         <a asp-action="Edit" asp-route-id="@user.UserID" class="btn btn-sm btn-warning">Sửa</a> *@
+@*                                         <button onclick="confirmDelete(@user.UserID)" class="btn btn-sm btn-danger">Xóa</button> *@
+@*                                     </td> *@
+@*                                 </tr> *@
+@*                             } *@
+@*                         </tbody> *@
+@*                     </table> *@
+@*                 </div> *@
+@*                 <div class="pagination mt-3"> *@
+@*                     <p>Trang @Model.PageNumber / @Model.TotalPages (Tổng: @Model.TotalItems người dùng)</p> *@
+@*                     <nav aria-label="Page navigation"> *@
+@*                         <ul class="pagination"> *@
+@*                             @if (Model.PageNumber > 1) *@
+@*                             { *@
+@*                                 <li class="page-item"> *@
+@*                                     <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.PageNumber - 1, pageSize = Model.PageSize })">Trang trước</a> *@
+@*                                 </li> *@
+@*                             } *@
+@*                             @if (Model.PageNumber < Model.TotalPages) *@
+@*                             { *@
+@*                                 <li class="page-item"> *@
+@*                                     <a class="page-link" href="@Url.Action("Index", new { pageNumber = Model.PageNumber + 1, pageSize = Model.PageSize })">Trang sau</a> *@
+@*                                 </li> *@
+@*                             } *@
+@*                         </ul> *@
+@*                     </nav> *@
+@*                 </div> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+
+@section Scripts {
+    <script>
+        function confirmDelete(id) {
+            if (confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
+                window.location.href = '@Url.Action("Delete", "Users")/' + id;
+            }
+        }
+
+    $(document).ready(function () {
+          $("#basic-datatables").DataTable({});
+
+          $("#multi-filter-select").DataTable({
+            pageLength: 5,
+            initComplete: function () {
+              this.api()
+                .columns()
+                .every(function () {
+                  var column = this;
+                  var select = $(
+                    '<select class="form-select"><option value=""></option></select>'
+                  )
+                    .appendTo($(column.footer()).empty())
+                    .on("change", function () {
+                      var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                      column
+                        .search(val ? "^" + val + "$" : "", true, false)
+                        .draw();
+                    });
+
+                  column
+                    .data()
+                    .unique()
+                    .sort()
+                    .each(function (d, j) {
+                      select.append(
+                        '<option value="' + d + '">' + d + "</option>"
+                      );
+                    });
+                });
+            },
+          });
+
+          // Add Row
+          $("#add-row").DataTable({
+            pageLength: 5,
+          });
+
+          var action =
+            '<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+
+          $("#addRowButton").click(function () {
+            $("#add-row")
+              .dataTable()
+              .fnAddData([
+                $("#addName").val(),
+                $("#addPosition").val(),
+                $("#addOffice").val(),
+                action,
+              ]);
+            $("#addRowModal").modal("hide");
+          });
+        });
+    </script>
+}

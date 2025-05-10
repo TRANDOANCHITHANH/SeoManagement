@@ -46,6 +46,8 @@ builder.Services.AddScoped<IKeywordRepository, KeywordRepository>();
 builder.Services.AddScoped<IKeywordService, KeywordService>();
 builder.Services.AddScoped<IIndexCheckerUrlRepository, IndexCheckerUrlRepository>();
 builder.Services.AddScoped<IIndexCheckerUrlService, IndexCheckerUrlService>();
+builder.Services.AddScoped<INewsRepository, NewRepository>();
+builder.Services.AddScoped<INewsService, NewService>();
 
 builder.Services.AddCors(options =>
 {

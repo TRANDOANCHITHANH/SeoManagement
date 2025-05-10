@@ -1,0 +1,65 @@
+﻿@model SeoManagement.Web.Areas.Admin.Models.ViewModels.NewViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa tin tức";
+}
+
+<div class="page-header">
+    <h3 class="fw-bold">News</h3>
+    <ul class="breadcrumbs">
+        <li class="nav-home">
+            <a href="#">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">News</a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Edit</a>
+        </li>
+    </ul>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit" asp-controller="News" asp-area="Admin" asp-route-newId="@Model.NewsID" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="NewsID" />
+                    <input type="hidden" asp-for="CreatedDate" value="@Model.CreatedDate.ToString("o")" />
+                    <div class="form-group mb-3">
+                        <label asp-for="Title" class="form-label">Tiêu đề</label>
+                        <input asp-for="Title" class="form-control" required />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Content" class="form-label">Nội dung</label>
+                        <textarea asp-for="Content" class="form-control" rows="5" required></textarea>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="IsPublished" class="form-label">Trạng thái</label>
+                        <select asp-for="IsPublished" class="form-control">
+                            <option value="true" selected="@(Model.IsPublished ? "selected" : null)">Đã xuất bản</option>
+                            <option value="false" selected="@(Model.IsPublished ? null : "selected")">Nháp</option>
+                        </select>
+                        <span asp-validation-for="IsPublished" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

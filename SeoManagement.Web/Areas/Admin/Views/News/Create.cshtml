@@ -1,0 +1,48 @@
+﻿@model SeoManagement.Web.Areas.Admin.Models.ViewModels.NewViewModel
+
+@{
+    ViewData["Title"] = "Thêm tin tức mới";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-header">
+            <h4 class="page-title">Thêm tin tức mới</h4>
+            <a asp-action="Index" class="btn btn-primary float-end">Quay lại danh sách</a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div class="form-group mb-3">
+                        <label asp-for="Title" class="form-label">Tiêu đề</label>
+                        <input asp-for="Title" class="form-control" required />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Content" class="form-label">Nội dung</label>
+                        <textarea asp-for="Content" class="form-control" rows="5" required></textarea>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="IsPublished" class="form-label">Trạng thái</label>
+                        <select asp-for="IsPublished" class="form-control">
+                            <option value="true">Đã xuất bản</option>
+                            <option value="false">Nháp</option>
+                        </select>
+                        <span asp-validation-for="IsPublished" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Tạo mới</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

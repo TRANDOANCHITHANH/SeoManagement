@@ -1,0 +1,41 @@
+﻿@model SeoManagement.Web.Areas.Admin.Models.ViewModels.NewViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết tin tức";
+}
+
+<div class="page-header">
+    <h3 class="fw-bold">News</h3>
+    <ul class="breadcrumbs">
+        <li class="nav-home">
+            <a href="#">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">News</a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Details</a>
+        </li>
+    </ul>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">@Model.Title</h4>
+                <p><strong>Nội dung:</strong> @Html.Raw(Model.Content)</p>
+                <p><strong>Ngày tạo:</strong> @Model.CreatedDate.ToString("dd/MM/yyyy")</p>
+                <p><strong>Trạng thái:</strong> @(Model.IsPublished ? "Đã xuất bản" : "Nháp") </p>
+            </div>
+        </div>
+    </div>
+</div>

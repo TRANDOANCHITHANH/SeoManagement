@@ -362,5 +362,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-SeoManagement.Web/appsettings.json
-SeoManagement.API/appsettings.json
+# Ignore appsettings.Development.json to prevent pushing sensitive data
+SeoManagement.Web/appsettings.Development.json
+SeoManagement.API/appsettings.Development.json

@@ -35,12 +35,17 @@ namespace SeoManagement.Infrastructure.Repositories
 			return await _context.News.FindAsync(newId);
 		}
 
-		public async Task<(List<New> Items, int TotalItems)> GetPagedAsync(int pageNumber, int pageSize)
+		public async Task<(List<New> Items, int TotalItems)> GetPagedAsync(int pageNumber, int pageSize, bool? isPublished = null)
 		{
 
 			if (pageNumber < 1 || pageSize < 1)
 				throw new ArgumentException("PageNumber and PageSize must be positive.");
 			var query = _context.News.AsQueryable();
+			if (isPublished.HasValue)
+			{
+				query = query.Where(n => n.IsPublished == isPublished.Value);
+			}
+			query = query.OrderByDescending(n => n.CreatedDate);
 			var totalItems = await GetTotalCountAsync();
 			var items = await query
 				.Skip((pageNumber - 1) * pageSize)

@@ -80,7 +80,6 @@ namespace SeoManagement.Web.Areas.Admin.Controllers
 				{
 					Title = viewModel.Title,
 					Content = viewModel.Content,
-					CreatedDate = viewModel.CreatedDate,
 					IsPublished = viewModel.IsPublished
 				};
 

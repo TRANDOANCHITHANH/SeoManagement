@@ -1,4 +1,6 @@
-﻿@{
+﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Areas.Admin.Models.ViewModels.NewViewModel>
+
+@{
     ViewData["Title"] = "Trang chủ";
 }
 
@@ -93,47 +95,34 @@
 </div>
 
 <div class="row">
-    <!-- Bài viết 1 -->
-    <div class="col-md-4 stretch-card grid-margin">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Cách tối ưu SEO On-Page hiệu quả năm 2025</h4>
-                <p class="card-description text-muted">Tìm hiểu các kỹ thuật SEO On-Page mới nhất để cải thiện thứ hạng website.</p>
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <small class="text-muted">Ngày đăng: 01/05/2025</small>
-                    <a href="#" class="btn btn-outline-primary btn-sm">Đọc thêm</a>
+    @if (!Model.Items.Any())
+    {
+        <div class="col-12">
+            <p class="text-muted">Hiện tại chưa có tin tức nào.</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var item in Model.Items)
+        {
+            <div class="col-md-4 stretch-card grid-margin">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h4 class="card-title">@item.Title</h4>
+                        <p class="card-description text-muted">
+                            @(item.Content.Length > 100 ? item.Content.Substring(0, 100) + "..." : item.Content)
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <small class="text-muted">Ngày đăng: @item.CreatedDate.ToString("dd/MM/yyyy")</small>
+                            <a href="@Url.Action("Details", "News", new { area = "", newId = item.NewsID })" class="btn btn-outline-primary btn-sm">
+                                Đọc thêm
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Bài viết 2 -->
-    <div class="col-md-4 stretch-card grid-margin">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Hướng dẫn sử dụng Schema để tăng CTR</h4>
-                <p class="card-description text-muted">Hướng dẫn chi tiết cách triển khai Schema markup để cải thiện tỷ lệ nhấp.</p>
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <small class="text-muted">Ngày đăng: 28/04/2025</small>
-                    <a href="#" class="btn btn-outline-primary btn-sm">Đọc thêm</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bài viết 3 -->
-    <div class="col-md-4 stretch-card grid-margin">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">5 sai lầm phổ biến khi làm SEO</h4>
-                <p class="card-description text-muted">Tìm hiểu các sai lầm thường gặp và cách khắc phục để SEO hiệu quả hơn.</p>
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <small class="text-muted">Ngày đăng: 25/04/2025</small>
-                    <a href="#" class="btn btn-outline-primary btn-sm">Đọc thêm</a>
-                </div>
-            </div>
-        </div>
-    </div>
+        }
+    }
 </div>
 
 <!-- Phần Các kênh cần hỗ trợ -->

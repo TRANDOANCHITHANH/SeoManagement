@@ -17,9 +17,9 @@ namespace SeoManagement.API.Controllers
 		}
 
 		[HttpGet]
-		public async Task<ActionResult<PagedResultDto<NewDto>>> GetNews(int pageNumber = 1, int pageSize = 5)
+		public async Task<ActionResult<PagedResultDto<NewDto>>> GetNews(int pageNumber = 1, int pageSize = 5, bool? isPublished = null)
 		{
-			var (items, totalItems) = await _service.GetPagedAsync(pageNumber, pageSize);
+			var (items, totalItems) = await _service.GetPagedAsync(pageNumber, pageSize, isPublished);
 			var result = new PagedResultDto<NewDto>
 			{
 				Items = items.Select(n => new NewDto
@@ -67,7 +67,8 @@ namespace SeoManagement.API.Controllers
 				{
 					Title = model.Title,
 					Content = model.Content,
-					IsPublished = model.IsPublished
+					IsPublished = model.IsPublished,
+					CreatedDate = DateTime.Now,
 				};
 
 				await _service.CreateAsync(news);

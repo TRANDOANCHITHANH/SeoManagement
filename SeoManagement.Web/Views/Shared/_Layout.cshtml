@@ -3,11 +3,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <settings-meta />
     <title>@ViewData["Title"] - SeoManagement.Web</title>
     <link rel="shortcut icon" href="~/images/shortcut1.png" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/SeoManagement.Web.styles.css" asp-append-version="true" />\
+    <link rel="stylesheet" href="~/SeoManagement.Web.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/style.css">
     <link rel="stylesheet" href="~/vendors/feather/feather.css">
     <link rel="stylesheet" href="~/vendors/mdi/css/materialdesignicons.min.css">
@@ -22,7 +23,7 @@
     <link rel="stylesheet" href="~/vendors/datatables.net-bs4/dataTables.bootstrap4.css">
     <link rel="stylesheet" type="text/css" href="~/js/select.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
-
+    @RenderSection("Styles", required: false)
 </head>
 <body class="with-welcome-text">
     <div class="container-scroller">

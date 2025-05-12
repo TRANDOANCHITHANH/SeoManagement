@@ -55,6 +55,7 @@ builder.Services.AddAuthorization(options =>
 	options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
 });
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<GoogleSearchConsoleService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();

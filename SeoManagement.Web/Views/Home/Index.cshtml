@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Trang chủ";
+    var configs = ViewBag.Configs as Dictionary<string, string>;
 }
 
 <div class="row">
@@ -143,19 +144,28 @@
                     <div class="col-md-4 text-center">
                         <i class="mdi mdi-email fs-30 text-primary"></i>
                         <h5 class="mt-2">Email</h5>
-                        <p class="text-muted">support@seomanagement.com</p>
+                        @if (configs.ContainsKey("SettingEmail"))
+                        {
+                            <p class="text-muted"><i class="bi bi-envelope me-2"></i>@configs["SettingEmail"]</p>
+                        }
                     </div>
                     <!-- Điện thoại -->
                     <div class="col-md-4 text-center">
                         <i class="mdi mdi-phone fs-30 text-primary"></i>
                         <h5 class="mt-2">Điện thoại</h5>
-                        <p class="text-muted">+84 123 456 789</p>
+                        @if (configs.ContainsKey("SettingHotline"))
+                        {
+                            <p class="text-muted"><i class="bi bi-envelope me-2"></i>@configs["SettingHotline"]</p>
+                        }
                     </div>
                     <!-- Facebook -->
                     <div class="col-md-4 text-center">
                         <i class="mdi mdi-facebook fs-30 text-primary"></i>
                         <h5 class="mt-2">Facebook</h5>
-                        <p class="text-muted"><a href="https://facebook.com/seomanagement" target="_blank" class="text-primary">fb.com/seomanagement</a></p>
+                        @if (configs.ContainsKey("SettingFacebook"))
+                        {
+                            <p class="text-muted"><i class="bi bi-envelope me-2"></i><a href="@configs["SettingFacebook"]" target="_blank" class="text-primary">fb.com/seomanagement</a></p>
+                        }
                     </div>
                 </div>
             </div>

@@ -27,6 +27,11 @@ namespace SeoManagement.Web.Controllers
 			{
 				return View(new PagedResultViewModel<NewViewModel> { Items = new List<NewViewModel>() });
 			}
+
+			var configResponse = await _httpClient.GetFromJsonAsync<PagedResultViewModel<SystemConfigViewModel>>("api/systemconfigs?pageNumber=1&pageSize=100");
+			var configs = configResponse?.Items?.ToDictionary(c => c.ConfigKey, c => c.ConfigValue) ?? new Dictionary<string, string>();
+			ViewBag.Configs = configs;
+
 			return View(response);
 		}
 

@@ -1,0 +1,78 @@
+﻿@model SeoManagement.Web.Areas.Admin.Models.ViewModels.SystemConfigViewModel
+
+@{
+    ViewData["Title"] = "Tạo cấu hình";
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <h3 class="fw-bold">Cấu hình</h3>
+    <ul class="breadcrumbs">
+        <li class="nav-home">
+            <a href="#">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">SystemConfig</a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Create</a>
+        </li>
+    </ul>
+</div>
+
+<!-- Alerts -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Form -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="ConfigKey" class="form-label fw-bold"></label>
+                        <input asp-for="ConfigKey" class="form-control" />
+                        <span asp-validation-for="ConfigKey" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfigValue" class="form-label fw-bold"></label>
+                        <input asp-for="ConfigValue" class="form-control" />
+                        <span asp-validation-for="ConfigValue" class="text-danger"></span>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Tạo cấu hình</button>
+                        <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

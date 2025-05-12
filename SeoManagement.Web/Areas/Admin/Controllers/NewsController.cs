@@ -148,7 +148,6 @@ namespace SeoManagement.Web.Areas.Admin.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> Edit(int newId, NewViewModel viewModel)
 		{
-			// Log đầu vào để kiểm tra dữ liệu từ form
 			_logger.LogInformation("Received Edit request: newId={NewId}, ViewModel={@ViewModel}", newId, viewModel);
 
 			if (newId != viewModel.NewsID)
@@ -165,7 +164,6 @@ namespace SeoManagement.Web.Areas.Admin.Controllers
 
 			try
 			{
-				// Ánh xạ từ NewViewModel sang định dạng JSON tương ứng với NewDto
 				var dto = new
 				{
 					NewsID = viewModel.NewsID,
@@ -174,11 +172,6 @@ namespace SeoManagement.Web.Areas.Admin.Controllers
 					CreatedDate = viewModel.CreatedDate != default ? viewModel.CreatedDate.ToString("o") : DateTime.UtcNow.ToString("o"),
 					IsPublished = viewModel.IsPublished
 				};
-
-				// Log dữ liệu gửi đi trước khi gửi request
-				_logger.LogInformation("Sending data to API: {Dto}", dto);
-
-				// Gửi request đến API
 				var response = await _httpClient.PutAsJsonAsync($"api/news/{newId}", dto);
 				var responseContent = await response.Content.ReadAsStringAsync(); // Đọc nội dung response để debug
 				_logger.LogInformation("API Response: Status={StatusCode}, Content={Content}", (int)response.StatusCode, responseContent);

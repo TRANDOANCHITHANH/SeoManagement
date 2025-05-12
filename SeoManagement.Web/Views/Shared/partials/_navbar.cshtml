@@ -1,4 +1,9 @@
-﻿<nav class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex align-items-top flex-row">
+﻿@{
+    var configs = ViewData["Configs"] as Dictionary<string, string>;
+    var settingLogo = configs?.GetValueOrDefault("SettingLogo", ""); 
+    var settingLogoMini = configs?.GetValueOrDefault("SettingLogoMini", "");
+}
+<nav class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex align-items-top flex-row">
     <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-start">
         <div class="me-3">
             <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-bs-toggle="minimize">
@@ -7,10 +12,10 @@
         </div>
         <div>
             <a class="navbar-brand brand-logo" asp-action="Index" asp-controller="Home">
-                <img src="~/images/logo4.png" alt="logo" />
+                <img src="@settingLogo" alt="logo" />
             </a>
             <a class="navbar-brand brand-logo-mini" href="home/index">
-                <img src="~/images/logo-mini.svg" alt="logo" />
+                <img src="@settingLogoMini" alt="logo" />
             </a>
         </div>
     </div>

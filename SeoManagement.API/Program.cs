@@ -48,6 +48,8 @@ builder.Services.AddScoped<IIndexCheckerUrlRepository, IndexCheckerUrlRepository
 builder.Services.AddScoped<IIndexCheckerUrlService, IndexCheckerUrlService>();
 builder.Services.AddScoped<INewsRepository, NewRepository>();
 builder.Services.AddScoped<INewsService, NewService>();
+builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
+builder.Services.AddScoped<ISystemConfigService, SystemConfigService>();
 
 builder.Services.AddCors(options =>
 {

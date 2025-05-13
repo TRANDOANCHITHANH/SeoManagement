@@ -1,11 +1,32 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.UserViewModel
 
+<div class="page-header">
+    <h3 class="fw-bold">Users</h3>
+    <ul class="breadcrumbs">
+        <li class="nav-home">
+            <a href="#">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Users</a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Edit</a>
+        </li>
+    </ul>
+</div>
+
 <div class="row">
     <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Chỉnh sửa người dùng</h4>
-                <p class="card-description">Cập nhật thông tin người dùng</p>
                 @if (!ViewData.ModelState.IsValid)
                 {
                     <div class="alert alert-danger">

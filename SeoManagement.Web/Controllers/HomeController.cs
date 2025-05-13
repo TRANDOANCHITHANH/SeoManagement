@@ -20,8 +20,12 @@ namespace SeoManagement.Web.Controllers
 			_httpClient.BaseAddress = new Uri(_configuration["ApiBaseUrl"]);
 		}
 
-		public async Task<IActionResult> Index()
+		public async Task<IActionResult> Index(int? categoryId)
 		{
+			var categoryResponse = await _httpClient.GetFromJsonAsync<PagedResultViewModel<CategoryViewModel>>("api/categories?pageNumber=1&pageSize=100");
+			var categories = categoryResponse?.Items?.Where(c => c.IsActive).ToList() ?? new List<CategoryViewModel>();
+			ViewBag.Categories = categories;
+
 			var response = await _httpClient.GetFromJsonAsync<PagedResultViewModel<NewViewModel>>("api/news?pageNumber=1&pageSize=3&isPublished=true");
 			if (response == null || !response.Items.Any())
 			{
@@ -31,7 +35,7 @@ namespace SeoManagement.Web.Controllers
 			var configResponse = await _httpClient.GetFromJsonAsync<PagedResultViewModel<SystemConfigViewModel>>("api/systemconfigs?pageNumber=1&pageSize=100");
 			var configs = configResponse?.Items?.ToDictionary(c => c.ConfigKey, c => c.ConfigValue) ?? new Dictionary<string, string>();
 			ViewBag.Configs = configs;
-
+			ViewBag.SelectedCategoryId = categoryId;
 			return View(response);
 		}
 

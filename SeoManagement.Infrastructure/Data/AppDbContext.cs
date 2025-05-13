@@ -25,6 +25,8 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<SEOOnPageCheck> SEOOnPageChecks { get; set; }
 		public DbSet<IndexCheckerUrl> IndexCheckerUrls { get; set; }
 		public DbSet<New> News { get; set; }
+		public DbSet<Category> Categories { get; set; }
+
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);

@@ -1,0 +1,211 @@
+﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Areas.Admin.Models.ViewModels.CategoryViewModel>
+
+@{
+    ViewData["Title"] = "Danh sách danh mục";
+}
+
+<div class="page-header">
+    <h3 class="fw-bold">Categories</h3>
+    <ul class="breadcrumbs">
+        <li class="nav-home">
+            <a href="#">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Categories</a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Index</a>
+        </li>
+    </ul>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success" role="alert">
+        @TempData["Success"]
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @TempData["Error"]
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h4 class="card-title">Danh sách danh mục</h4>
+                    <a class="btn btn-primary btn-round ms-auto" asp-action="Create">
+                        <i class="fa fa-plus"></i>
+                        Thêm danh mục
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="basic-datatables"
+                           class="display table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Tên</th>
+                                <th>Slug</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var category in Model.Items)
+                            {
+                                <tr>
+                                    <td>@category.Name</td>
+                                    <td>@category.Slug</td>
+                                    <td>@(category.IsActive ? "Hiển thị" : "Ẩn")</td>
+                                    <td>@category.CreatedDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <a asp-action="Edit" asp-route-categoryId="@category.CategoryId" class="btn btn-link btn-primary"><i class="fa fa-edit"></i></a> |
+                                        <button type="button" class="btn btn-link btn-danger delete-btn" data-category-id="@category.CategoryId" data-title="@category.Name"><i class="fa fa-times"></i></button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa danh mục"<span id="modal-title"></span>" không?
+            </div>
+            <div class="modal-footer">
+
+                <form asp-action="DeleteConfirmed" method="post" id="deleteForm">
+                    <input type="hidden" name="categoryId" id="deleteCategoryId" />
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+         $(document).ready(function () {
+              $("#basic-datatables").DataTable({});
+
+              $("#multi-filter-select").DataTable({
+                pageLength: 5,
+                initComplete: function () {
+                  this.api()
+                    .columns()
+                    .every(function () {
+                      var column = this;
+                      var select = $(
+                        '<select class="form-select"><option value=""></option></select>'
+                      )
+                        .appendTo($(column.footer()).empty())
+                        .on("change", function () {
+                          var val = $.fn.dataTable.util.escapeRegex($(this).val());
+
+                          column
+                            .search(val ? "^" + val + "$" : "", true, false)
+                            .draw();
+                        });
+
+                      column
+                        .data()
+                        .unique()
+                        .sort()
+                        .each(function (d, j) {
+                          select.append(
+                            '<option value="' + d + '">' + d + "</option>"
+                          );
+                        });
+                    });
+                },
+              });
+
+              // Add Row
+              $("#add-row").DataTable({
+                pageLength: 5,
+              });
+
+              var action =
+                '<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+
+              $("#addRowButton").click(function () {
+                $("#add-row")
+                  .dataTable()
+                  .fnAddData([
+                    $("#addName").val(),
+                    $("#addPosition").val(),
+                    $("#addOffice").val(),
+                    action,
+                  ]);
+                $("#addRowModal").modal("hide");
+              });
+            });
+        document.addEventListener('DOMContentLoaded', function () {
+            var deleteButtons = document.querySelectorAll('.delete-btn');
+            var modalTitle = document.getElementById('modal-title');
+            var deleteCategoryId = document.getElementById('deleteCategoryId');
+            var deleteForm = document.getElementById('deleteForm');
+
+            deleteButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var newId = this.getAttribute('data-category-id');
+                    var title = this.getAttribute('data-title');
+                    modalTitle.textContent = title;
+                    deleteCategoryId.value = newId;
+                    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                    deleteModal.show();
+                });
+            });
+
+            deleteForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                fetch('/Admin/Categories/DeleteConfirmed', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams(new FormData(this)).toString()
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        return response.text().then(text => { throw new Error(text); });
+                    }
+                })
+                .catch(error => {
+                    alert('Lỗi: ' + error.message);
+                    console.error('Error:', error);
+                });
+            });
+        });
+    </script>
+}

@@ -6,7 +6,7 @@ namespace SeoManagement.Web.Areas.Admin.Models.ViewModels
 	{
 		public int ConfigID { get; set; }
 
-		[Required(ErrorMessage = "Khóa cấu hình là bắt buộc.")]
+		[Required]
 		[StringLength(50, ErrorMessage = "Khóa cấu hình không được vượt quá 50 ký tự.")]
 		public string ConfigKey { get; set; }
 

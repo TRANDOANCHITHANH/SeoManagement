@@ -1,0 +1,83 @@
+﻿@model SeoManagement.Web.Areas.Admin.Models.ViewModels.CategoryViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa danh mục";
+}
+
+<div class="page-header">
+    <h3 class="fw-bold">Categories</h3>
+    <ul class="breadcrumbs">
+        <li class="nav-home">
+            <a href="#">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Categories</a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Edit</a>
+        </li>
+    </ul>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="CategoryId" />
+                    <input type="hidden" asp-for="CreatedDate" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Name" class="control-label">Tên danh mục</label>
+                        <input asp-for="Name" class="form-control" id="categoryName" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Slug" class="control-label">Slug</label>
+                        <input asp-for="Slug" class="form-control" id="categorySlug" readonly />
+                        <span asp-validation-for="Slug" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="IsActive" class="control-label">Hiển thị</label>
+                        <input asp-for="IsActive" type="checkbox" class="form-check-input" />
+                        <span asp-validation-for="IsActive" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const nameInput = document.getElementById('categoryName');
+            const slugInput = document.getElementById('categorySlug');
+
+            nameInput.addEventListener('input', function () {
+                let slug = nameInput.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9-]/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/^-|-$/g, '');
+
+                slugInput.value = slug;
+            });
+
+            slugInput.value = '@Model.Slug';
+        });
+    </script>
+}

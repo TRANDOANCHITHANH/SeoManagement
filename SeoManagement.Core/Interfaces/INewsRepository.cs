@@ -2,13 +2,9 @@
 
 namespace SeoManagement.Core.Interfaces
 {
-	public interface INewsRepository
+	public interface INewsRepository : IRepository<New>
 	{
 		Task<(List<New> Items, int TotalItems)> GetPagedAsync(int pageNumber, int pageSize, bool? isPublished = null);
-		Task<New> GetByIdAsync(int newId);
-		Task AddAsync(New news);
-		Task UpdateAsync(New news);
-		Task DeleteAsync(int newId);
 		Task<int> GetTotalCountAsync();
 	}
 }

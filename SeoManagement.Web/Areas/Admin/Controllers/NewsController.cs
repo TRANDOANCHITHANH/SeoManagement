@@ -92,7 +92,7 @@ namespace SeoManagement.Web.Areas.Admin.Controllers
 
 				var errorContent = await response.Content.ReadAsStringAsync();
 				_logger.LogError("Lỗi khi tạo tin tức: {ErrorContent}", errorContent);
-				ModelState.AddModelError("", "Có lỗi xảy ra khi tạo tin tức. Vui lòng thử lại.");
+				ModelState.AddModelError("", errorContent);
 			}
 			catch (Exception ex)
 			{

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
 using SeoManagement.Web.Models.ViewModels;
@@ -6,6 +7,7 @@ using System.Text.Json;
 
 namespace SeoManagement.Web.Controllers
 {
+	[Authorize(AuthenticationSchemes = "MainAuth")]
 	public class SEOProjectsController : Controller
 	{
 		private readonly HttpClient _httpClient;

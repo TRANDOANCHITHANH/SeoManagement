@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
@@ -48,22 +49,26 @@ namespace SeoManagement.Web.Controllers
 			var user = await _userManager.FindByEmailAsync(model.Email);
 			if (user == null)
 			{
-				ModelState.AddModelError("", "Invalid login attpemt");
+				ModelState.AddModelError("", "Invalid login attempt");
 				return View(model);
 			}
 
-			var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, lockoutOnFailure: false);
+			if (await _userManager.IsInRoleAsync(user, "Admin"))
+			{
+				ModelState.AddModelError("", "Tài khoản này chỉ được phép đăng nhập trang Admin.");
+				return View(model);
+			}
+
+			var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: false);
 			if (result.Succeeded)
 			{
-				var claims = new List<Claim>
-				{
-					new Claim("FullName", user.FullName ?? user.UserName)
-				};
-				await _signInManager.SignInWithClaimsAsync(user, model.RememberMe, claims);
+				var principal = await _signInManager.CreateUserPrincipalAsync(user);
+				principal.Identities.First().AddClaim(new Claim("FullName", user.FullName ?? user.UserName));
+				await HttpContext.SignInAsync("MainAuth", principal);
 				return RedirectToAction("Index", "Home");
 			}
 
-			ModelState.AddModelError("", "Invalid login attempt");
+			ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
 			return View(model);
 		}
 

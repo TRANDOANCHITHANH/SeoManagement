@@ -10,10 +10,7 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews(options =>
-{
-	options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter());
-});
+builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AppDbContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -39,16 +36,32 @@ builder.Services.Configure<IdentityOptions>(options =>
 	options.User.RequireUniqueEmail = true;
 });
 
-builder.Services.AddAuthentication(options =>
-{
-	options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
-	options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
-}).AddCookie(options =>
+builder.Services.AddAuthentication("DynamicAuth")
+	.AddCookie("MainAuth", options =>
 	{
 		options.LoginPath = "/Account/Login";
 		options.LogoutPath = "/Account/Logout";
 		options.AccessDeniedPath = "/Account/AccessDenied";
+	})
+	.AddCookie("AdminAuth", options =>
+	{
+		options.LoginPath = "/Admin/Account/Login";
+		options.LogoutPath = "/Admin/Account/Logout";
+		options.AccessDeniedPath = "/Admin/Account/AccessDenied";
+	})
+	.AddPolicyScheme("DynamicAuth", "DynamicAuth", options =>
+	{
+		options.ForwardDefaultSelector = context =>
+		{
+			if (context.Request.Path.StartsWithSegments("/admin"))
+			{
+				return "AdminAuth";
+			}
+			return "MainAuth";
+		};
 	});
+
+
 builder.Services.AddAuthorization(options =>
 {
 	options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
@@ -108,7 +121,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseCors("AllowAll");
 

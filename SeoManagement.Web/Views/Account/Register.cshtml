@@ -1,89 +1,79 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.RegisterViewModel
 @{
     Layout = null;
+    ViewData["MetaRobots"] = "noindex, nofollow";
 }
 
-<link rel="stylesheet" href="~/vendors/feather/feather.css">
-<link rel="stylesheet" href="~/vendors/mdi/css/materialdesignicons.min.css">
-<link rel="stylesheet" href="~/vendors/ti-icons/css/themify-icons.css">
-<link rel="stylesheet" href="~/vendors/font-awesome/css/font-awesome.min.css">
-<link rel="stylesheet" href="~/vendors/typicons/typicons.css">
-<link rel="stylesheet" href="~/vendors/simple-line-icons/css/simple-line-icons.css">
-<link rel="stylesheet" href="~/vendors/css/vendor.bundle.base.css">
-<link rel="stylesheet" href="~/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
-<link rel="stylesheet" href="~/css/style.css">
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="@ViewData["MetaRobots"]">
+    <title>Đăng nhập - SEO Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Custom CSS -->
+    <link href="~/css/login.css" rel="stylesheet" />
+</head>
 <body>
-    <div class="container-scroller">
-        <div class="container-fluid page-body-wrapper full-page-wrapper">
-            <div class="content-wrapper d-flex align-items-center auth px-0">
-                <div class="row w-100 mx-0">
-                    <div class="col-lg-4 mx-auto">
-                        <div class="auth-form-light text-left py-5 px-4 px-sm-5">
-                            <div class="brand-logo">
-                                <img src="~/images/logo.svg" alt="logo">
-                            </div>
-                            <h4>Hello! let's get started</h4>
-                            <h6 class="fw-light">Sign Up.</h6>
-                            <form class="pt-3" method="post" asp-action="Register">
-                                <div asp-validation-summary="All" class="text-danger"></div>
-                                <div class="form-group">
-                                    <label asp-for="Email">Email</label>
-                                    <input asp-for="Email" class="form-control" required />
-                                    <span asp-validation-for="Email" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="UserName">User name</label>
-                                    <input asp-for="UserName" class="form-control" required />
-                                    <span asp-validation-for="UserName" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="FullName">Full name</label>
-                                    <input asp-for="FullName" class="form-control" required />
-                                    <span asp-validation-for="FullName" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="Password">Mật khẩu</label>
-                                    <input asp-for="Password" class="form-control" required />
-                                    <span asp-validation-for="Password" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="ConfirmPassword">Xác nhận mật khẩu</label>
-                                    <input asp-for="ConfirmPassword" class="form-control" required />
-                                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                                </div>
-                                <div class="mt-3 d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary">Đăng ký</button>
-                                </div>
-                                <div class="mb-2 d-grid gap-2">
-                                    <button type="button" class="btn btn-block btn-facebook auth-form-btn">
-                                        <i class="ti-facebook me-2"></i>Connect using facebook
-                                    </button>
-                                </div>
-                                <div class="text-center mt-4 fw-light">
-                                    Don't have an account? <a href="register.html" class="text-primary">Create</a>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- content-wrapper ends -->
+    <div class="login-container">
+        <div class="text-center">
+            <img src="~/images/logo4.png" alt="SEO Management Logo" class="logo">
+            <h4>Đăng Ký</h4>
+            <p>Nhập thông tin để tiếp tục</p>
         </div>
-        <!-- page-body-wrapper ends -->
+        <form method="post" asp-action="Register">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Email">Email</label>
+                <input asp-for="Email" class="form-control" required />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserName">Tên đăng nhập</label>
+                <input asp-for="UserName" class="form-control" required />
+                <span asp-validation-for="UserName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FullName">Tên đầy đủ</label>
+                <input asp-for="FullName" class="form-control" required />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Password">Mật khẩu</label>
+                <input asp-for="Password" class="form-control" required />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfirmPassword">Xác nhận mật khẩu</label>
+                <input asp-for="ConfirmPassword" class="form-control" required />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+            <div class="mt-3 d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Đăng ký</button>
+            </div>
+            <div class="mb-2 d-grid gap-2">
+                <button type="button" class="btn btn-block btn-facebook auth-form-btn">
+                    <i class="ti-facebook me-2"></i>Connect using facebook
+                </button>
+            </div>
+            <div class="text-center mt-4 fw-light">
+               Đã có tài khoản? <a href="/Account/Login" class="text-primary">Đăng nhập ngay</a>
+            </div>
+        </form>
     </div>
-    <script src="~/vendors/js/vendor.bundle.base.js"></script>
-    <script src="~/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
-    <!-- endinject -->
-    <!-- Plugin js for this page -->
-    <!-- End plugin js for this page -->
-    <!-- inject:js -->
-    <script src="~/js/off-canvas.js"></script>
-    <script src="~/js/template.js"></script>
-    <script src="~/js/settings.js"></script>
-    <script src="~/js/hoverable-collapse.js"></script>
-    <script src="~/js/todolist.js"></script>
 
+    <!-- Bootstrap JS and Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- jQuery for validation -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <!-- Validation scripts -->
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }
 </body>
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+</html>
+

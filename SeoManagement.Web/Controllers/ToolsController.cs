@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
@@ -8,6 +9,7 @@ using SeoManagement.Web.Models.ViewModels;
 
 namespace SeoManagement.Web.Controllers
 {
+	[Authorize(AuthenticationSchemes = "MainAuth")]
 	public class ToolsController : Controller
 	{
 		private readonly GoogleCustomSearchService _searchService;

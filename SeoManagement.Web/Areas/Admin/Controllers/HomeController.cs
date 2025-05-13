@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace SeoManagement.Web.Areas.Admin.Controllers
 {
 	[Area("Admin")]
-	[Authorize(Roles = "Admin")]
+	[Authorize(AuthenticationSchemes = "AdminAuth")]
 	public class HomeController : Controller
 	{
 		public IActionResult Index()

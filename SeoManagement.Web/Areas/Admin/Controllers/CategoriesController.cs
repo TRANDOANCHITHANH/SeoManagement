@@ -6,7 +6,7 @@ using SeoManagement.Web.Models.ViewModels;
 namespace SeoManagement.Web.Areas.Admin.Controllers
 {
 	[Area("Admin")]
-	[Authorize(Roles = "Admin")]
+	[Authorize(AuthenticationSchemes = "AdminAuth")]
 	public class CategoriesController : Controller
 	{
 		private readonly HttpClient _httpClient;

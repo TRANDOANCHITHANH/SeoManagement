@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Web.Areas.Admin.Models.ViewModels;
 using SeoManagement.Web.Models;
@@ -6,6 +7,7 @@ using System.Diagnostics;
 
 namespace SeoManagement.Web.Controllers
 {
+	[Authorize(AuthenticationSchemes = "MainAuth", Policy = "UserOnly")]
 	public class HomeController : Controller
 	{
 		private readonly ILogger<HomeController> _logger;

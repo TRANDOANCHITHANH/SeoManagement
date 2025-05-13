@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Web.Models.ViewModels;
 
 namespace SeoManagement.Web.Controllers
 {
+	[Authorize(AuthenticationSchemes = "MainAuth")]
 	public class KeywordsController : Controller
 	{
 		private readonly HttpClient _httpClient;

@@ -26,18 +26,17 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<IndexCheckerUrl> IndexCheckerUrls { get; set; }
 		public DbSet<New> News { get; set; }
 		public DbSet<Category> Categories { get; set; }
+		public DbSet<PageSpeedResult> PageSpeedResults { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
 
-			// Ánh xạ bảng Identity
 			modelBuilder.Entity<ApplicationUser>(b =>
 			{
 				b.ToTable("Users");
 				b.Property(u => u.Id).HasColumnName("UserId");
 
-				// Mối quan hệ
 				b.HasMany(u => u.SEOProjects)
 					.WithOne(p => p.User)
 					.HasForeignKey(p => p.UserId)
@@ -87,6 +86,10 @@ namespace SeoManagement.Infrastructure.Data
 				.HasForeignKey(u => u.ProjectID)
 				.OnDelete(DeleteBehavior.Cascade);
 
+				entity.HasMany(p => p.PageSpeedResults)
+				.WithOne(u => u.Project)
+				.HasForeignKey(u => u.ProjectID)
+				.OnDelete(DeleteBehavior.Cascade);
 			});
 			// Cấu hình mối quan hệ cho Content
 			modelBuilder.Entity<Content>(entity =>

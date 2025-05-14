@@ -2,11 +2,8 @@
 
 namespace SeoManagement.Core.Interfaces
 {
-	public interface IIndexCheckerUrlRepository
+	public interface IIndexCheckerUrlRepository : IRepository<IndexCheckerUrl>
 	{
-		Task AddAsync(IndexCheckerUrl url);
-		Task UpdateAsync(IndexCheckerUrl url);
 		Task<List<IndexCheckerUrl>> GetByProjectIdAsync(int projectId);
-		Task DeleteAsync(int id);
 	}
 }

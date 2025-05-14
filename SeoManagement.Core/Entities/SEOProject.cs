@@ -38,5 +38,6 @@ namespace SeoManagement.Core.Entities
 		public virtual ICollection<KeywordGroup> KeywordGroups { get; set; }
 		public virtual ICollection<SEOOnPageCheck> SEOOnPageChecks { get; set; }
 		public virtual ICollection<IndexCheckerUrl> IndexCheckerUrls { get; set; }
+		public virtual ICollection<PageSpeedResult> PageSpeedResults { get; set; }
 	}
 }

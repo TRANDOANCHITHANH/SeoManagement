@@ -1,0 +1,131 @@
+﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Models.ViewModels.SEOProjectViewModel>
+@using SeoManagement.Web.Models.ViewModels
+@{
+    ViewData["Title"] = "Danh Sách Dự Án Kiểm Tra";
+}
+
+<div class="row">
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Danh sách dự án Kiểm Tra Tốc Độ Tải Trang</h4>
+                <p class="card-description">Quản lý các dự án Kiểm Tra Tốc Độ Tải Trang</p>
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success" role="alert">
+                        @TempData["Success"]
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @TempData["Error"]
+                    </div>
+                }
+                <div class="mb-3">
+                    <a asp-action="Create" asp-route-projectType="PageSpeedChecker" asp-controller="SeoProjects" class="btn btn-primary">Tạo dự án mới</a>
+                </div>
+                @if (Model.Items == null || !Model.Items.Any())
+                {
+                    <p>Chưa có dự án Page Speed Checker nào. Vui lòng tạo dự án mới.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên dự án</th>
+                                    <th>Mô tả</th>
+                                    <th>Ngày bắt đầu</th>
+                                    <th>Trạng thái</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var project in Model.Items)
+                                {
+                                    <tr>
+                                        <td>@project.ProjectID</td>
+                                        <td>@project.ProjectName</td>
+                                        <td>@project.Description</td>
+                                        <td>@project.StartDate.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            @switch (project.Status)
+                                            {
+                                                case ProjectStatus.Active:
+                                                    <span class="badge bg-success">Hoạt động</span>
+                                                    break;
+                                                case ProjectStatus.Completed:
+                                                    <span class="badge bg-secondary">Đã hoàn thành</span>
+                                                    break;
+                                                case ProjectStatus.Pending:
+                                                    <span class="badge bg-warning">Chờ xử lý</span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-controller="PageSpeedResults" asp-action="PageSpeedChecker" asp-route-projectId="@project.ProjectID" class="btn btn-primary btn-sm">Mở</a>
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteModal(@project.ProjectID, '@project.ProjectName')">Xóa</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    var totalPages = (int)Math.Ceiling((double)Model.TotalItems / Model.PageSize);
+                    var currentPage = Model.PageNumber;
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage - 1)" asp-route-pageSize="@Model.PageSize">Trước</a>
+                            </li>
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-pageSize="@Model.PageSize">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage == Model.TotalPages ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-pageNumber="@(currentPage + 1)" asp-route-pageSize="@Model.PageSize">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa dự án</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa dự án <strong id="projectName"></strong> không? Hành động này không thể hoàn tác.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <a id="confirmDeleteBtn" class="btn btn-danger">Xóa</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showDeleteModal(projectId, projectName) {
+            document.getElementById('projectName').textContent = projectName;
+            document.getElementById('confirmDeleteBtn').setAttribute('href', '@Url.Action("Delete", "SEOProjects")/' + projectId);
+
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'), {});
+            deleteModal.show();
+        }
+    </script>
+}

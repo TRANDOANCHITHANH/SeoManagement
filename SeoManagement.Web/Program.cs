@@ -81,6 +81,8 @@ builder.Services.AddScoped<IKeywordService, KeywordService>();
 builder.Services.AddHttpClient<GoogleCustomSearchService>();
 builder.Services.AddScoped<IIndexCheckerUrlRepository, IndexCheckerUrlRepository>();
 builder.Services.AddScoped<IIndexCheckerUrlService, IndexCheckerUrlService>();
+builder.Services.AddScoped<IPageSpeedResultRepository, PageSpeedResultRepository>();
+builder.Services.AddScoped<IPageSpeedResultService, PageSpeedResultService>();
 builder.Services.AddScoped<GoogleCustomSearchService>(sp =>
 {
 	var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
@@ -88,6 +90,14 @@ builder.Services.AddScoped<GoogleCustomSearchService>(sp =>
 	var apiKey = configuration["GoogleCustomSearch:ApiKey"];
 	var searchEngineId = configuration["GoogleCustomSearch:SearchEngineId"];
 	return new GoogleCustomSearchService(httpClient, apiKey, searchEngineId);
+});
+
+builder.Services.AddScoped<PageSpeedService>(sp =>
+{
+	var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+	var configuration = sp.GetRequiredService<IConfiguration>();
+	var apiKey = configuration["GooglePageSpeed:ApiKey"];
+	return new PageSpeedService(httpClient, apiKey);
 });
 
 builder.Services.AddCors(options =>

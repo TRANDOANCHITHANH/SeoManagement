@@ -5,6 +5,7 @@
     {
         "IndexChecker" => "Kiểm Tra Index",
         "SEOOnPage" => "Kiểm Tra SEO On-Page",
+        "PageSpeedChecker" => "Kiểm Tra Tốc Độ Tải Trang",
         _ => "Danh Sách Dự Án SEO"
     };
 }
@@ -36,6 +37,11 @@
                     @if (string.IsNullOrEmpty(ViewBag.ProjectType) || ViewBag.ProjectType == "SEOOnPage")
                     {
                         <a asp-action="Create" asp-route-projectType="SEOOnPage" class="btn btn-primary">Tạo dự án SEO On-Page</a>
+                    }
+
+                    @if (string.IsNullOrEmpty(ViewBag.ProjectType) || ViewBag.ProjectType == "PageSpeedChecker")
+                    {
+                        <a asp-action="Create" asp-route-projectType="PageSpeedChecker" class="btn btn-primary">Tạo dự án kiểm tra tốc độ tải trang</a>
                     }
                 </div>
                 @if (Model.Items == null || !Model.Items.Any())
@@ -95,7 +101,12 @@
                                                 <a asp-controller="Tools" asp-action="IndexChecker" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra Index</a>
                                                 <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-warning">Sửa</a>
                                             }
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteModal(@project.ProjectID, '@project.ProjectName')">Xóa</button>
+                                            else if (project.ProjectType == "PageSpeedChecker")
+                                            {
+                                                <a asp-controller="PageSpeedResults" asp-action="PageSpeedChecker" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra</a>
+                                                <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-warning">Sửa</a>
+                                            }
+                                            <button type="button" class="btn btn-danger" onclick="showDeleteModal(@project.ProjectID, '@project.ProjectName')">Xóa</button>
                                         </td>
                                         <td>
                                             <form asp-action="UpdateStatus" method="post">

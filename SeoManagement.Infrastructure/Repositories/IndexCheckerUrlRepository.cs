@@ -46,5 +46,10 @@ namespace SeoManagement.Infrastructure.Repositories
 				await _context.SaveChangesAsync();
 			}
 		}
+
+		public Task<IndexCheckerUrl> GetByIdAsync(int id)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

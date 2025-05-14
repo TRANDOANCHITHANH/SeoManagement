@@ -1,0 +1,469 @@
+﻿@using System.Web
+@model SeoManagement.Web.Models.ViewModels.SEOProjectViewModel
+
+@{
+    ViewData["Title"] = "Kiểm tra Tốc độ Tải Trang";
+    var projectId = ViewBag.ProjectId as int?;
+    var results = ViewBag.Results as List<(string Url, double LoadTime, double? LCP, double? FID, double? CLS, string Suggestions, DateTime LastCheckedDate)>;
+    var projectName = ViewBag.ProjectName;
+    var projectDescription = ViewBag.ProjectDescription;
+
+    int totalUrls = results?.Count ?? 0;
+    int fastUrls = results?.Count(r => r.LoadTime > 0 && r.LoadTime <= 3) ?? 0;
+    int slowUrls = totalUrls - fastUrls;
+}
+
+<div class="container">
+    <h2 class="text-center mb-4">Kiểm tra Tốc độ Tải Trang cho Dự án #@(projectName)</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success text-center">@TempData["Success"]</div>
+    }
+
+    @if (projectId.HasValue && results != null && results.Any())
+    {
+        <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px;">
+            <div class="card-body">
+                <h4 class="card-title">Tổng quan dự án</h4>
+                <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-2 rounded">
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Tên dự án:</span>
+                        <input type="text" class="form-control" value="@projectName" readonly />
+                    </div>
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Mô tả:</span>
+                        <input type="text" class="form-control" value="@projectDescription" readonly />
+                    </div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 bg-light text-center rounded shadow-sm transition-all" style="transition: transform 0.3s ease;">
+                            <div class="card-body">
+                                <h6 class="card-subtitle text-muted mb-2">Tổng liên kết</h6>
+                                <h3 class="card-title text-dark"><i class="fa fa-link me-2 text-primary"></i>@totalUrls</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 bg-light text-center rounded shadow-sm transition-all" style="transition: transform 0.3s ease;">
+                            <div class="card-body">
+                                <h6 class="card-subtitle text-muted mb-2">Tải nhanh</h6>
+                                <h3 class="card-title text-success"><i class="fa fa-check-circle me-2"></i>@fastUrls/@totalUrls</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 bg-light text-center rounded shadow-sm transition-all" style="transition: transform 0.3s ease;">
+                            <div class="card-body">
+                                <h6 class="card-subtitle text-muted mb-2">Tải chậm</h6>
+                                <h3 class="card-title text-danger"><i class="fa fa-times-circle me-2"></i>@slowUrls/@totalUrls</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex justify-content-end mb-4">
+        <a asp-controller="PageSpeedResults" asp-action="Index" class="btn btn-secondary">
+            Quay lại danh sách dự án
+        </a>
+        <button type="button" class="btn btn-success ms-2" data-bs-toggle="modal" data-bs-target="#addUrlModal">
+            Thêm URL
+        </button>
+    </div>
+
+    @if (results != null && results.Any())
+    {
+        <div class="card shadow p-4">
+            <h4 class="mb-3">Danh sách link</h4>
+            <div class="table-responsive">
+                <table id="urlTable" class="table table-hover table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 55%;">URL</th>
+                            <th style="width: 15%;">Thời gian tải (s)</th>
+                            <th style="width: 20%;">Ngày cập nhật</th>
+                            <th style="width: 10%;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < results.Count; i++)
+                        {
+                            var result = results[i];
+                            <tr>
+                                <td title="@result.Url" class="text-break">@result.Url</td>
+                                <td>
+                                    @if (result.LoadTime > 0)
+                                    {
+                                        <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal"
+                                                onclick="showDetailModal(@i)">
+                                            @result.LoadTime.ToString("F2")
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Không xác định</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (result.LastCheckedDate != DateTime.MinValue)
+                                    {
+                                        @result.LastCheckedDate.ToString("dd/MM/yyyy HH:mm")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Chưa kiểm tra</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="https://developers.google.com/speed/pagespeed/insights/?url=@Uri.EscapeDataString(result.Url)" target="_blank">
+                                            <button class="btn btn-default px-2">
+                                                <i class="fa fa-search"></i><span> </span>
+                                            </button>
+                                        </a>
+                                        <button type="button" class="btn btn-default btn-dangerous px-2" onclick="showDeleteModal('@Html.Raw(HttpUtility.JavaScriptStringEncode(result.Url))')">
+                                            <i class="fa fa-trash-o"></i><span> </span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning text-center">Không có URL nào trong danh sách.</div>
+    }
+
+    <div id="loadingOverlay" class="loading-overlay d-none">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <span class="loading-text">Đang xử lý...</span>
+        </div>
+    </div>
+
+    <div id="successToast" class="toast d-none">
+        <div class="toast-body">
+            Kiểm tra thành công!
+        </div>
+    </div>
+
+    <!-- Modal Thêm URL -->
+    <div class="modal fade" id="addUrlModal" tabindex="-1" aria-labelledby="addUrlModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="addUrlForm" asp-action="PageSpeedChecker" asp-controller="PageSpeedResults" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="projectId" value="@projectId" />
+                    <input type="hidden" name="inputType" id="inputTypeHidden" value="manual" />
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addUrlModalLabel">Thêm URL</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="d-flex align-items-center gap-4 mb-3">
+                            <div class="form-check m-0 d-flex align-items-center gap-2" style="padding-left:70px;">
+                                <input class="form-check-input" type="radio" name="inputTypeRadio" id="manualInput" value="manual" checked>
+                                <label class="form-check-label mb-0" for="manualInput">Nhập thủ công</label>
+                            </div>
+                            <div class="form-check m-0 d-flex align-items-center gap-2" style="padding-left:70px;">
+                                <input class="form-check-input" type="radio" name="inputTypeRadio" id="excelInput" value="excel">
+                                <label class="form-check-label mb-0" for="excelInput">Import Excel</label>
+                            </div>
+                        </div>
+
+                        <div id="manualInputArea">
+                            <textarea id="manualUrls" name="urls" class="form-control" rows="5" placeholder="Nhập URL (Có thể nhập nhiều URL, mỗi URL trên 1 dòng)"></textarea>
+                            <div id="manualUrlsError" class="text-danger mt-2 d-none">Vui lòng nhập ít nhất một URL.</div>
+                        </div>
+
+                        <div id="excelInputArea" class="d-none">
+                            <input type="file" id="excelFile" name="excelFile" class="form-control" accept=".xlsx" />
+                            <div class="form-text">Chọn file Excel (.xlsx) chứa danh sách URL.</div>
+                            <a href="~/file/page-speed-checker-template.xlsx" download class="btn btn-outline-primary btn-sm">
+                                <i class="fa fa-download"></i> Tải file mẫu
+                            </a>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="saveButton">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xóa URL -->
+    <div class="modal fade" id="deleteUrlModal" tabindex="-1" aria-labelledby="deleteUrlModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUrlModalLabel">Xác nhận xóa URL</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    Bạn có chắc chắn muốn xóa URL <strong id="urlToDelete"></strong> không? Hành động này không thể hoàn tác.
+                </div>
+                <div class="modal-footer">
+                    <form id="deleteUrlForm" asp-action="DeleteUrl" asp-controller="PageSpeedResults" method="post">
+                        <input type="hidden" name="projectId" value="@projectId" />
+                        <input type="hidden" name="url" id="deleteUrlInput" />
+                        <button type="submit" class="btn btn-danger">Xóa</button>
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Chi tiết Hiệu suất -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailModalLabel">Chi tiết Hiệu suất</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Các giá trị được đo bằng thời gian thực tế qua các thiết bị, phản ánh hiệu quả truy cập trang.</p>
+                    <div class="d-flex justify-content-between mb-3">
+                        <div>
+                            <span class="badge bg-danger" style="margin-right: 5px;">▲ 0-49</span>
+                            <span class="badge bg-warning" style="margin-right: 5px;">■ 50-89</span>
+                            <span class="badge bg-success">● 90-100</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span id="loadTimeIcon" class="text-primary">●</span> <strong>Thời gian tải (s)</strong>
+                                <p id="detailLoadTime" class="mb-1"></p>
+                            </div>
+                            <div class="mb-3">
+                                <span id="lcpIcon" class="text-primary">●</span> <strong>LCP (s)</strong>
+                                <p id="detailLCP" class="mb-1"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <span id="fidIcon" class="text-primary">●</span> <strong>FID (ms)</strong>
+                                <p id="detailFID" class="mb-1"></p>
+                            </div>
+                            <div class="mb-3">
+                                <span id="clsIcon" class="text-primary">●</span> <strong>CLS</strong>
+                                <p id="detailCLS" class="mb-1"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <div class="col-12">
+                            <p><strong>URL:</strong> <span id="detailUrl"></span></p>
+                            <p><strong>Ngày cập nhật:</strong> <span id="detailLastChecked"></span></p>
+                            <p><strong>Gợi ý cải thiện:</strong></p>
+                            <div id="detailSuggestions" class="bg-light p-2 rounded" style="max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        #urlTable {
+            table-layout: fixed;
+            word-wrap: break-word;
+            width: 100%;
+        }
+
+            #urlTable th, #urlTable td {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+                #urlTable td.text-break {
+                    white-space: normal;
+                    overflow-wrap: break-word;
+                }
+
+    </style>
+    <script>
+        const urlData = [
+        @for (int i = 0; i < results.Count; i++)
+        {
+            var result = results[i];
+            <text>
+                    {
+                        url: '@Html.Raw(HttpUtility.JavaScriptStringEncode(result.Url))',
+                        loadTime: @result.LoadTime.ToString("F2"),
+                        lcp: @(result.LCP?.ToString("F2") ?? "null"),
+                        fid: @(result.FID?.ToString("F2") ?? "null"),
+                        cls: @(result.CLS?.ToString("F2") ?? "null"),
+                        suggestions: '@Html.Raw(HttpUtility.JavaScriptStringEncode(result.Suggestions ?? ""))',
+                        lastChecked: '@result.LastCheckedDate.ToString("dd/MM/yyyy HH:mm")'
+                    }@(i < results.Count - 1 ? "," : "")
+            </text>
+        }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const manualInput = document.getElementById('manualInput');
+            const excelInput = document.getElementById('excelInput');
+            const manualInputArea = document.getElementById('manualInputArea');
+            const excelInputArea = document.getElementById('excelInputArea');
+            const inputTypeHidden = document.getElementById('inputTypeHidden');
+            const manualUrls = document.getElementById('manualUrls');
+            const manualUrlsError = document.getElementById('manualUrlsError');
+            const excelFile = document.getElementById('excelFile');
+            const saveButton = document.getElementById('saveButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const successToast = document.getElementById('successToast');
+
+            console.log('Initial inputType:', inputTypeHidden.value);
+
+            manualInput.addEventListener('change', toggleInputType);
+            excelInput.addEventListener('change', toggleInputType);
+
+            function toggleInputType() {
+                if (manualInput.checked) {
+                    manualInputArea.classList.remove('d-none');
+                    excelInputArea.classList.add('d-none');
+                    inputTypeHidden.value = 'manual';
+                    excelFile.removeAttribute('required');
+                } else if (excelInput.checked) {
+                    manualInputArea.classList.add('d-none');
+                    excelInputArea.classList.remove('d-none');
+                    inputTypeHidden.value = 'excel';
+                    excelFile.setAttribute('required', 'required');
+                }
+                console.log('Updated inputType:', inputTypeHidden.value);
+            }
+
+            document.getElementById('addUrlForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                let isValid = true;
+
+                if (inputTypeHidden.value === 'manual') {
+                    const urlsValue = manualUrls.value.trim();
+                    if (!urlsValue) {
+                        manualUrlsError.classList.remove('d-none');
+                        isValid = false;
+                    } else {
+                        manualUrlsError.classList.add('d-none');
+                    }
+                }
+
+                if (inputTypeHidden.value === 'excel' && !excelFile.files.length) {
+                    alert('Vui lòng chọn một file Excel trước khi gửi.');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    return;
+                }
+
+                const addUrlModal = bootstrap.Modal.getInstance(document.getElementById('addUrlModal'));
+                addUrlModal.hide();
+
+                loadingOverlay.classList.remove('d-none');
+                saveButton.disabled = true;
+
+                const formData = new FormData(this);
+                for (let [key, value] of formData.entries()) {
+                    console.log(key + ': ' + value);
+                }
+
+                fetch(this.action, {
+                    method: this.method,
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        loadingOverlay.classList.add('d-none');
+                        successToast.classList.remove('d-none');
+                        successToast.classList.add('show');
+                       
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        return response.text().then(text => {
+                            throw new Error('Request failed: ' + text);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi thêm URL. Vui lòng thử lại.');
+                    saveButton.disabled = false;
+                })
+                .finally(() => {
+                    loadingOverlay.classList.add('d-none');
+                });
+            });
+
+            toggleInputType();
+        });
+
+        function showDeleteModal(url) {
+            document.getElementById('urlToDelete').textContent = url;
+            document.getElementById('deleteUrlInput').value = url;
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteUrlModal'), {});
+            deleteModal.show();
+        }
+
+        function showDetailModal(index) {
+            const data = urlData[index];
+            console.log(data.url, data.loadTime, data.lcp, data.fid, data.cls, data.suggestions, data.lastChecked);
+
+            document.getElementById('detailUrl').textContent = data.url;
+            document.getElementById('detailLastChecked').textContent = data.lastChecked;
+            document.getElementById('detailSuggestions').textContent = data.suggestions || "Không có gợi ý";
+
+            const setPerformanceColor = (value, elementId, iconId, unit) => {
+                const numValue = parseFloat(value);
+                let colorClass = 'text-success';
+                if (!isNaN(numValue)) {
+                    if (elementId === 'detailLoadTime' && numValue > 5) colorClass = 'text-danger';
+                    else if (elementId === 'detailLoadTime' && numValue > 3) colorClass = 'text-warning';
+                    else if (elementId === 'detailLCP' && numValue > 4) colorClass = 'text-danger';
+                    else if (elementId === 'detailLCP' && numValue > 2.5) colorClass = 'text-warning';
+                    else if (elementId === 'detailFID' && numValue > 300) colorClass = 'text-danger';
+                    else if (elementId === 'detailFID' && numValue > 100) colorClass = 'text-warning';
+                    else if (elementId === 'detailCLS' && numValue > 0.25) colorClass = 'text-danger';
+                    else if (elementId === 'detailCLS' && numValue > 0.1) colorClass = 'text-warning';
+                }
+                document.getElementById(elementId).textContent = isNaN(numValue) ? "Không xác định" : `${numValue.toFixed(2)} ${unit}`;
+                document.getElementById(elementId).className = `mb-1 ${colorClass}`;
+                document.getElementById(iconId).className = colorClass;
+            };
+
+            setPerformanceColor(data.loadTime, 'detailLoadTime', 'loadTimeIcon', 'giây');
+            setPerformanceColor(data.lcp, 'detailLCP', 'lcpIcon', 'giây');
+            setPerformanceColor(data.fid, 'detailFID', 'fidIcon', 'mili giây');
+            setPerformanceColor(data.cls, 'detailCLS', 'clsIcon', '');
+
+            var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+            detailModal.show();
+        }
+    </script>
+}

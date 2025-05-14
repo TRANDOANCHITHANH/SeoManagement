@@ -14,7 +14,10 @@ namespace SeoManagement.Infrastructure.Services
 		{
 			await _repository.AddAsync(url);
 		}
-
+		public async Task UpdateAsync(IndexCheckerUrl url)
+		{
+			await _repository.UpdateAsync(url);
+		}
 		public async Task<List<IndexCheckerUrl>> GetByProjectIdAsync(int projectId)
 		{
 			return await _repository.GetByProjectIdAsync(projectId);

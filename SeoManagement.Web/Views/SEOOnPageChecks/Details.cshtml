@@ -6,49 +6,315 @@
     var analysisResult = ViewBag.AnalysisResult as SEOOnPageAnalysisResultViewModel;
 }
 
-<div class="row">
-    <div class="col-lg-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Chi Tiết Kiểm Tra SEO On-Page</h4>
-                @if (TempData["Error"] != null)
-                {
-                    <div class="alert alert-danger" role="alert">
-                        @TempData["Error"]
-                    </div>
-                }
-                <dl class="row">
-                    <dt class="col-sm-3">URL</dt>
-                    <dd class="col-sm-9">@Model.Url</dd>
-                    <dt class="col-sm-3">Tiêu Đề</dt>
-                    <dd class="col-sm-9">@Model.Title</dd>
-                    <dt class="col-sm-3">Meta Description</dt>
-                    <dd class="col-sm-9">@Model.MetaDescription</dd>
-                    <dt class="col-sm-3">Từ Khóa Chính</dt>
-                    <dd class="col-sm-9">@Model.MainKeyword</dd>
-                    <dt class="col-sm-3">Số Lượng Từ</dt>
-                    <dd class="col-sm-9">@Model.WordCount</dd>
-                    <dt class="col-sm-3">Ngày Tạo</dt>
-                    <dd class="col-sm-9">@Model.CreatedAt.ToString("dd/MM/yyyy")</dd>
-                </dl>
+<div class="container py-4">
+    <h2 class="text-center mb-4 fw-bold">Chi Tiết Kiểm Tra SEO On-Page</h2>
 
-                @if (analysisResult != null)
-                {
-                    <h5>Kết Quả Phân Tích SEO On-Page</h5>
-                    <p>@analysisResult.Summary</p>
-                    <ul>
-                        <li>Tiêu đề có độ dài tối ưu (30-60 ký tự): <strong>@(analysisResult.IsTitleLengthOptimal ? "Có" : "Không")</strong></li>
-                        <li>Meta Description có độ dài tối ưu (120-160 ký tự): <strong>@(analysisResult.IsMetaDescriptionLengthOptimal ? "Có" : "Không")</strong></li>
-                        <li>Tiêu đề chứa từ khóa chính: <strong>@(analysisResult.IsMainKeywordInTitle ? "Có" : "Không")</strong></li>
-                        <li>Meta Description chứa từ khóa chính: <strong>@(analysisResult.IsMainKeywordInMetaDescription ? "Có" : "Không")</strong></li>
-                        <li>Số lượng từ đủ (ít nhất 300 từ): <strong>@(analysisResult.IsWordCountSufficient ? "Có" : "Không")</strong></li>
-                    </ul>
-                }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-                <div class="mt-3">
-                    <a asp-action="Index" asp-route-projectId="@Model.ProjectID" class="btn btn-secondary">Quay Lại</a>
+    <div class="row g-4">
+        <div class="col-12">
+            <!-- Card thông tin cơ bản -->
+            <div class="card h-100 border-0 shadow-lg" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px;">
+                <div class="card-header bg-transparent border-bottom-0">
+                    <h4 class="card-title mb-0 text-dark">Thông Tin Cơ Bản</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row row-cols-1 row-cols-md-2 g-3">
+                        <div class="col">
+                            <dt class="col-12 text-muted">URL</dt>
+                            <dd class="col-12 text-break fw-medium">@Model.Url</dd>
+                        </div>
+                        <div class="col">
+                            <dt class="col-12 text-muted">Tiêu Đề</dt>
+                            <dd class="col-12 fw-medium">@Model.Title</dd>
+                        </div>
+                        <div class="col">
+                            <dt class="col-12 text-muted">Meta Description</dt>
+                            <dd class="col-12 fw-medium">@Model.MetaDescription</dd>
+                        </div>
+                        <div class="col">
+                            <dt class="col-12 text-muted">Từ Khóa Chính</dt>
+                            <dd class="col-12 fw-medium">@Model.MainKeyword</dd>
+                        </div>
+                        <div class="col">
+                            <dt class="col-12 text-muted">Số Lượng Từ</dt>
+                            <dd class="col-12 fw-medium">@Model.WordCount</dd>
+                        </div>
+                        <div class="col">
+                            <dt class="col-12 text-muted">Ngày Tạo</dt>
+                            <dd class="col-12 fw-medium">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card kết quả phân tích -->
+        <div class="col-12">
+            <div class="card h-100 border-0 shadow-lg" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 15px;">
+                <div class="card-header bg-transparent border-bottom-0">
+                    <h4 class="card-title mb-0 text-dark">Kết Quả Phân Tích SEO On-Page</h4>
+                </div>
+                <div class="card-body">
+                    @if (analysisResult != null)
+                    {
+                        <!-- Tổng quan -->
+                        <div class="mb-4">
+                            <h5 class="text-muted fw-semibold">Tổng Quan</h5>
+                            <p class="lead text-dark">@analysisResult.Summary</p>
+                        </div>
+
+                        <!-- Danh sách kết quả phân tích -->
+                        <div class="row row-cols-1 row-cols-md-2 g-4">
+                            <!-- Title Length -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.IsTitleLengthOptimal ? "Tối ưu" : "Không tối ưu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-header fa-2x me-3 @(analysisResult.IsTitleLengthOptimal ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Độ Dài Tiêu Đề</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.IsTitleLengthOptimal ? "Tối ưu (30-60 ký tự)" : "Không tối ưu")
+                                                @if (!analysisResult.IsTitleLengthOptimal)
+                                                {
+                                                    <span class="text-danger"> - Nên giữ 30-60 ký tự.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Meta Description Length -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.IsMetaDescriptionLengthOptimal ? "Tối ưu" : "Không tối ưu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-file-text-o fa-2x me-3 @(analysisResult.IsMetaDescriptionLengthOptimal ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Độ Dài Meta Description</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.IsMetaDescriptionLengthOptimal ? "Tối ưu (120-160 ký tự)" : "Không tối ưu")
+                                                @if (!analysisResult.IsMetaDescriptionLengthOptimal)
+                                                {
+                                                    <span class="text-danger"> - Nên giữ 120-160 ký tự.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Main Keyword in Title -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.IsMainKeywordInTitle ? "Có mặt" : "Thiếu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-key fa-2x me-3 @(analysisResult.IsMainKeywordInTitle ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Từ Khóa Trong Tiêu Đề</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.IsMainKeywordInTitle ? "Có mặt" : "Thiếu")
+                                                @if (!analysisResult.IsMainKeywordInTitle)
+                                                {
+                                                    <span class="text-danger"> - Thêm từ khóa chính.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Main Keyword in Meta Description -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.IsMainKeywordInMetaDescription ? "Có mặt" : "Thiếu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-key fa-2x me-3 @(analysisResult.IsMainKeywordInMetaDescription ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Từ Khóa Trong Meta Description</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.IsMainKeywordInMetaDescription ? "Có mặt" : "Thiếu")
+                                                @if (!analysisResult.IsMainKeywordInMetaDescription)
+                                                {
+                                                    <span class="text-danger"> - Thêm từ khóa chính.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Word Count -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.IsWordCountSufficient ? "Đủ" : "Quá thấp")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-font fa-2x me-3 @(analysisResult.IsWordCountSufficient ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Số Lượng Từ</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.IsWordCountSufficient ? "Đủ (≥ 300 từ)" : "Quá thấp")
+                                                @if (!analysisResult.IsWordCountSufficient)
+                                                {
+                                                    <span class="text-danger"> - Tăng lên ≥ 300 từ.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Number of Headings -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.HeadingCount > 0 ? "Có heading" : "Thiếu heading")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-list-ul fa-2x me-3 @(analysisResult.HeadingCount > 0 ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Số Lượng Thẻ Heading (H1, H2, H3)</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @analysisResult.HeadingCount
+                                                @if (analysisResult.HeadingCount == 0)
+                                                {
+                                                    <span class="text-danger"> - Thêm ít nhất 1 heading.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Images Missing Alt Text -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.ImageCountWithoutAlt == 0 ? "Không có lỗi" : $"{analysisResult.ImageCountWithoutAlt} lỗi")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-file-image-o fa-2x me-3 @(analysisResult.ImageCountWithoutAlt == 0 ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Hình Ảnh Thiếu Alt Text</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @analysisResult.ImageCountWithoutAlt
+                                                @if (analysisResult.ImageCountWithoutAlt > 0)
+                                                {
+                                                    <span class="text-danger"> - Thêm alt text cho hình ảnh.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Keyword Density -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.KeywordDensity >= 1 && analysisResult.KeywordDensity <= 3 ? "Tối ưu" : "Không tối ưu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-bar-chart-o fa-2x me-3 @((analysisResult.KeywordDensity >= 1 && analysisResult.KeywordDensity <= 3) ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Mật Độ Từ Khóa</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @analysisResult.KeywordDensity.ToString("F1")% (Tối ưu: 1-3%)
+                                                @if (analysisResult.KeywordDensity < 1 || analysisResult.KeywordDensity > 3)
+                                                {
+                                                    <span class="text-danger"> - Điều chỉnh về 1-3%.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Internal Links -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.InternalLinkCount > 0 ? "Có liên kết" : "Thiếu liên kết")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-link fa-2x me-3 @(analysisResult.InternalLinkCount > 0 ? "text-success" : "text-warning")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Liên Kết Nội Bộ</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @analysisResult.InternalLinkCount
+                                                @if (analysisResult.InternalLinkCount == 0)
+                                                {
+                                                    <span class="text-danger"> - Thêm liên kết nội bộ.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Page Speed Score -->
+                            <div class="col-12">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@analysisResult.PageSpeedScore%">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-tachometer-alt fa-2x me-3 @(analysisResult.PageSpeedScore >= 50 ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Điểm Tốc Độ Trang (Desktop)</strong>
+                                            <div class="progress mt-2" style="height: 25px;">
+                                                <div class="progress-bar @(analysisResult.PageSpeedScore >= 50 ? "bg-success" : "bg-danger") progress-bar-striped progress-bar-animated"
+                                                     role="progressbar"
+                                                     style="width: @analysisResult.PageSpeedScore%;"
+                                                     aria-valuenow="@analysisResult.PageSpeedScore"
+                                                     aria-valuemin="0"
+                                                     aria-valuemax="100">
+                                                    @analysisResult.PageSpeedScore%
+                                                </div>
+                                            </div>
+                                            @if (analysisResult.PageSpeedScore < 50)
+                                            {
+                                                <p class="mb-0 text-danger small"> - Cải thiện: Nén hình ảnh, giảm yêu cầu HTTP.</p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning text-center alert-dismissible fade show" role="alert">
+                            Không thể tải kết quả phân tích.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Nút quay lại -->
+    <div class="mt-5 text-center">
+        <a asp-action="Index" asp-route-projectId="@Model.ProjectID" class="btn btn-primary btn-lg">
+            <i class="fa fa-arrow-left me-2"></i> Quay Lại
+        </a>
+    </div>
 </div>
+
+@section Styles {
+    <style>
+        .text-break {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            if (sessionStorage.getItem('showSpinner') === 'true') {
+                var spinnerOverlay = document.getElementById('spinnerOverlay');
+                if (spinnerOverlay) {
+                    spinnerOverlay.classList.add('d-none');
+                }
+                sessionStorage.removeItem('showSpinner');
+            }
+        });
+    </script>
+}

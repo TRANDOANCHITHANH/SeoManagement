@@ -19,6 +19,12 @@
 		public bool IsMainKeywordInTitle { get; set; }
 		public bool IsMainKeywordInMetaDescription { get; set; }
 		public bool IsWordCountSufficient { get; set; }
+
+		public int HeadingCount { get; set; }
+		public int ImageCountWithoutAlt { get; set; }
+		public double KeywordDensity { get; set; }
+		public int InternalLinkCount { get; set; }
+		public int PageSpeedScore { get; set; }
 		public string Summary { get; set; }
 	}
 }

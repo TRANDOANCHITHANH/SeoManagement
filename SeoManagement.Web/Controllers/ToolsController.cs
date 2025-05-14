@@ -20,7 +20,6 @@ namespace SeoManagement.Web.Controllers
 		private readonly IConfiguration _configuration;
 		private readonly UserManager<ApplicationUser> _userManager;
 
-
 		public ToolsController(GoogleCustomSearchService searchService, IIndexCheckerUrlService indexCheckerUrlService, ISEOProjectService projectService, ILogger<ToolsController> logger, HttpClient httpClient, IConfiguration configuration, UserManager<ApplicationUser> userManager)
 		{
 			_searchService = searchService;
@@ -94,7 +93,7 @@ namespace SeoManagement.Web.Controllers
 							if (worksheet == null)
 							{
 								TempData["Error"] = "File Excel không hợp lệ hoặc không chứa dữ liệu.";
-								return View(new SEOProjectViewModel());
+								return RedirectToAction("IndexChecker", new { projectId });
 							}
 
 							int lastRow = worksheet.LastRowUsed()?.RowNumber() ?? 1;
@@ -111,7 +110,7 @@ namespace SeoManagement.Web.Controllers
 							if (!urlList.Any())
 							{
 								TempData["Error"] = "File Excel không chứa URL hợp lệ.";
-								return View(new SEOProjectViewModel());
+								return RedirectToAction("IndexChecker", new { projectId });
 							}
 						}
 					}
@@ -120,7 +119,7 @@ namespace SeoManagement.Web.Controllers
 				{
 					_logger.LogError(ex, "Lỗi khi đọc file Excel: {Message}", ex.Message);
 					TempData["Error"] = "Đã xảy ra lỗi khi đọc file Excel: " + ex.Message;
-					return View(new SEOProjectViewModel());
+					return RedirectToAction("IndexChecker", new { projectId });
 				}
 			}
 			else
@@ -128,7 +127,7 @@ namespace SeoManagement.Web.Controllers
 				if (string.IsNullOrWhiteSpace(urls))
 				{
 					TempData["Error"] = "Vui lòng nhập ít nhất một URL để kiểm tra.";
-					return View(new SEOProjectViewModel());
+					return RedirectToAction("IndexChecker", new { projectId });
 				}
 
 				urlList = urls.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
@@ -140,7 +139,7 @@ namespace SeoManagement.Web.Controllers
 				if (!urlList.Any())
 				{
 					TempData["Error"] = "Không có URL hợp lệ để kiểm tra.";
-					return View(new SEOProjectViewModel());
+					return RedirectToAction("IndexChecker", new { projectId });
 				}
 			}
 
@@ -175,8 +174,6 @@ namespace SeoManagement.Web.Controllers
 							};
 							await _indexCheckerUrlService.AddAsync(indexCheckerUrl);
 						}
-
-						TempData["Success"] = "Thêm URL thành công!";
 					}
 					catch (Exception ex)
 					{
@@ -198,6 +195,9 @@ namespace SeoManagement.Web.Controllers
 					}
 					await Task.Delay(100);
 				}
+
+				TempData["Success"] = "Thêm URL thành công!";
+
 				if (projectId.HasValue)
 				{
 					var allResults = await _indexCheckerUrlService.GetByProjectIdAsync(projectId.Value);
@@ -207,21 +207,16 @@ namespace SeoManagement.Web.Controllers
 						.DistinctBy(r => r.Url)
 						.ToList();
 					ViewBag.Results = combinedResults;
-				}
-				else
-				{
-					ViewBag.Results = results;
-				}
-				ViewBag.Urls = string.Join("\n", urlList);
 
-				ViewBag.ProjectId = projectId;
-				return View(new SEOProjectViewModel());
+					return RedirectToAction("IndexChecker", new { projectId });
+				}
+				return RedirectToAction("IndexChecker");
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "Lỗi chung khi kiểm tra index cho danh sách URL.");
 				TempData["Error"] = "Đã xảy ra lỗi khi kiểm tra index: " + ex.Message;
-				return View(new SEOProjectViewModel());
+				return RedirectToAction("IndexChecker", new { projectId });
 			}
 		}
 

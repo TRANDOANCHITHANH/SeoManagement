@@ -26,17 +26,25 @@ namespace SeoManagement.Web.Controllers
 
 		public async Task<IActionResult> Index(int projectId, int pageNumber = 1, int pageSize = 10)
 		{
-			var response = await _httpClient.GetFromJsonAsync<PagedResultViewModel<SEOOnPageCheckViewModel>>(
-						   $"api/seoonpagechecks/project/{projectId}?pageNumber={pageNumber}&pageSize={pageSize}");
+			var response = await _httpClient.GetAsync($"api/seoonpagechecks/project/{projectId}?pageNumber={pageNumber}&pageSize={pageSize}");
+			if (!response.IsSuccessStatusCode)
+			{
+				var errorContent = await response.Content.ReadAsStringAsync();
+				_logger.LogError("Failed to retrieve SEOOnPageChecks for projectId: {ProjectId}. Status: {StatusCode}, Error: {ErrorContent}", projectId, response.StatusCode, errorContent);
+				TempData["Error"] = "Không thể lấy danh sách kiểm tra SEO On-Page. Vui lòng thử lại sau.";
+				return View(new PagedResultViewModel<SEOOnPageCheckViewModel> { Items = new List<SEOOnPageCheckViewModel>() });
+			}
 
-			if (response == null)
+			var result = await response.Content.ReadFromJsonAsync<PagedResultViewModel<SEOOnPageCheckViewModel>>();
+			if (result == null)
 			{
 				_logger.LogWarning("Không lấy được danh sách kiểm tra SEO On-Page cho ProjectId: {ProjectId}", projectId);
+				TempData["Error"] = "Không có dữ liệu để hiển thị.";
 				return View(new PagedResultViewModel<SEOOnPageCheckViewModel> { Items = new List<SEOOnPageCheckViewModel>() });
 			}
 
 			ViewBag.ProjectId = projectId;
-			return View(response);
+			return View(result);
 		}
 
 
@@ -97,6 +105,10 @@ namespace SeoManagement.Web.Controllers
 			{
 				var analysisResult = await analysisResponse.Content.ReadFromJsonAsync<SEOOnPageAnalysisResultViewModel>();
 				ViewBag.AnalysisResult = analysisResult;
+			}
+			else
+			{
+				ViewBag.AnalysisResult = new SEOOnPageAnalysisResultViewModel { Summary = "Không thể phân tích SEO On-Page. Vui lòng thử lại sau." };
 			}
 
 			return View(check);

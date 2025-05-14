@@ -64,7 +64,12 @@
                                         <td>@project.ProjectID</td>
                                         <td>@project.ProjectName</td>
                                         <td>@project.Description</td>
-                                        <td>@project.StartDate.ToString("dd MMM yyyy")</td>
+                                        <td>
+                                            @if (project.StartDate != DateTime.MinValue)
+                                            {
+                                                @project.StartDate.ToString("dd/MM/yyyy")
+                                            }
+                                        </td>
                                         <td>
                                             @switch (project.Status)
                                             {

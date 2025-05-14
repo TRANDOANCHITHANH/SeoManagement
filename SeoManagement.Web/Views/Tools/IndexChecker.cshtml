@@ -90,73 +90,66 @@
     {
         <div class="card shadow p-4">
             <h4 class="mb-3">Danh sách link</h4>
-            <table id="urlTable" class="table table-hover table-bordered">
-                <thead class="table-light">
-                    <tr>
-                        <th>URL</th>
-                        <th>Kiểm tra</th>
-                        <th>Lỗi</th>
-                        <th>Ngày cập nhật</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var result in results)
-                    {
+            <div class="table-responsive">
+                <table id="urlTable" class="table table-hover table-bordered">
+                    <thead class="table-light">
                         <tr>
-                            <td>@result.Url</td>
-                            <td>
-                                @if (result.IsIndexed)
-                                {
-                                    <span class="badge bg-success">Đã Index</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">Chưa Index</span>
-                                }
-                            </td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(result.Error))
-                                {
-                                    <span class="text-danger">@result.Error</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Không có lỗi</span>
-                                }
-                            </td>
-                            <td>
-                                @if (result.LastCheckedDate != DateTime.MinValue)
-                                {
-                                    @result.LastCheckedDate.ToString("dd/MM/yyyy HH:mm:ss")
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Chưa kiểm tra</span>
-                                }
-                            </td>
-                            <td>
-                                <div class="flex items-center justify-center gap-2">
-                                    <a href="https://google.com/search?q=site:@result.Url" target="_blank">
-                                        <button type="button" class="btn btn-default px-2">
-                                            <i class="fa fa-search"></i><span> </span>
-                                        </button>
-                                    </a>
-                                    <button type="button" class="btn btn-default btn-dangerous px-2" onclick="showDeleteModal('@result.Url')">
-                                        <i class="fa fa-trash-o"></i><span> </span>
-                                    </button>
-                                </div>
-                            </td>
+                            <th style="width: 55%;">URL</th>
+                            <th style="width: 15%;">Kiểm tra</th>
+                            <th style="width: 20%;">Ngày cập nhật</th>
+                            <th style="width: 10%;">Hành động</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var result in results)
+                        {
+                            <tr>
+                                <td title="@result.Url" class="text-break">@result.Url</td>
+                                <td>
+                                    @if (result.IsIndexed)
+                                    {
+                                        <span class="badge bg-success">Đã Index</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Chưa Index</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (result.LastCheckedDate != DateTime.MinValue)
+                                    {
+                                        @result.LastCheckedDate.ToString("dd/MM/yyyy HH:mm")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Chưa kiểm tra</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="https://google.com/search?q=site:@result.Url" target="_blank">
+                                            <button class="btn btn-default px-2">
+                                                <i class="fa fa-search"></i><span> </span>
+                                            </button>
+                                        </a>
+                                        <button type="button" class="btn btn-default btn-dangerous px-2" onclick="showDeleteModal('@result.Url')">
+                                            <i class="fa fa-trash-o"></i><span> </span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     }
     else
     {
         <div class="alert alert-warning text-center">Không có URL nào trong danh sách.</div>
     }
+
+    <!-- Modal Thêm URL -->
     <div class="modal fade" id="addUrlModal" tabindex="-1" aria-labelledby="addUrlModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -181,10 +174,11 @@
 
                         <div id="manualInputArea">
                             <textarea id="manualUrls" name="urls" class="form-control" rows="5" placeholder="Nhập từ khóa (Có thể nhập nhiều từ, mỗi từ trên 1 dòng)"></textarea>
+                            <div id="manualUrlsError" class="text-danger mt-2 d-none">Vui lòng nhập ít nhất một URL.</div>
                         </div>
 
                         <div id="excelInputArea" class="d-none">
-                            <input type="file" id="excelFile" name="excelFile" class="form-control" accept=".xlsx" required />
+                            <input type="file" id="excelFile" name="excelFile" class="form-control" accept=".xlsx" />
                             <div class="form-text">Chọn file Excel (.xlsx) chứa danh sách URL.</div>
                             <a href="~/file/link-index-checker-template.xlsx" download class="btn btn-outline-primary btn-sm">
                                 <i class="fa fa-download"></i> Tải file mẫu
@@ -200,6 +194,7 @@
         </div>
     </div>
 
+    <!-- Modal Xóa URL -->
     <div class="modal fade" id="deleteUrlModal" tabindex="-1" aria-labelledby="deleteUrlModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -211,12 +206,12 @@
                     Bạn có chắc chắn muốn xóa URL <strong id="urlToDelete"></strong> không? Hành động này không thể hoàn tác.
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                     <form id="deleteUrlForm" asp-action="DeleteUrl" asp-controller="Tools" method="post">
                         <input type="hidden" name="projectId" value="@projectId" />
                         <input type="hidden" name="url" id="deleteUrlInput" />
                         <button type="submit" class="btn btn-danger">Xóa</button>
                     </form>
+                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                 </div>
             </div>
         </div>
@@ -224,6 +219,24 @@
 </div>
 
 @section Scripts {
+    <style>
+        #urlTable {
+            table-layout: fixed;
+            word-wrap: break-word;
+            width: 100%;
+        }
+
+            #urlTable th, #urlTable td {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+                #urlTable td.text-break {
+                    white-space: normal;
+                    overflow-wrap: break-word;
+                }
+    </style>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const manualInput = document.getElementById('manualInput');
@@ -231,6 +244,9 @@
             const manualInputArea = document.getElementById('manualInputArea');
             const excelInputArea = document.getElementById('excelInputArea');
             const inputTypeHidden = document.getElementById('inputTypeHidden');
+            const manualUrls = document.getElementById('manualUrls');
+            const manualUrlsError = document.getElementById('manualUrlsError');
+            const excelFile = document.getElementById('excelFile');
 
             // Log để debug
             console.log('Initial inputType:', inputTypeHidden.value);
@@ -243,27 +259,55 @@
                     manualInputArea.classList.remove('d-none');
                     excelInputArea.classList.add('d-none');
                     inputTypeHidden.value = 'manual';
+                    excelFile.removeAttribute('required');
                 } else if (excelInput.checked) {
                     manualInputArea.classList.add('d-none');
                     excelInputArea.classList.remove('d-none');
                     inputTypeHidden.value = 'excel';
+                    excelFile.setAttribute('required', 'required');
                 }
                 console.log('Updated inputType:', inputTypeHidden.value);
             }
 
             document.getElementById('addUrlForm').addEventListener('submit', function (event) {
-                console.log('Form submitted with inputType:', inputTypeHidden.value);
-                if (inputTypeHidden.value === 'excel' && !document.getElementById('excelFile').files.length) {
-                    event.preventDefault();
-                    alert('Vui lòng chọn một file Excel trước khi gửi.');
+                let isValid = true;
+
+                if (inputTypeHidden.value === 'manual') {
+                    const urlsValue = manualUrls.value.trim();
+                    if (!urlsValue) {
+                        manualUrlsError.classList.remove('d-none');
+                        isValid = false;
+                    } else {
+                        manualUrlsError.classList.add('d-none');
+                    }
                 }
+
+                if (inputTypeHidden.value === 'excel' && !excelFile.files.length) {
+                    alert('Vui lòng chọn một file Excel trước khi gửi.');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    event.preventDefault();
+                    return;
+                }
+
+                const formData = new FormData(this);
+                for (let [key, value] of formData.entries()) {
+                    console.log(key + ': ' + value);
+                }
+
+                const submitButton = this.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = 'Đang xử lý...';
             });
+
+            toggleInputType();
         });
 
         function showDeleteModal(url) {
             document.getElementById('urlToDelete').textContent = url;
             document.getElementById('deleteUrlInput').value = url;
-
             var deleteModal = new bootstrap.Modal(document.getElementById('deleteUrlModal'), {});
             deleteModal.show();
         }

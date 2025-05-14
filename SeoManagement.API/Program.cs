@@ -52,6 +52,7 @@ builder.Services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
 builder.Services.AddScoped<ISystemConfigService, SystemConfigService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddHttpClient();
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll", builder =>

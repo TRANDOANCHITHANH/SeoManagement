@@ -19,6 +19,17 @@ namespace SeoManagement.Infrastructure.Repositories
 			await _context.SaveChangesAsync();
 		}
 
+		public async Task UpdateAsync(IndexCheckerUrl url)
+		{
+			var existingUrl = await _context.IndexCheckerUrls.FindAsync(url.UrlID);
+			if (existingUrl != null)
+			{
+				_context.Entry(existingUrl).CurrentValues.SetValues(url);
+				existingUrl.LastCheckedDate = DateTime.UtcNow;
+				await _context.SaveChangesAsync();
+			}
+		}
+
 		public async Task<List<IndexCheckerUrl>> GetByProjectIdAsync(int projectId)
 		{
 			return await _context.IndexCheckerUrls

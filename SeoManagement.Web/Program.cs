@@ -100,6 +100,17 @@ builder.Services.AddScoped<PageSpeedService>(sp =>
 	return new PageSpeedService(httpClient, apiKey);
 });
 
+builder.Services.AddScoped<IBacklinkResultRepository, BacklinkResultRepository>();
+builder.Services.AddScoped<IBacklinkResultService, BacklinkResultService>();
+builder.Services.AddScoped<BacklinkService>(sp =>
+{
+	var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
+	var configuration = sp.GetRequiredService<IConfiguration>();
+	var apiKey = configuration["RapidApiKey"];
+	return new BacklinkService(httpClient, apiKey);
+});
+
+
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll", builder =>

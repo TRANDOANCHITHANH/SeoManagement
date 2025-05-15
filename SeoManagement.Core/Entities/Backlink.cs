@@ -13,18 +13,19 @@ namespace SeoManagement.Core.Entities
 
 		[Required]
 		[StringLength(500)]
-		public string SourceURL { get; set; }
+		public string Url { get; set; }
 
-		[Required]
-		[StringLength(500)]
-		public string TargetURL { get; set; }
+		public int TotalBacklinks { get; set; }
 
-		public float? QualityScore { get; set; }
+		public int? ReferringDomains { get; set; }
 
-		public DateTime CreatedDate { get; set; } = DateTime.Now;
+		public int? DofollowBacklinks { get; set; }
+		public int? DofollowRefDomains { get; set; }
 
+		public DateTime? LastCheckedDate { get; set; }
+		public string BacklinksDetails { get; set; }
 		// Navigation properties
 		[ForeignKey("ProjectID")]
-		public virtual SEOProject Project { get; set; }
+		public SEOProject Project { get; set; }
 	}
 }

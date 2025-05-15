@@ -1,0 +1,320 @@
+﻿@using System.Web
+@using System.Text.Json
+@model SeoManagement.Web.Models.ViewModels.SEOProjectViewModel
+
+@{
+    ViewData["Title"] = "Kiểm tra Backlink";
+    var projectId = ViewBag.ProjectId as int?;
+    var backlinkResults = ViewBag.BacklinkResults as List<(string Url, int TotalBacklinks, int ReferringDomains, int DofollowBacklinks, int DofollowRefDomains, string BacklinksDetails, DateTime LastCheckedDate)>;
+    var projectName = ViewBag.ProjectName;
+    var projectDescription = ViewBag.ProjectDescription;
+
+    <script>
+        console.log('backlinkResults from ViewBag:', @Html.Raw(Json.Serialize(backlinkResults)));
+    </script>
+}
+
+<div class="container">
+    <h2 class="text-center mb-4">Kiểm tra Backlink cho Dự án #@(projectName ?? "N/A")</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success text-center">@TempData["Success"]</div>
+    }
+
+    @if (projectId.HasValue)
+    {
+        <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px;">
+            <div class="card-body">
+                <h4 class="card-title">Tổng quan dự án</h4>
+                <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-2 rounded">
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Tên dự án:</span>
+                        <input type="text" class="form-control" value="@projectName" readonly />
+                    </div>
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Mô tả:</span>
+                        <input type="text" class="form-control" value="@projectDescription" readonly />
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex justify-content-end mb-4">
+        <a asp-controller="BacklinkCheckers" asp-action="Index" class="btn btn-secondary">
+            Quay lại danh sách dự án
+        </a>
+        <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#checkBacklinkModal">
+            Kiểm tra Backlink
+        </button>
+    </div>
+
+    @if (backlinkResults != null && backlinkResults.Any())
+    {
+        <div class="card shadow p-4 mb-4">
+            <h4 class="mb-3">Danh sách Backlink</h4>
+            <div class="table-responsive">
+                <table id="backlinkTable" class="table table-hover table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 35%;">URL</th>
+                            <th style="width: 10%;">Số Backlink</th>
+                            <th style="width: 10%;">Dofollow Backlinks</th>
+                            <th style="width: 10%;">Referring Domains</th>
+                            <th style="width: 10%;">Dofollow Ref. Domains</th>
+                            <th style="width: 15%;">Ngày cập nhật</th>
+                            <th style="width: 10%;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < backlinkResults.Count; i++)
+                        {
+                            var result = backlinkResults[i];
+                            <tr>
+                                <td title="@result.Url" class="text-break">@result.Url</td>
+                                <td>
+                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#backlinkDetailModal"
+                                            onclick="showBacklinkDetailModal(@i)">
+                                        @result.TotalBacklinks
+                                    </button>
+                                </td>
+                                <td>@result.DofollowBacklinks</td>
+                                <td>@result.ReferringDomains</td>
+                                <td>@result.DofollowRefDomains</td>
+                                <td>@result.LastCheckedDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button type="button" class="btn btn-default btn-dangerous px-2" onclick="showDeleteModal('@Html.Raw(HttpUtility.JavaScriptStringEncode(result.Url))')">
+                                            <i class="fa fa-trash-o"></i><span> </span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning text-center">Không có URL nào trong danh sách backlink.</div>
+    }
+
+    <!-- Overlay để ngăn tương tác khi loading -->
+    <div id="loadingOverlay" class="loading-overlay d-none">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <span class="loading-text">Đang xử lý...</span>
+        </div>
+    </div>
+
+    <!-- Toast thông báo thành công -->
+    <div id="successToast" class="toast d-none" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body">
+            Kiểm tra backlink thành công!
+        </div>
+    </div>
+
+    <!-- Modal Kiểm tra Backlink -->
+    <div class="modal fade" id="checkBacklinkModal" tabindex="-1" aria-labelledby="checkBacklinkModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="checkBacklinkForm" asp-action="CheckBacklinks" asp-controller="BacklinkCheckers" method="post">
+                    <input type="hidden" name="projectId" value="@projectId" />
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="checkBacklinkModalLabel">Kiểm tra Backlink</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="backlinkUrl" class="form-label">URL cần kiểm tra</label>
+                            <input type="text" id="backlinkUrl" name="backlinkUrl" class="form-control" placeholder="Nhập URL (ví dụ: https://example.com)" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="checkBacklinkButton">Kiểm tra</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xóa URL -->
+    <div class="modal fade" id="deleteUrlModal" tabindex="-1" aria-labelledby="deleteUrlModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUrlModalLabel">Xác nhận xóa URL</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    Bạn có chắc chắn muốn xóa URL <strong id="urlToDelete"></strong> không? Hành động này không thể hoàn tác.
+                </div>
+                <div class="modal-footer">
+                    <form id="deleteUrlForm" asp-action="DeleteBacklink" asp-controller="BacklinkCheckers" method="post">
+                        <input type="hidden" name="projectId" value="@projectId" />
+                        <input type="hidden" name="url" id="deleteUrlInput" />
+                        <button type="submit" class="btn btn-danger">Xóa</button>
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Chi tiết Backlink -->
+    <div class="modal fade" id="backlinkDetailModal" tabindex="-1" aria-labelledby="backlinkDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="backlinkDetailModalLabel">Chi tiết Backlink</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>URL:</strong> <span id="backlinkDetailUrl"></span></p>
+                    <p><strong>Ngày cập nhật:</strong> <span id="backlinkDetailLastChecked"></span></p>
+                    <p><strong>Danh sách Backlink:</strong></p>
+                    <ul id="backlinkDetailList" class="list-group"></ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        #backlinkTable {
+            table-layout: fixed;
+            word-wrap: break-word;
+            width: 100%;
+        }
+
+            #backlinkTable th, #backlinkTable td {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+                #backlinkTable td.text-break {
+                    white-space: normal;
+                    overflow-wrap: break-word;
+                }
+
+    </style>
+    <script>
+           const backlinkData = [
+        @for (int i = 0; i < (backlinkResults?.Count ?? 0); i++)
+        {
+            var result = backlinkResults[i];
+            <text>
+                        {
+                            url: '@Html.Raw(HttpUtility.JavaScriptStringEncode(result.Url))',
+                            totalBacklinks: @result.TotalBacklinks,
+                            referringDomains: @result.ReferringDomains,
+                            dofollowBacklinks: @result.DofollowBacklinks,
+                            dofollowRefDomains: @result.DofollowRefDomains,
+                            backlinksDetails: @Html.Raw(JsonSerializer.Serialize(result.BacklinksDetails)),
+                            lastChecked: '@result.LastCheckedDate.ToString("dd/MM/yyyy HH:mm")'
+                        }@(i < backlinkResults.Count - 1 ? "," : "")
+            </text>
+        }
+        ];
+
+        console.log('Backlink data initialized:', backlinkData);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const checkBacklinkForm = document.getElementById('checkBacklinkForm');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const successToast = document.getElementById('successToast');
+            const checkBacklinkButton = document.getElementById('checkBacklinkButton');
+
+            checkBacklinkForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const backlinkModal = bootstrap.Modal.getInstance(document.getElementById('checkBacklinkModal'));
+                backlinkModal.hide();
+
+                loadingOverlay.classList.remove('d-none');
+                checkBacklinkButton.disabled = true;
+
+                const formData = new FormData(this);
+                fetch(this.action, {
+                    method: this.method,
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        loadingOverlay.classList.add('d-none');
+                        successToast.classList.remove('d-none');
+                        successToast.classList.add('show');
+                        console.log('Fetch response OK, reloading page...');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        return response.text().then(text => {
+                            throw new Error('Request failed: ' + text);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during fetch:', error);
+                    alert('Có lỗi xảy ra khi kiểm tra backlink: ' + error.message);
+                    checkBacklinkButton.disabled = false;
+                })
+                .finally(() => {
+                    loadingOverlay.classList.add('d-none');
+                });
+            });
+        });
+
+        function showDeleteModal(url) {
+            document.getElementById('urlToDelete').textContent = url;
+            document.getElementById('deleteUrlInput').value = url;
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteUrlModal'), {});
+            deleteModal.show();
+        }
+
+        function showBacklinkDetailModal(index) {
+            const data = backlinkData[index];
+            document.getElementById('backlinkDetailUrl').textContent = data.url;
+            document.getElementById('backlinkDetailLastChecked').textContent = data.lastChecked;
+
+            const backlinkList = document.getElementById('backlinkDetailList');
+            backlinkList.innerHTML = '';
+
+            let backlinks;
+            try {
+                backlinks = JSON.parse(data.backlinksDetails);
+            } catch (e) {
+                backlinkList.innerHTML = '<li class="list-group-item">Không có dữ liệu backlink chi tiết.</li>';
+                return;
+            }
+
+            if (backlinks && backlinks.length > 0) {
+                backlinks.forEach(link => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.textContent = `${link.fromUrl} (Anchor: ${link.anchor || 'N/A'}, Domain Rating: ${link.domainRating})`;
+                    backlinkList.appendChild(li);
+                });
+            } else {
+                backlinkList.innerHTML = '<li class="list-group-item">Không có backlink nào được tìm thấy.</li>';
+            }
+
+            var detailModal = new bootstrap.Modal(document.getElementById('backlinkDetailModal'));
+            detailModal.show();
+        }
+    </script>
+}

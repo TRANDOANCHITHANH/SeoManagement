@@ -1,0 +1,154 @@
+﻿@model SeoManagement.Web.Models.ViewModels.WebsiteInsightViewModel
+
+@{
+    ViewData["Title"] = "Phân tích Website";
+}
+
+<div class="container">
+    <h2 class="text-center mb-4">Phân tích Website</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success text-center">@TempData["Success"]</div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-@(Model.Message.Contains("Lỗi") ? "danger" : "success") text-center">@Model.Message</div>
+    }
+
+    @if (ViewBag.ProjectId != null)
+    {
+        <h4 class="mb-3">Dự án: @ViewBag.ProjectName</h4>
+        <p><strong>Mô tả:</strong> @ViewBag.ProjectDescription</p>
+    }
+
+    <form asp-action="IndexChecker" method="post" class="mb-4">
+        <input type="hidden" name="ProjectId" value="@ViewBag.ProjectId" />
+        <div class="input-group">
+            <input type="text" name="DomainInput" class="form-control" placeholder="Nhập domain (ví dụ: https://vanlangvn.com)" value="@Model.DomainInput" />
+            <button type="submit" class="btn btn-primary">Phân tích</button>
+        </div>
+    </form>
+
+    @if (ViewBag.Results != null && ViewBag.Results.Count > 0)
+    {
+        <div class="card shadow p-4 mb-4">
+            <h4 class="mb-3">Danh sách kết quả phân tích</h4>
+            <div class="table-responsive">
+            <table class="table table-hover table-bordered" id="urlTable">
+                <thead>
+                    <tr>
+                        <th>Domain</th>
+                        <th>Lượt truy cập (gần nhất)</th>
+                        <th>Tỷ lệ thoát(%)</th>
+                        <th>Số trang mỗi lượt truy cập</th>
+                        <th>Thời gian trên trang (s)</th>
+                        <th>Global Rank</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var result in ViewBag.Results)
+                    {
+                        <tr>
+                            <td>@result.Domain</td>
+                            <td>@result.GlobalVisits</td>
+                            <td>@result.BounceRate</td>
+                            <td>@result.PagesPerVisit</td>
+                            <td>@result.TimeOnSite</td>
+                            <td>@result.GlobalRank</td>
+                            <td>
+                                <button class="btn btn-info btn-sm" onclick="showDetails('@result.Domain')">Chi tiết</button>
+                                <form asp-action="DeleteInsight" method="post" style="display:inline;">
+                                    <input type="hidden" name="projectId" value="@ViewBag.ProjectId" />
+                                    <input type="hidden" name="domain" value="@result.Domain" />
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa domain này?')">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <!-- Modal chi tiết -->
+        @foreach (var result in ViewBag.Results)
+        {
+            <div class="modal fade" id="detailsModal_@result.Domain.Replace(".", "_")" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Chi tiết phân tích - @result.Domain</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <h5>Nguồn Traffic</h5>
+                            <ul>
+                                <li><strong>Search:</strong> @(result.SearchTrafficPercentage * 100)%</li>
+                                <li><strong>Direct:</strong> @(result.DirectTrafficPercentage * 100)%</li>
+                                <li><strong>Referrals:</strong> @(result.ReferralTrafficPercentage * 100)%</li>
+                                <li><strong>Social:</strong> @(result.SocialTrafficPercentage * 100)%</li>
+                                <li><strong>Paid Referrals:</strong> @(result.PaidReferralTrafficPercentage * 100)%</li>
+                                <li><strong>Mail:</strong> @(result.MailTrafficPercentage * 100)%</li>
+                            </ul>
+
+                            <h5>Top Từ khóa</h5>
+                            @if (!string.IsNullOrEmpty(result.TopKeywordsJson))
+                            {
+                                var keywords = System.Text.Json.JsonSerializer.Deserialize<List<dynamic>>(result.TopKeywordsJson);
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Từ khóa</th>
+                                            <th>Estimated Value</th>
+                                            <th>Volume</th>
+                                            <th>CPC</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var keyword in keywords)
+                                        {
+                                            <tr>
+                                                <td>@keyword.Name</td>
+                                                <td>@keyword.EstimatedValue</td>
+                                                <td>@(keyword.Volume != null ? keyword.Volume : "N/A")</td>
+                                                <td>@(keyword.CPC != null ? keyword.CPC : "N/A")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+
+                            <h5>Xếp hạng</h5>
+                            <p><strong>Global Rank:</strong> @result.GlobalRank</p>
+                            <p><strong>Country Rank (@result.CountryRankCountry):</strong> @result.CountryRankValue</p>
+                            <p><strong>Category Rank (@result.CategoryRankCategory):</strong> @result.CategoryRankValue</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts{
+
+<script>
+    function showDetails(domain) {
+        domain = domain.replace(/\./g, '_');
+        $('#detailsModal_' + domain).modal('show');
+    }
+</script>
+}

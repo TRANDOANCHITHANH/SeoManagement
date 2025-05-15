@@ -7,6 +7,7 @@
         "SEOOnPage" => "Kiểm Tra SEO On-Page",
         "PageSpeedChecker" => "Kiểm Tra Tốc Độ Tải Trang",
         "BacklinkChecker" => "Kiểm tra Backlink",
+        "WebsiteInsight" => "Kiểm tra hiệu suất Website",
         _ => "Danh Sách Dự Án SEO"
     };
 }
@@ -47,6 +48,10 @@
                     @if (string.IsNullOrEmpty(ViewBag.ProjectType) || ViewBag.ProjectType == "BacklinkChecker")
                     {
                         <a asp-action="Create" asp-route-projectType="BacklinkChecker" class="btn btn-primary">Tạo dự án kiểm tra Backlink</a>
+                    }
+                    @if (string.IsNullOrEmpty(ViewBag.ProjectType) || ViewBag.ProjectType == "WebsiteInsight")
+                    {
+                        <a asp-action="Create" asp-route-projectType="WebsiteInsight" class="btn btn-primary">Tạo dự án kiểm tra hiệu suất Website</a>
                     }
                 </div>
                 @if (Model.Items == null || !Model.Items.Any())
@@ -114,6 +119,11 @@
                                             else if (project.ProjectType == "BacklinkChecker")
                                             {
                                                 <a asp-controller="BacklinkCheckers" asp-action="CheckBacklinks" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra</a>
+                                                <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-warning">Sửa</a>
+                                            }
+                                            else if (project.ProjectType == "WebsiteInsight")
+                                            {
+                                                <a asp-controller="WebsiteInsights" asp-action="IndexChecker" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra</a>
                                                 <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-warning">Sửa</a>
                                             }
                                             <button type="button" class="btn btn-danger" onclick="showDeleteModal(@project.ProjectID, '@project.ProjectName')">Xóa</button>

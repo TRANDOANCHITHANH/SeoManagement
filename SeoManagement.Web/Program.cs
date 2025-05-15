@@ -109,6 +109,9 @@ builder.Services.AddScoped<BacklinkService>(sp =>
 	var apiKey = configuration["RapidApiKey"];
 	return new BacklinkService(httpClient, apiKey);
 });
+builder.Services.AddScoped<IWebsiteInsightRepository, WebsiteInsightRepository>();
+builder.Services.AddScoped<IService<WebsiteInsight>, WebsiteInsightService>();
+builder.Services.AddHttpClient<IService<WebsiteInsight>, WebsiteInsightService>();
 
 
 builder.Services.AddCors(options =>

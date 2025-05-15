@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SeoManagement.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SeoManagement.Infrastructure.Data;
 namespace SeoManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250515173532_update_websiteinsight_table")]
+    partial class update_websiteinsight_table
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -886,9 +889,6 @@ namespace SeoManagement.Infrastructure.Migrations
                     b.Property<long?>("GlobalVisits")
                         .HasColumnType("bigint");
 
-                    b.Property<bool?>("IsDataFromGa")
-                        .HasColumnType("bit");
-
                     b.Property<double?>("MailTrafficPercentage")
                         .HasColumnType("float");
 
@@ -920,9 +920,6 @@ namespace SeoManagement.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("TopCountrySharesJson")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TopKeywordsJson")
                         .IsRequired()

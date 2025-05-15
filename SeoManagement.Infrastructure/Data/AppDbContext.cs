@@ -27,6 +27,8 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<New> News { get; set; }
 		public DbSet<Category> Categories { get; set; }
 		public DbSet<PageSpeedResult> PageSpeedResults { get; set; }
+		public DbSet<WebsiteInsight> WebsiteInsights { get; set; }
+
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -90,6 +92,12 @@ namespace SeoManagement.Infrastructure.Data
 				.WithOne(u => u.Project)
 				.HasForeignKey(u => u.ProjectID)
 				.OnDelete(DeleteBehavior.Cascade);
+
+				entity.HasMany(p => p.WebsiteInsights)
+				   .WithOne(w => w.Project)
+				   .HasForeignKey(w => w.ProjectID)
+				   .OnDelete(DeleteBehavior.Cascade);
+
 			});
 			// Cấu hình mối quan hệ cho Content
 			modelBuilder.Entity<Content>(entity =>

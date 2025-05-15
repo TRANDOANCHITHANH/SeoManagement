@@ -14,13 +14,13 @@ namespace SeoManagement.Web.Controllers
 	{
 		private readonly IPageSpeedResultService _pageSpeedResultService;
 		private readonly ISEOProjectService _projectService;
-		private readonly ILogger<ToolsController> _logger;
+		private readonly ILogger<PageSpeedResultsController> _logger;
 		private readonly HttpClient _httpClient;
 		private readonly IConfiguration _configuration;
 		private readonly UserManager<ApplicationUser> _userManager;
 		private readonly PageSpeedService _pageSpeedService;
 
-		public PageSpeedResultsController(IPageSpeedResultService pageSpeedResultService, ISEOProjectService projectService, ILogger<ToolsController> logger, HttpClient httpClient, IConfiguration configuration, UserManager<ApplicationUser> userManager, PageSpeedService pageSpeedService)
+		public PageSpeedResultsController(IPageSpeedResultService pageSpeedResultService, ISEOProjectService projectService, ILogger<PageSpeedResultsController> logger, HttpClient httpClient, IConfiguration configuration, UserManager<ApplicationUser> userManager, PageSpeedService pageSpeedService)
 		{
 			_pageSpeedResultService = pageSpeedResultService;
 			_projectService = projectService;

@@ -113,10 +113,6 @@ namespace SeoManagement.Infrastructure.Data
 				.WithMany(p => p.SEOOnPageChecks)
 				.HasForeignKey(c => c.ProjectID);
 
-			modelBuilder.Entity<Keyword>()
-			   .HasMany(k => k.KeywordHistories)
-			   .WithOne(h => h.Keyword)
-			   .HasForeignKey(h => h.KeywordID);
 		}
 	}
 }

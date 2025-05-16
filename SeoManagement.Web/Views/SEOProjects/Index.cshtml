@@ -8,6 +8,7 @@
         "PageSpeedChecker" => "Kiểm Tra Tốc Độ Tải Trang",
         "BacklinkChecker" => "Kiểm tra Backlink",
         "WebsiteInsight" => "Kiểm tra hiệu suất Website",
+        "KeywordRankChecker" => "Kiểm tra thứ hạng Keyword",
         _ => "Danh Sách Dự Án SEO"
     };
 }
@@ -53,6 +54,11 @@
                     {
                         <a asp-action="Create" asp-route-projectType="WebsiteInsight" class="btn btn-primary">Tạo dự án kiểm tra hiệu suất Website</a>
                     }
+                    @if (string.IsNullOrEmpty(ViewBag.ProjectType) || ViewBag.ProjectType == "KeywordRankChecker")
+                    {
+                        <a asp-action="Create" asp-route-projectType="KeywordRankChecker" class="btn btn-primary">Tạo dự án kiểm tra thứ hạng Keyword</a>
+                    }
+                    
                 </div>
                 @if (Model.Items == null || !Model.Items.Any())
                 {
@@ -126,6 +132,12 @@
                                                 <a asp-controller="WebsiteInsights" asp-action="IndexChecker" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra</a>
                                                 <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-warning">Sửa</a>
                                             }
+                                            else if (project.ProjectType == "KeywordRankChecker")
+                                            {
+                                                <a asp-controller="KeywordCheckers" asp-action="IndexChecker" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra</a>
+                                                <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-warning">Sửa</a>
+                                            }
+                                            
                                             <button type="button" class="btn btn-danger" onclick="showDeleteModal(@project.ProjectID, '@project.ProjectName')">Xóa</button>
                                         </td>
                                         <td>

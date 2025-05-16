@@ -14,77 +14,44 @@ namespace SeoManagement.Infrastructure.Repositories
 			_context = context;
 		}
 
-		public async Task<(IEnumerable<Keyword>, int)> GetPagedByProjectIdAsync(int projectId, int pageNumber, int pageSize)
+		public async Task AddAsync(Keyword entity)
 		{
-			var query = _context.Keywords
-				.Where(k => k.ProjectID == projectId)
-				.OrderByDescending(k => k.CreatedDate);
-
-			var totalItems = await query.CountAsync();
-			var items = await query
-				.Include(k => k.KeywordHistories)
-				.Skip((pageNumber - 1) * pageSize)
-				.Take(pageSize)
-				.ToListAsync();
-
-			return (items, totalItems);
-		}
-
-		public async Task<Keyword> GetByIdAsync(int id)
-		{
-			return await _context.Keywords
-				.Include(k => k.Project)
-				.Include(k => k.KeywordHistories)
-				.FirstOrDefaultAsync(k => k.KeywordID == id);
-		}
-
-		public async Task AddAsync(Keyword keyword)
-		{
-			await _context.Keywords.AddAsync(keyword);
-			await _context.SaveChangesAsync();
-		}
-
-		public async Task UpdateAsync(Keyword keyword)
-		{
-			var existingKeyword = await GetByIdAsync(keyword.KeywordID);
-			if (existingKeyword == null) return;
-
-			existingKeyword.KeywordName = keyword.KeywordName;
-			existingKeyword.SearchVolume = keyword.SearchVolume;
-			existingKeyword.Competition = keyword.Competition;
-			existingKeyword.SearchIntent = keyword.SearchIntent;
-
-			if (existingKeyword.CurrentRank != keyword.CurrentRank && keyword.CurrentRank.HasValue)
-			{
-				var history = new KeywordHistory
-				{
-					KeywordID = keyword.KeywordID,
-					Rank = keyword.CurrentRank.Value,
-					RecordedDate = DateTime.Now
-				};
-				await AddKeywordHistoryAsync(history);
-			}
-
-			existingKeyword.CurrentRank = keyword.CurrentRank;
-
-			_context.Keywords.Update(existingKeyword);
+			await _context.Keywords.AddAsync(entity);
 			await _context.SaveChangesAsync();
 		}
 
 		public async Task DeleteAsync(int id)
 		{
-			var keyword = await GetByIdAsync(id);
-			if (keyword != null)
+			var result = await _context.Keywords.FindAsync(id);
+			if (result != null)
 			{
-				_context.Keywords.Remove(keyword);
+				_context.Keywords.Remove(result);
 				await _context.SaveChangesAsync();
 			}
 		}
 
-		public async Task AddKeywordHistoryAsync(KeywordHistory history)
+		public Task<Keyword> GetByIdAsync(int id)
 		{
-			await _context.KeywordHistories.AddAsync(history);
-			await _context.SaveChangesAsync();
+			throw new NotImplementedException();
+		}
+
+		public async Task<List<Keyword>> GetByProjectIdAsync(int projectId)
+		{
+			return await _context.Keywords
+			.Where(b => b.ProjectID == projectId)
+			.AsSplitQuery()
+			.ToListAsync();
+		}
+
+		public async Task UpdateAsync(Keyword entity)
+		{
+			var existingResult = await _context.Keywords.FindAsync(entity.KeywordID);
+			if (existingResult != null)
+			{
+				_context.Entry(existingResult).CurrentValues.SetValues(entity);
+				existingResult.LastUpdate = DateTime.UtcNow;
+				await _context.SaveChangesAsync();
+			}
 		}
 	}
 }

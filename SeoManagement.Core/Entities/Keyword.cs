@@ -15,22 +15,21 @@ namespace SeoManagement.Core.Entities
 		[StringLength(100)]
 		public string KeywordName { get; set; }
 
-		public int? SearchVolume { get; set; }
+		[StringLength(500)]
+		public string Domain { get; set; }
 
-		public float? Competition { get; set; }
+		public int? TopVolume { get; set; }
 
-		public int? CurrentRank { get; set; }
+		public int? TopPosition { get; set; }
 
-		[StringLength(50)]
-		public string SearchIntent { get; set; } // Informational, Navigational, Transactional
+		[StringLength(4000)]
+		public string SerpResultsJson { get; set; } = string.Empty;
 
-		public DateTime CreatedDate { get; set; } = DateTime.Now;
+		public DateTime LastUpdate { get; set; }
 
 		// Navigation properties
 		[ForeignKey("ProjectID")]
 		public virtual SEOProject Project { get; set; }
-		public virtual ICollection<KeywordHistory> KeywordHistories { get; set; }
-		public virtual ICollection<Prediction> Predictions { get; set; }
 
 	}
 }

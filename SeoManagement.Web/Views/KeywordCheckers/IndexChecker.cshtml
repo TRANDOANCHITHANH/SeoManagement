@@ -1,0 +1,212 @@
+﻿@model SeoManagement.Web.Models.ViewModels.KeywordRankViewModel
+
+@{
+    ViewData["Title"] = "Kiểm tra thứ hạng từ khóa";
+}
+<style>
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5); /* Lớp phủ mờ */
+        z-index: 9999;
+        display: none; /* Ẩn mặc định */
+        justify-content: center;
+        align-items: center;
+    }
+
+    .spinner-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 4px solid #3498db;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 10px;
+    }
+</style>
+<div class="container">
+    <h2 class="text-center mb-4">Kiểm tra thứ hạng từ khóa</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success text-center">@TempData["Success"]</div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-@(Model.Message.Contains("Lỗi") ? "danger" : "success") text-center">@Model.Message</div>
+    }
+
+    @if (ViewBag.ProjectId != null)
+    {
+        <h4 class="mb-3">Dự án: @ViewBag.ProjectName</h4>
+        <p><strong>Mô tả:</strong> @ViewBag.ProjectDescription</p>
+    }
+
+    <div class="overlay" id="loadingOverlay">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <span>Đang kiểm tra...</span>
+        </div>
+    </div>
+
+    <div id="successToast" class="toast d-none">
+        <div class="toast-body">
+            Kiểm tra thành công!
+        </div>
+    </div>
+
+    <form asp-action="IndexChecker" method="post" class="mb-4" id="checkForm">
+        <input type="hidden" name="ProjectId" value="@ViewBag.ProjectId" />
+        <div class="input-group">
+            <input type="text" name="Keyword" class="form-control" placeholder="Nhập từ khóa (ví dụ: máy dò kim loại)" value="@Model.Keyword" />
+            <input type="text" name="Domain" class="form-control" placeholder="Nhập domain (ví dụ: vanlangvn.com)" value="@Model.Domain" style="margin-left: 5px;" />
+            <button type="submit" class="btn btn-primary" style="margin-left: 5px;">Kiểm tra</button>
+        </div>
+    </form>
+
+    @if (ViewBag.Results != null && ViewBag.Results.Count > 0)
+    {
+        <div class="card shadow p-4 mb-4">
+            <h4 class="mb-3">Danh sách kết quả kiểm tra</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Từ khóa</th>
+                        <th>Domain</th>
+                        <th>Thứ hạng</th>
+                        <th>Top Volume</th>
+                        <th>Cập nhật lần cuối</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var result in ViewBag.Results)
+                    {
+                        <tr>
+                            <td>@result.Keyword</td>
+                            <td>@result.Domain</td>
+                            <td>@(result.TopPosition > 0 ? result.TopPosition : "N/A")</td>
+                            <td>@(result.TopVolume > 0 ? result.TopVolume : "N/A")</td>
+                            <td>@result.LastUpdate</td>
+                            <td>
+                                <button class="btn btn-info btn-sm" onclick="showDetails('@(result.Keyword.Replace(" ", "_") + "_" + result.Domain.Replace(".", "_"))')">Chi tiết</button>
+                                <form asp-action="DeleteRank" method="post" style="display:inline;">
+                                    <input type="hidden" name="projectId" value="@ViewBag.ProjectId" />
+                                    <input type="hidden" name="keyword" value="@result.Keyword" />
+                                    <input type="hidden" name="domain" value="@result.Domain" />
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa kết quả này?')">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Modal chi tiết -->
+        @foreach (var result in ViewBag.Results)
+        {
+            <div class="modal fade" id="detailsModal_@(result.Keyword.Replace(" ", "_") + "_" + result.Domain.Replace(".", "_"))" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Chi tiết - @result.Keyword trên @result.Domain</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <h5>Thông tin chính</h5>
+                            <p><strong>Thứ hạng:</strong> @(result.TopPosition > 0 ? result.TopPosition : "N/A")</p>
+                            <p><strong>Top Volume:</strong> @(result.TopVolume > 0 ? result.TopVolume : "N/A")</p>
+
+                            <h5>Kết quả SERP</h5>
+                            @if (!string.IsNullOrEmpty(result.SerpResultsJson))
+                            {
+                                var serpResults = System.Text.Json.JsonSerializer.Deserialize<List<System.Text.Json.JsonElement>>(result.SerpResultsJson);
+                                <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Vị trí</th>
+                                            <th>Tiêu đề</th>
+                                            <th>URL</th>
+                                            <th>Rank</th>
+                                            <th>Traffic</th>
+                                            <th>Domain Rating</th>
+                                            <th>Top Volume</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var serp in serpResults)
+                                        {
+                                            System.Text.Json.JsonElement positionProp = default;
+                                            System.Text.Json.JsonElement titleProp = default;
+                                            System.Text.Json.JsonElement urlProp = default;
+                                            System.Text.Json.JsonElement metricsProp = default;
+                                            System.Text.Json.JsonElement rankProp = default;
+                                            System.Text.Json.JsonElement trafficProp = default;
+                                            System.Text.Json.JsonElement drProp = default;
+                                            System.Text.Json.JsonElement tvProp = default;
+
+                                            bool hasPosition = serp.TryGetProperty("Position", out positionProp) && positionProp.ValueKind == System.Text.Json.JsonValueKind.Number;
+                                            bool hasTitle = serp.TryGetProperty("Title", out titleProp) && titleProp.ValueKind == System.Text.Json.JsonValueKind.String;
+                                            bool hasUrl = serp.TryGetProperty("Url", out urlProp) && urlProp.ValueKind == System.Text.Json.JsonValueKind.String;
+                                            bool hasMetrics = serp.TryGetProperty("Metrics", out metricsProp) && metricsProp.ValueKind == System.Text.Json.JsonValueKind.Object;
+                                            bool hasRank = hasMetrics && metricsProp.TryGetProperty("Rank", out rankProp) && rankProp.ValueKind == System.Text.Json.JsonValueKind.Number;
+                                            bool hasTraffic = hasMetrics && metricsProp.TryGetProperty("Traffic", out trafficProp) && trafficProp.ValueKind == System.Text.Json.JsonValueKind.Number;
+                                            bool hasDomainRating = hasMetrics && metricsProp.TryGetProperty("DomainRating", out drProp) && drProp.ValueKind == System.Text.Json.JsonValueKind.Number;
+                                            bool hasTopVolume = hasMetrics && metricsProp.TryGetProperty("TopVolume", out tvProp) && tvProp.ValueKind == System.Text.Json.JsonValueKind.Number;
+
+                                            <tr>
+                                                <td>@(hasPosition ? positionProp.GetInt32() : "N/A")</td>
+                                                <td>@(hasTitle ? titleProp.GetString() : "N/A")</td>
+                                                <td>@(hasUrl ? urlProp.GetString() : "N/A")</td>
+                                                <td>@(hasRank ? rankProp.GetInt64() : "N/A")</td>
+                                                <td>@(hasTraffic ? trafficProp.GetInt32() : "N/A")</td>
+                                                <td>@(hasDomainRating ? drProp.GetInt32() : "N/A")</td>
+                                                <td>@(hasTopVolume ? tvProp.GetInt32() : "N/A")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                </div>
+                            }
+
+                            <h5>Cập nhật lần cuối</h5>
+                            <p>@result.LastUpdate</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<script>
+    function showDetails(id) {
+        $('#detailsModal_' + id).modal('show');
+    }
+        document.getElementById('checkForm').addEventListener('submit', function () {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    });
+</script>

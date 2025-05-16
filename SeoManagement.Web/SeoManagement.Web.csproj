@@ -23,6 +23,7 @@
   <ItemGroup>
     <Folder Include="Areas\Admin\Data\" />
     <Folder Include="Utilities\" />
+    <Folder Include="Views\Keywords\" />
     <Folder Include="Views\Users\" />
   </ItemGroup>
 

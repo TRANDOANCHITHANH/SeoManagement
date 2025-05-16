@@ -7,6 +7,28 @@
 }
 
 <div class="container py-4">
+    <div class="page-header mb-3">
+        <h4 class="fw-bold">SEO On-Page</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a asp-action="Index" asp-controller="Home">
+                    <i class="icon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-controller="SEOProjects" asp-route-projectType="SEOOnPage">Kiểm tra On-Page</a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Chi tiết</a>
+            </li>
+        </ul>
+    </div>
     <h2 class="text-center mb-4 fw-bold">Chi Tiết Kiểm Tra SEO On-Page</h2>
 
     @if (TempData["Error"] != null)

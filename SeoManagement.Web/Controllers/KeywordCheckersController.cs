@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
@@ -40,11 +41,21 @@ namespace SeoManagement.Web.Controllers
 					{
 						Keyword = r.KeywordName,
 						Domain = r.Domain,
-						TopPosition = r.TopPosition ?? 0,
+						CurrentPosition = r.TopPosition.HasValue ? r.TopPosition.Value : -1,
+						PreviousPosition = r.KeywordHistories != null && r.KeywordHistories.Any()
+							? r.KeywordHistories.OrderByDescending(h => h.RecordedDate).Skip(1).FirstOrDefault()?.Rank ?? -1
+							: -1,
+						BestPosition = r.KeywordHistories != null
+							? new List<int> { r.TopPosition ?? -1 }.Concat(r.KeywordHistories.Select(h => h.Rank))
+								.Where(p => p > 0)
+								.DefaultIfEmpty(-1)
+								.Min()
+							: (r.TopPosition.HasValue && r.TopPosition.Value > 0 ? r.TopPosition.Value : -1),
 						TopVolume = r.TopVolume ?? 0,
 						LastUpdate = r.LastUpdate.ToString("yyyy-MM-dd"),
 						SerpResultsJson = r.SerpResultsJson
 					})
+					.DistinctBy(r => new { r.Keyword, r.Domain })
 					.ToList();
 
 				var project = await _projectService.GetByIdAsync(projectId.Value);
@@ -84,7 +95,16 @@ namespace SeoManagement.Web.Controllers
 					{
 						Keyword = r.KeywordName,
 						Domain = r.Domain,
-						TopPosition = r.TopPosition ?? 0,
+						CurrentPosition = r.TopPosition.HasValue ? r.TopPosition.Value : -1,
+						PreviousPosition = r.KeywordHistories != null && r.KeywordHistories.Any()
+							? r.KeywordHistories.OrderByDescending(h => h.RecordedDate).Skip(1).FirstOrDefault()?.Rank ?? -1
+							: -1,
+						BestPosition = r.KeywordHistories != null
+							? new List<int> { r.TopPosition ?? -1 }.Concat(r.KeywordHistories.Select(h => h.Rank))
+								.Where(p => p > 0)
+								.DefaultIfEmpty(-1)
+								.Min()
+							: (r.TopPosition.HasValue && r.TopPosition.Value > 0 ? r.TopPosition.Value : -1),
 						TopVolume = r.TopVolume ?? 0,
 						LastUpdate = r.LastUpdate.ToString("yyyy-MM-dd"),
 						SerpResultsJson = r.SerpResultsJson
@@ -140,6 +160,91 @@ namespace SeoManagement.Web.Controllers
 			}
 
 			return RedirectToAction(nameof(IndexChecker), new { projectId });
+		}
+
+		[HttpGet]
+		public async Task<IActionResult> ExportToExcel(int projectId)
+		{
+			try
+			{
+				var keywords = await _keywordService.GetByProjectIdAsync(projectId);
+				if (keywords == null || !keywords.Any())
+				{
+					TempData["Error"] = "Không có dữ liệu từ khóa để xuất.";
+					return RedirectToAction(nameof(IndexChecker), new { projectId });
+				}
+
+				var results = keywords
+					.Select(r =>
+					{
+						var previousPosition = r.KeywordHistories != null && r.KeywordHistories.Any()
+							? r.KeywordHistories.OrderByDescending(h => h.RecordedDate).Skip(1).FirstOrDefault()?.Rank ?? -1
+							: -1;
+
+						return new
+						{
+							Keyword = r.KeywordName ?? "Unknown Keyword",
+							Domain = r.Domain ?? "Unknown Domain",
+							CurrentPosition = r.TopPosition.HasValue ? r.TopPosition.Value : -1,
+							PreviousPosition = previousPosition,
+							BestPosition = r.KeywordHistories != null
+								? new List<int> { r.TopPosition ?? -1 }.Concat(r.KeywordHistories.Select(h => h.Rank))
+									.Where(p => p > 0)
+									.DefaultIfEmpty(-1)
+									.Min()
+								: (r.TopPosition.HasValue && r.TopPosition.Value > 0 ? r.TopPosition.Value : -1),
+							TopVolume = r.TopVolume ?? 0,
+							LastUpdate = r.LastUpdate
+						};
+					})
+					.DistinctBy(r => new { r.Keyword, r.Domain })
+					.ToList();
+
+				using (var workbook = new XLWorkbook())
+				{
+					var worksheet = workbook.Worksheets.Add("KeywordRankReport");
+					var currentRow = 1;
+
+					// Tiêu đề cột
+					worksheet.Cell(currentRow, 1).Value = "Từ khóa";
+					worksheet.Cell(currentRow, 2).Value = "Domain";
+					worksheet.Cell(currentRow, 3).Value = "Vị trí hiện tại";
+					worksheet.Cell(currentRow, 4).Value = "Vị trí cũ";
+					worksheet.Cell(currentRow, 5).Value = "Vị trí cao nhất";
+					worksheet.Cell(currentRow, 6).Value = "Top Volume";
+					worksheet.Cell(currentRow, 7).Value = "Ngày cập nhật cuối";
+					worksheet.Range(currentRow, 1, currentRow, 7).Style.Font.Bold = true;
+
+					currentRow++;
+					foreach (var result in results)
+					{
+						worksheet.Cell(currentRow, 1).Value = result.Keyword;
+						worksheet.Cell(currentRow, 2).Value = result.Domain;
+						worksheet.Cell(currentRow, 3).Value = result.CurrentPosition > 0 ? result.CurrentPosition.ToString() : "N/A";
+						worksheet.Cell(currentRow, 4).Value = result.PreviousPosition > 0 ? result.PreviousPosition.ToString() : "N/A";
+						worksheet.Cell(currentRow, 5).Value = result.BestPosition > 0 ? result.BestPosition.ToString() : "N/A";
+						worksheet.Cell(currentRow, 6).Value = result.TopVolume > 0 ? result.TopVolume.ToString() : "N/A";
+						worksheet.Cell(currentRow, 7).Value = result.LastUpdate.ToString("dd/MM/yyyy HH:mm:ss");
+
+						currentRow++;
+					}
+
+					worksheet.Columns().AdjustToContents();
+
+					using (var stream = new MemoryStream())
+					{
+						workbook.SaveAs(stream);
+						var content = stream.ToArray();
+						return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"KeywordRank_Project_{projectId}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Lỗi khi xuất dữ liệu Excel cho dự án: {ProjectId}", projectId);
+				TempData["Error"] = "Đã xảy ra lỗi khi xuất dữ liệu: " + ex.Message;
+				return RedirectToAction(nameof(IndexChecker), new { projectId });
+			}
 		}
 	}
 }

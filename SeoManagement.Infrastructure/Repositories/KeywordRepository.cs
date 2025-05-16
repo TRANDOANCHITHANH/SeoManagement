@@ -39,6 +39,7 @@ namespace SeoManagement.Infrastructure.Repositories
 		{
 			return await _context.Keywords
 			.Where(b => b.ProjectID == projectId)
+			.Include(k => k.KeywordHistories)
 			.AsSplitQuery()
 			.ToListAsync();
 		}
@@ -52,6 +53,13 @@ namespace SeoManagement.Infrastructure.Repositories
 				existingResult.LastUpdate = DateTime.UtcNow;
 				await _context.SaveChangesAsync();
 			}
+		}
+
+		public async Task<Keyword> GetByKeywordAndDomainAsync(int projectId, string keyword, string domain)
+		{
+			return await _context.Keywords
+				.Include(k => k.KeywordHistories)
+				.FirstOrDefaultAsync(k => k.ProjectID == projectId && k.KeywordName == keyword && k.Domain == domain);
 		}
 	}
 }

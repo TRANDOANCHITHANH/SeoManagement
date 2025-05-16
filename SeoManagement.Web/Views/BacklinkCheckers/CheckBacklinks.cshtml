@@ -15,7 +15,29 @@
 }
 
 <div class="container">
-    <h2 class="text-center mb-4">Kiểm tra Backlink cho Dự án #@(projectName ?? "N/A")</h2>
+    <div class="page-header mb-3">
+        <h4 class="fw-bold">Backlinks</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a asp-action="Index" asp-controller="Home">
+                    <i class="icon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-controller="SEOProjects" asp-route-projectType="BacklinkChecker">Kiểm tra Backlink</a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Chi tiết</a>
+            </li>
+        </ul>
+    </div>
+    <h2 class="text-center mb-4">Kiểm tra Backlink</h2>
 
     @if (TempData["Error"] != null)
     {

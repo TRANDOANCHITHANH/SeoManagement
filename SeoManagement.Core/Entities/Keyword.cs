@@ -31,5 +31,7 @@ namespace SeoManagement.Core.Entities
 		[ForeignKey("ProjectID")]
 		public virtual SEOProject Project { get; set; }
 
+		public virtual ICollection<KeywordHistory> KeywordHistories { get; set; }
+
 	}
 }

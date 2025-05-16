@@ -10,9 +10,9 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5); /* Lớp phủ mờ */
+        background: rgba(0, 0, 0, 0.5);
         z-index: 9999;
-        display: none; /* Ẩn mặc định */
+        display: none; 
         justify-content: center;
         align-items: center;
     }
@@ -35,8 +35,33 @@
         animation: spin 1s linear infinite;
         margin-bottom: 10px;
     }
+
+
 </style>
 <div class="container">
+    <div class="page-header mb-3">
+        <h4 class="fw-bold">Keywords</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a asp-action="Index" asp-controller="Home">
+                    <i class="icon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-controller="SEOProjects" asp-route-projectType="KeywordRankChecker">Kiểm tra thứ hạng</a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Chi tiết</a>
+            </li>
+        </ul>
+    </div>
+
     <h2 class="text-center mb-4">Kiểm tra thứ hạng từ khóa</h2>
 
     @if (TempData["Error"] != null)
@@ -67,12 +92,6 @@
         </div>
     </div>
 
-    <div id="successToast" class="toast d-none">
-        <div class="toast-body">
-            Kiểm tra thành công!
-        </div>
-    </div>
-
     <form asp-action="IndexChecker" method="post" class="mb-4" id="checkForm">
         <input type="hidden" name="ProjectId" value="@ViewBag.ProjectId" />
         <div class="input-group">
@@ -81,17 +100,28 @@
             <button type="submit" class="btn btn-primary" style="margin-left: 5px;">Kiểm tra</button>
         </div>
     </form>
-
+    <div class="card shadow p-4 mb-4">
+        <h4 class="mb-3">Biểu đồ tăng trưởng từ khóa</h4>
+        <div class="chart-container">
+            <canvas id="keywordGrowthChart"></canvas>
+        </div>
+    </div>
     @if (ViewBag.Results != null && ViewBag.Results.Count > 0)
     {
         <div class="card shadow p-4 mb-4">
-            <h4 class="mb-3">Danh sách kết quả kiểm tra</h4>
-            <table class="table table-bordered">
+            <h4 class="mb-3">Danh sách từ khóa</h4>
+            <a asp-action="ExportToExcel" asp-route-projectId="@ViewBag.ProjectId" class="btn btn-info btn-sm mb-2" style="width:15%;">
+                <i class="fa fa-download"></i> Xuất Excel
+            </a>
+            <div class="table-responsive">
+            <table class="table table-bordered" id="urlTable">
                 <thead>
                     <tr>
                         <th>Từ khóa</th>
                         <th>Domain</th>
-                        <th>Thứ hạng</th>
+                        <th>Vị trí hiện tại</th>
+                        <th>Vị trí cũ</th>
+                        <th>Vị trí tốt nhất</th>
                         <th>Top Volume</th>
                         <th>Cập nhật lần cuối</th>
                         <th>Thao tác</th>
@@ -100,25 +130,30 @@
                 <tbody>
                     @foreach (var result in ViewBag.Results)
                     {
+                      
                         <tr>
                             <td>@result.Keyword</td>
                             <td>@result.Domain</td>
-                            <td>@(result.TopPosition > 0 ? result.TopPosition : "N/A")</td>
+                            <td>@(result.CurrentPosition > 0 ? result.CurrentPosition.ToString() : "N/A")</td>
+                            <td>@(result.PreviousPosition > 0 ? result.PreviousPosition.ToString() : "N/A")</td>
+                            <td>@(result.BestPosition > 0 ? result.BestPosition.ToString() : "N/A")</td>
                             <td>@(result.TopVolume > 0 ? result.TopVolume : "N/A")</td>
                             <td>@result.LastUpdate</td>
                             <td>
-                                <button class="btn btn-info btn-sm" onclick="showDetails('@(result.Keyword.Replace(" ", "_") + "_" + result.Domain.Replace(".", "_"))')">Chi tiết</button>
+                                <a href="https://www.google.com/search?q=@result.Keyword&num=100&gl=vn&hl=vi" class="btn btn-outline-primary btn-sm" target="_blank"><i class="fa fa-share-square-o"></i></a>
+                                <button class="btn btn-outline-info btn-sm" onclick="showDetails('@(result.Keyword.Replace(" ", "_") + "_" + result.Domain.Replace(".", "_"))')"><i class="fa fa-info"></i></button>
                                 <form asp-action="DeleteRank" method="post" style="display:inline;">
                                     <input type="hidden" name="projectId" value="@ViewBag.ProjectId" />
                                     <input type="hidden" name="keyword" value="@result.Keyword" />
                                     <input type="hidden" name="domain" value="@result.Domain" />
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa kết quả này?')">Xóa</button>
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa kết quả này?')"> <i class="fa fa-trash-o"></i></button>
                                 </form>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- Modal chi tiết -->
@@ -133,7 +168,9 @@
                         </div>
                         <div class="modal-body">
                             <h5>Thông tin chính</h5>
-                            <p><strong>Thứ hạng:</strong> @(result.TopPosition > 0 ? result.TopPosition : "N/A")</p>
+                            <p><strong>Vị trí hiện tại:</strong> @(result.CurrentPosition > 0 ? result.CurrentPosition.ToString() : "N/A")</p>
+                            <p><strong>Vị trí cũ:</strong> @(result.PreviousPosition > 0 ? result.PreviousPosition.ToString() : "N/A")</p>
+                            <p><strong>Vị trí tốt nhất:</strong> @(result.BestPosition > 0 ? result.BestPosition.ToString() : "N/A")</p>
                             <p><strong>Top Volume:</strong> @(result.TopVolume > 0 ? result.TopVolume : "N/A")</p>
 
                             <h5>Kết quả SERP</h5>
@@ -141,7 +178,7 @@
                             {
                                 var serpResults = System.Text.Json.JsonSerializer.Deserialize<List<System.Text.Json.JsonElement>>(result.SerpResultsJson);
                                 <div class="table-responsive">
-                                <table class="table table-bordered">
+                                    <table class="table table-bordered" id="urlTable">
                                     <thead>
                                         <tr>
                                             <th>Vị trí</th>
@@ -201,7 +238,8 @@
         }
     }
 </div>
-
+@section Scripts{
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     function showDetails(id) {
         $('#detailsModal_' + id).modal('show');
@@ -209,4 +247,66 @@
         document.getElementById('checkForm').addEventListener('submit', function () {
         document.getElementById('loadingOverlay').style.display = 'flex';
     });
+
+        function drawKeywordGrowthChart() {
+            const results = @Html.Raw(Json.Serialize(ViewBag.Results));
+            const ctx = document.getElementById('keywordGrowthChart').getContext('2d');
+            const datasets = results.map(result => {
+                const labels = result.KeywordHistories ? result.KeywordHistories.map(h => new Date(h.RecordedDate).toLocaleDateString()) : [];
+                const data = result.KeywordHistories ? result.KeywordHistories.map(h => h.Rank) : [];
+
+                return {
+                    label: `${result.Keyword} (${result.Domain})`,
+                    data: data,
+                    borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                    fill: false,
+                    tension: 0.1
+                };
+            });
+
+            const chartData = {
+                labels: datasets.length > 0 ? datasets[0].data.map((_, i) => i + 1) : [],
+                datasets: datasets
+            };
+
+            new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            reverse: true, 
+                            title: {
+                                display: true,
+                                text: 'Vị trí'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Thời gian (theo thứ tự cập nhật)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw || 0;
+                                    return `${label}: Vị trí ${value} vào ngày ${labels[context.dataIndex]}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+             document.addEventListener('DOMContentLoaded', drawKeywordGrowthChart);
 </script>
+}

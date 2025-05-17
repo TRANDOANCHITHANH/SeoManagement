@@ -94,5 +94,12 @@ namespace SeoManagement.Infrastructure.Repositories
 				await _context.SaveChangesAsync();
 			}
 		}
+
+		public async Task<List<SEOProject>> GetAllAsync()
+		{
+			var query = await _context.SEOProjects
+								.AsNoTracking().ToListAsync();
+			return query;
+		}
 	}
 }

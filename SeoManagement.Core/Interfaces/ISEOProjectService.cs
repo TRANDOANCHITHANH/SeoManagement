@@ -9,5 +9,6 @@ namespace SeoManagement.Core.Interfaces
 		Task CreateSEOProjectAsync(SEOProject project);
 		Task UpdateSEOProjectAsync(SEOProject project);
 		Task DeleteSEOProjectAsync(int projectId);
+		Task<List<SEOProject>> GetAllAsync();
 	}
 }

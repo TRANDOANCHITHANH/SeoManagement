@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SeoManagement.Core.Entities;
@@ -5,6 +7,7 @@ using SeoManagement.Core.Interfaces;
 using SeoManagement.Infrastructure.Data;
 using SeoManagement.Infrastructure.Repositories;
 using SeoManagement.Infrastructure.Services;
+using SeoManagement.Web.Utilities;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +20,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
 	.AddEntityFrameworkStores<AppDbContext>()
 	.AddDefaultTokenProviders();
+
+builder.Services.AddHangfire(config => config
+	.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+	.UseSimpleAssemblyNameTypeSerializer()
+	.UseRecommendedSerializerSettings()
+	.UseMemoryStorage());
+
+builder.Services.AddHangfireServer();
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -75,6 +86,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISEOProjectRepository, SEOProjectRepository>();
 builder.Services.AddScoped<ISEOProjectService, SEOProjectService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddScoped<ScheduledKeywordCheckService>();
 builder.Services.AddScoped<ISEOOnPageCheckService, SEOOnPageCheckService>();
 builder.Services.AddScoped<IKeywordRepository, KeywordRepository>();
 builder.Services.AddScoped<IService<Keyword>, KeywordService>();
@@ -149,6 +161,10 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseCors("AllowAll");
+app.UseHangfireDashboard("/admin/hangfire", new DashboardOptions
+{
+	Authorization = new[] { new HangfireDashboardAuthorizationFilter() }
+});
 
 app.MapControllerRoute(
 	name: "areas",
@@ -188,4 +204,35 @@ using (var scope = app.Services.CreateScope())
 		await userManager.AddToRoleAsync(adminUser, "Admin");
 	}
 }
+
+var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
+Microsoft.Extensions.Logging.ILogger logger = loggerFactory.CreateLogger("HangfireSetup");
+var checkFrequency = builder.Configuration.GetSection("KeywordCheckSettings:Frequency").Value;
+
+using (var scope = app.Services.CreateScope())
+{
+	var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+	var scheduledService = scope.ServiceProvider.GetRequiredService<ScheduledKeywordCheckService>();
+
+	if (checkFrequency == "Daily")
+	{
+		recurringJobManager.AddOrUpdate(
+			"CheckKeywordRanksDaily",
+			() => scheduledService.CheckAndSendReportAsync(),
+			Cron.Daily(0, 0));
+		logger.LogInformation("Triggering daily keyword check job immediately for testing");
+		recurringJobManager.Trigger("CheckKeywordRanksDaily");
+	}
+	else if (checkFrequency == "Weekly")
+	{
+		recurringJobManager.AddOrUpdate(
+			"CheckKeywordRanksWeekly",
+			() => scheduledService.CheckAndSendReportAsync(),
+			Cron.Weekly(DayOfWeek.Monday, 0, 0));
+
+		logger.LogInformation("Triggering weekly keyword check job immediately for testing");
+		recurringJobManager.Trigger("CheckKeywordRanksWeekly");
+	}
+}
+
 app.Run();

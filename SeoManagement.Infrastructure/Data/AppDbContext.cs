@@ -28,7 +28,7 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<Category> Categories { get; set; }
 		public DbSet<PageSpeedResult> PageSpeedResults { get; set; }
 		public DbSet<WebsiteInsight> WebsiteInsights { get; set; }
-
+		public DbSet<ApiKey> ApiKeys { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

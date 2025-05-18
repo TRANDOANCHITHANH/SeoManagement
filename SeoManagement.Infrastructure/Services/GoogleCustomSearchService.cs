@@ -1,24 +1,22 @@
-﻿using System.Text.Json;
+﻿using SeoManagement.Core.Interfaces;
+using System.Text.Json;
 
 namespace SeoManagement.Infrastructure.Services
 {
 	public class GoogleCustomSearchService
 	{
-		private readonly HttpClient _httpClient;
-		private readonly string _apiKey;
-		private readonly string _searchEngineId;
+		private readonly IApiServiceFactory _apiServiceFactory;
 
-		public GoogleCustomSearchService(HttpClient httpClient, string apiKey, string searchEngineId)
+		public GoogleCustomSearchService(IApiServiceFactory apiServiceFactory)
 		{
-			_httpClient = httpClient;
-			_apiKey = apiKey;
-			_searchEngineId = searchEngineId;
+			_apiServiceFactory = apiServiceFactory;
 		}
 
 		public async Task<bool> CheckIfIndexedAsync(string url)
 		{
 			try
 			{
+				var (_httpClient, _apiKey, _searchEngineId) = await _apiServiceFactory.CreateGoogleCustomSearchClientAsync();
 				var query = $"site:{url}";
 				var requestUrl = $"https://www.googleapis.com/customsearch/v1?key={_apiKey}&cx={_searchEngineId}&q={Uri.EscapeDataString(query)}";
 

@@ -1,0 +1,68 @@
+﻿@model SeoManagement.Web.Areas.Admin.Models.ViewModels.ApiKeyViewModel
+
+@{
+    ViewData["Title"] = "Thêm Api Key mới";
+}
+
+<div class="page-header">
+    <h3 class="fw-bold">ApiKeys</h3>
+    <ul class="breadcrumbs">
+        <li class="nav-home">
+            <a asp-action="Index" asp-controller="Home">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a asp-action="Index">ApiKeys</a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Create</a>
+        </li>
+    </ul>
+</div>
+
+<div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group mb-3">
+                        <label asp-for="ServiceName" class="control-label"></label>
+                        <input asp-for="ServiceName" class="form-control" />
+                        <span asp-validation-for="ServiceName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="KeyValue" class="control-label"></label>
+                        <input asp-for="KeyValue" class="form-control" />
+                        <span asp-validation-for="KeyValue" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="IsActive" class="control-label"></label>
+                        <input asp-for="IsActive" type="checkbox" />
+                        <span asp-validation-for="IsActive" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="ExpiryDate" class="control-label"></label>
+                        <input asp-for="ExpiryDate" class="form-control" type="datetime-local" />
+                        <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <input type="submit" value="Thêm" class="btn btn-primary" />
+                        <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

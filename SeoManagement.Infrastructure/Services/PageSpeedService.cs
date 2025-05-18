@@ -1,22 +1,22 @@
-﻿using System.Text.Json.Serialization;
+﻿using SeoManagement.Core.Interfaces;
+using System.Text.Json.Serialization;
 
 namespace SeoManagement.Infrastructure.Services
 {
 	public class PageSpeedService
 	{
-		private readonly HttpClient _httpClient;
-		private readonly string _apiKey;
+		private readonly IApiServiceFactory _apiServiceFactory;
 
-		public PageSpeedService(HttpClient httpClient, string apiKey)
+		public PageSpeedService(IApiServiceFactory apiServiceFactory)
 		{
-			_httpClient = httpClient;
-			_apiKey = apiKey;
+			_apiServiceFactory = apiServiceFactory;
 		}
 
 		public async Task<(double LoadTime, double? LCP, double? FID, double? CLS, string Suggestions)> CheckPageSpeedAsync(string url)
 		{
 			try
 			{
+				var (_httpClient, _apiKey) = await _apiServiceFactory.CreatePageSpeedClientAsync();
 				var requestUrl = $"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={Uri.EscapeDataString(url)}&key={_apiKey}&strategy=desktop&category=performance";
 				var response = await _httpClient.GetAsync(requestUrl);
 				response.EnsureSuccessStatusCode();

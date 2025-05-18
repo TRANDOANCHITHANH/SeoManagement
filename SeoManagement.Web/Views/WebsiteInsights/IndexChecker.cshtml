@@ -49,8 +49,13 @@
         <h4 class="mb-3">Dự án: @ViewBag.ProjectName</h4>
         <p><strong>Mô tả:</strong> @ViewBag.ProjectDescription</p>
     }
-
-    <form asp-action="IndexChecker" method="post" class="mb-4">
+    <div class="overlay" id="loadingOverlay">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <span>Đang phân tích...</span>
+        </div>
+    </div>
+    <form asp-action="IndexChecker" method="post" class="mb-4" id="checkForm">
         <input type="hidden" name="ProjectId" value="@ViewBag.ProjectId" />
         <div class="input-group">
             <input type="text" name="DomainInput" class="form-control" placeholder="Nhập domain (ví dụ: https://vanlangvn.com)" value="@Model.DomainInput" />
@@ -124,7 +129,7 @@
                             <h5>Top Từ khóa</h5>
                             @if (!string.IsNullOrEmpty(result.TopKeywordsJson))
                             {
-                                var keywords = System.Text.Json.JsonSerializer.Deserialize<List<dynamic>>(result.TopKeywordsJson);
+                                var keywords = System.Text.Json.JsonSerializer.Deserialize<List<SeoManagement.Web.Models.ViewModels.TopKeywordViewModel>>(result.TopKeywordsJson);
                                 <table class="table table-bordered">
                                     <thead>
                                         <tr>
@@ -170,5 +175,8 @@
         domain = domain.replace(/\./g, '_');
         $('#detailsModal_' + domain).modal('show');
     }
+         document.getElementById('checkForm').addEventListener('submit', function () {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        });
 </script>
 }

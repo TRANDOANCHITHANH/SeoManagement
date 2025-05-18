@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using SeoManagement.Core.Entities;
+﻿using SeoManagement.Core.Entities;
 using SeoManagement.Core.Interfaces;
 using System.Text.Json;
 
@@ -8,16 +7,12 @@ namespace SeoManagement.Infrastructure.Services
 	public class WebsiteInsightService : IService<WebsiteInsight>
 	{
 		private readonly IWebsiteInsightRepository _repository;
-		private readonly HttpClient _httpClient;
-		private readonly string _apiKey;
+		private readonly IApiServiceFactory _apiServiceFactory;
 
-		public WebsiteInsightService(IWebsiteInsightRepository repository, HttpClient httpClient, IConfiguration configuration)
+		public WebsiteInsightService(IWebsiteInsightRepository repository, IApiServiceFactory apiServiceFactory)
 		{
 			_repository = repository;
-			_httpClient = httpClient;
-			_apiKey = configuration["RapidApiKey"];
-			_httpClient.DefaultRequestHeaders.Add("x-rapidapi-host", "similarweb-insights.p.rapidapi.com");
-			_httpClient.DefaultRequestHeaders.Add("x-rapidapi-key", _apiKey);
+			_apiServiceFactory = apiServiceFactory;
 		}
 
 		public async Task AddAsync(WebsiteInsight entity)
@@ -51,13 +46,13 @@ namespace SeoManagement.Infrastructure.Services
 			{
 				domain = "https://" + domain;
 			}
-
+			var _httpClient = await _apiServiceFactory.CreateRapidApiClientAsync("similarweb-insights.p.rapidapi.com");
 			var requestUri = $"https://similarweb-insights.p.rapidapi.com/all-insights?domain={Uri.EscapeDataString(domain)}";
 			var response = await _httpClient.GetAsync(requestUri);
 			response.EnsureSuccessStatusCode();
 
 			var json = await response.Content.ReadAsStringAsync();
-			Console.WriteLine($"API Response for {domain}: {json}");
+
 			using var doc = JsonDocument.Parse(json);
 			var root = doc.RootElement;
 

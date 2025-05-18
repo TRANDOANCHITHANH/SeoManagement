@@ -1,32 +1,27 @@
-﻿using System.Text.Json;
+﻿using SeoManagement.Core.Interfaces;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace SeoManagement.Infrastructure.Services
 {
 	public class BacklinkService
 	{
-		private readonly HttpClient _httpClient;
-		private readonly string _apiKey;
+		private readonly IApiServiceFactory _apiServiceFactory;
 
-		public BacklinkService(HttpClient httpClient, string apiKey)
+		public BacklinkService(IApiServiceFactory apiServiceFactory)
 		{
-			_httpClient = httpClient;
-			_apiKey = apiKey;
+			_apiServiceFactory = apiServiceFactory;
 		}
 
 		public async Task<(int TotalBacklinks, int ReferringDomains, int DofollowBacklinks, int DofollowRefDomains, string BacklinksDetails)> CheckBacklinksAsync(string url)
 		{
 			try
 			{
+				var _httpClient = await _apiServiceFactory.CreateRapidApiClientAsync("ahrefs2.p.rapidapi.com");
 				var request = new HttpRequestMessage
 				{
 					Method = HttpMethod.Get,
 					RequestUri = new Uri($"https://ahrefs2.p.rapidapi.com/backlinks?url={Uri.EscapeDataString(url)}&mode=subdomains"),
-					Headers =
-					{
-						{ "x-rapidapi-key", _apiKey },
-						{ "x-rapidapi-host", "ahrefs2.p.rapidapi.com" },
-					},
 				};
 
 				using var response = await _httpClient.SendAsync(request);

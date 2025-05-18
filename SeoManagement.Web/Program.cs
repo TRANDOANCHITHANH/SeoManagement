@@ -81,6 +81,10 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<GoogleSearchConsoleService>();
+builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
+builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+builder.Services.AddScoped<EncryptionService>();
+builder.Services.AddScoped<IApiServiceFactory, ApiServiceFactory>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISEOProjectRepository, SEOProjectRepository>();
@@ -90,42 +94,18 @@ builder.Services.AddScoped<ScheduledKeywordCheckService>();
 builder.Services.AddScoped<ISEOOnPageCheckService, SEOOnPageCheckService>();
 builder.Services.AddScoped<IKeywordRepository, KeywordRepository>();
 builder.Services.AddScoped<IService<Keyword>, KeywordService>();
-builder.Services.AddHttpClient<IService<Keyword>, KeywordService>();
-builder.Services.AddHttpClient<GoogleCustomSearchService>();
 builder.Services.AddScoped<IIndexCheckerUrlRepository, IndexCheckerUrlRepository>();
 builder.Services.AddScoped<IIndexCheckerUrlService, IndexCheckerUrlService>();
 builder.Services.AddScoped<IPageSpeedResultRepository, PageSpeedResultRepository>();
 builder.Services.AddScoped<IPageSpeedResultService, PageSpeedResultService>();
-builder.Services.AddScoped<GoogleCustomSearchService>(sp =>
-{
-	var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-	var configuration = sp.GetRequiredService<IConfiguration>();
-	var apiKey = configuration["GoogleCustomSearch:ApiKey"];
-	var searchEngineId = configuration["GoogleCustomSearch:SearchEngineId"];
-	return new GoogleCustomSearchService(httpClient, apiKey, searchEngineId);
-});
-
-builder.Services.AddScoped<PageSpeedService>(sp =>
-{
-	var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-	var configuration = sp.GetRequiredService<IConfiguration>();
-	var apiKey = configuration["GooglePageSpeed:ApiKey"];
-	return new PageSpeedService(httpClient, apiKey);
-});
+builder.Services.AddScoped<PageSpeedService>();
+builder.Services.AddScoped<GoogleCustomSearchService>();
 
 builder.Services.AddScoped<IBacklinkResultRepository, BacklinkResultRepository>();
 builder.Services.AddScoped<IBacklinkResultService, BacklinkResultService>();
-builder.Services.AddScoped<BacklinkService>(sp =>
-{
-	var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient();
-	var configuration = sp.GetRequiredService<IConfiguration>();
-	var apiKey = configuration["RapidApiKey"];
-	return new BacklinkService(httpClient, apiKey);
-});
+builder.Services.AddScoped<BacklinkService>();
 builder.Services.AddScoped<IWebsiteInsightRepository, WebsiteInsightRepository>();
 builder.Services.AddScoped<IService<WebsiteInsight>, WebsiteInsightService>();
-builder.Services.AddHttpClient<IService<WebsiteInsight>, WebsiteInsightService>();
-
 
 builder.Services.AddCors(options =>
 {

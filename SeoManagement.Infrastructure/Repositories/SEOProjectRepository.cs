@@ -95,9 +95,9 @@ namespace SeoManagement.Infrastructure.Repositories
 			}
 		}
 
-		public async Task<List<SEOProject>> GetAllAsync()
+		public async Task<IEnumerable<SEOProject>> GetAllAsync(string projectType)
 		{
-			var query = await _context.SEOProjects
+			var query = await _context.SEOProjects.Where(p => p.ProjectType == projectType)
 								.AsNoTracking().ToListAsync();
 			return query;
 		}

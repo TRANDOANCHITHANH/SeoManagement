@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Kiểm tra thứ hạng từ khóa";
+    var projectId = ViewBag.ProjectId as int?;
+    var isAutoReportEnabled = ViewBag.IsAutoReportEnabled as bool? ?? false;
 }
 <div class="container">
     <div class="page-header mb-3">
@@ -28,7 +30,6 @@
     </div>
 
     <h2 class="text-center mb-4">Kiểm tra thứ hạng từ khóa</h2>
-
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger text-center">@TempData["Error"]</div>
@@ -46,8 +47,40 @@
 
     @if (ViewBag.ProjectId != null)
     {
-        <h4 class="mb-3">Dự án: @ViewBag.ProjectName</h4>
-        <p><strong>Mô tả:</strong> @ViewBag.ProjectDescription</p>
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-12 col-md-4">
+                        <p class="card-title mb-0">Dự án: @ViewBag.ProjectName</p>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <p class="card-text mb-0"><strong>Mô tả:</strong> @ViewBag.ProjectDescription</p>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <p class="card-text mb-0"><strong>Search Engine:</strong> Google</p>
+                    </div>
+                    <div class="col-12 col-md-4 d-flex justify-content">
+                        <div class="d-flex align-items-center">
+                            <p class="form-check-label me-3" for="autoReportToggle">Tự động kiểm tra:</p>
+                            <div class="form-check form-switch" style="padding-left:40px">
+                                <input class="form-check-input" type="checkbox" id="autoReportToggle" @(isAutoReportEnabled ? "checked" : "")
+                                       onchange="toggleAutoReport(@projectId, this.checked)">
+                                <label class="form-check-label badge @(isAutoReportEnabled ? "bg-success" : "bg-secondary") ms-2" for="autoReportToggle" style="border-radius:40px">
+                                    @(isAutoReportEnabled ? "Bật" : "Tắt")
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                 
+                    <div class="col-12 col-md-4">
+                        <p class="card-text mb-0"><strong>Vị trí:</strong> Việt Nam</p>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <p class="card-text mb-0"><strong>Thiết bị:</strong> Desktop</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     }
 
     <div class="overlay" id="loadingOverlay">
@@ -212,7 +245,19 @@
         document.getElementById('checkForm').addEventListener('submit', function () {
         document.getElementById('loadingOverlay').style.display = 'flex';
     });
-
+         function toggleAutoReport(projectId, isEnabled) {
+                fetch('/KeywordCheckers/AutoReport', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `projectId=${projectId}&isEnabled=${isEnabled}`
+                })
+                .then(response => response.ok ? response.text() : Promise.reject('Error'))
+                .then(() => {
+                   
+                    location.reload();
+                })
+                .catch(error => alert('Có lỗi xảy ra: ' + error));
+            }
         function drawKeywordGrowthChart() {
             const results = @Html.Raw(Json.Serialize(ViewBag.Results));
             const ctx = document.getElementById('keywordGrowthChart').getContext('2d');

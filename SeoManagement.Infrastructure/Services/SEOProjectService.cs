@@ -47,9 +47,9 @@ namespace SeoManagement.Infrastructure.Services
 			await _seoProjectRepository.DeleteAsync(projectId);
 		}
 
-		public async Task<List<SEOProject>> GetAllAsync()
+		public async Task<IEnumerable<SEOProject>> GetAllAsync(string projectType)
 		{
-			return await _seoProjectRepository.GetAllAsync();
+			return await _seoProjectRepository.GetAllAsync(projectType);
 		}
 	}
 }

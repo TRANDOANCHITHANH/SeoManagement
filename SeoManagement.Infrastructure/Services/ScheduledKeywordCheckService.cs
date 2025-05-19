@@ -33,14 +33,14 @@ namespace SeoManagement.Infrastructure.Services
 			{
 				_logger.LogInformation("Bắt đầu kiểm tra định kỳ thứ hạng từ khóa: {Time}", DateTime.Now);
 
-				var projects = await _projectService.GetAllAsync();
+				var projects = await _projectService.GetAllAsync("KeywordRankChecker");
 				if (projects == null || !projects.Any())
 				{
 					_logger.LogWarning("Không có dự án nào để kiểm tra.");
 					return;
 				}
 
-				foreach (var project in projects)
+				foreach (var project in projects.Where(p => p.IsAutoReportEnabled == true))
 				{
 					var keywords = await _keywordService.GetByProjectIdAsync(project.ProjectID);
 					if (keywords == null || !keywords.Any())

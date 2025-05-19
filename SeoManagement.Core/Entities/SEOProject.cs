@@ -28,6 +28,8 @@ namespace SeoManagement.Core.Entities
 
 		public int Status { get; set; }
 
+		public bool? IsAutoReportEnabled { get; set; }
+
 		// Navigation properties
 		[ForeignKey("UserId")]
 		public virtual ApplicationUser User { get; set; }

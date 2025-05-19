@@ -46,8 +46,22 @@
 
     @if (ViewBag.ProjectId != null)
     {
-        <h4 class="mb-3">Dự án: @ViewBag.ProjectName</h4>
-        <p><strong>Mô tả:</strong> @ViewBag.ProjectDescription</p>
+        <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px;">
+            <div class="card-body">
+                <h4 class="card-title">Tổng quan dự án</h4>
+                <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-2 rounded">
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Tên dự án:</span>
+                        <input type="text" class="form-control" value="@ViewBag.ProjectName" readonly />
+                    </div>
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Mô tả:</span>
+                        <input type="text" class="form-control" value="@ViewBag.ProjectDescription" readonly />
+                    </div>
+                </div>
+               
+            </div>
+        </div>
     }
     <div class="overlay" id="loadingOverlay">
         <div class="spinner-container">
@@ -91,11 +105,11 @@
                             <td>@result.TimeOnSite</td>
                             <td>@result.GlobalRank</td>
                             <td>
-                                <button class="btn btn-info btn-sm" onclick="showDetails('@result.Domain')">Chi tiết</button>
+                                    <button class="btn btn-outline-info btn-sm" onclick="showDetails('@result.Domain')"><i class="fa fa-info"></i></button>
                                 <form asp-action="DeleteInsight" method="post" style="display:inline;">
                                     <input type="hidden" name="projectId" value="@ViewBag.ProjectId" />
                                     <input type="hidden" name="domain" value="@result.Domain" />
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa domain này?')">Xóa</button>
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa domain này?')"><i class="fa fa-trash-o"></i></button>
                                 </form>
                             </td>
                         </tr>

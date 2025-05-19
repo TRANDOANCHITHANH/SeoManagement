@@ -61,6 +61,7 @@ namespace SeoManagement.Web.Controllers
 				var project = await _projectService.GetByIdAsync(projectId.Value);
 				ViewBag.ProjectName = project.ProjectName;
 				ViewBag.ProjectDescription = project.Description;
+				ViewBag.IsAutoReportEnabled = project.IsAutoReportEnabled;
 			}
 
 			return View(new KeywordRankViewModel());
@@ -245,6 +246,22 @@ namespace SeoManagement.Web.Controllers
 				TempData["Error"] = "Đã xảy ra lỗi khi xuất dữ liệu: " + ex.Message;
 				return RedirectToAction(nameof(IndexChecker), new { projectId });
 			}
+		}
+
+		[HttpPost]
+		public async Task<IActionResult> AutoReport(int projectId, bool isEnabled)
+		{
+			var project = await _projectService.GetByIdAsync(projectId);
+			if (project == null)
+			{
+				TempData["Error"] = "Dự án không tồn tại.";
+				return RedirectToAction("IndexChecker", new { projectId });
+			}
+
+			project.IsAutoReportEnabled = isEnabled;
+			await _projectService.UpdateSEOProjectAsync(project);
+			TempData["Success"] = isEnabled ? "Đã bật tự động kiểm tra và gửi báo cáo." : "Đã tắt tự động kiểm tra và gửi báo cáo.";
+			return RedirectToAction("IndexChecker", new { projectId });
 		}
 	}
 }

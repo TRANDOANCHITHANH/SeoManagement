@@ -1,5 +1,7 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.UserViewModel
-
+@{
+    ViewData["Title"] = "Cập nhật thông tin người dùng";
+}
 <div class="page-header">
     <h3 class="fw-bold">Người dùng</h3>
     <ul class="breadcrumbs">
@@ -69,11 +71,16 @@
                         </select>
                         <span asp-validation-for="IsActive" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="DailyKeywordCheckLimit">Giới hạn kiểm tra từ khóa mỗi ngày</label>
-                        <input asp-for="DailyKeywordCheckLimit" type="number" min="0" class="form-control" placeholder="Nhập giới hạn (số lần/ngày)" />
-                        <span asp-validation-for="DailyKeywordCheckLimit" class="text-danger"></span>
-                    </div>
+                    <h5>Giới hạn hành động mỗi ngày</h5>
+                    @for (int i = 0; i < Model.ActionLimits.Count; i++)
+                    {
+                        <div class="form-group">
+                            <label asp-for="ActionLimits[i].DailyLimit">@Model.ActionLimits[i].ActionType</label>
+                            <input type="hidden" asp-for="ActionLimits[i].ActionType" />
+                            <input asp-for="ActionLimits[i].DailyLimit" type="number" min="0" class="form-control" placeholder="Nhập giới hạn (số lần/ngày)" />
+                            <span asp-validation-for="ActionLimits[i].DailyLimit" class="text-danger"></span>
+                        </div>
+                    }
                     <button type="submit" class="btn btn-primary">Cập nhật</button>
                     <a asp-action="Index" class="btn btn-secondary">Hủy</a>
                 </form>

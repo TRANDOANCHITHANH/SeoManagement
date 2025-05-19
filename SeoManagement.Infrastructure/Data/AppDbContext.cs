@@ -29,6 +29,7 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<PageSpeedResult> PageSpeedResults { get; set; }
 		public DbSet<WebsiteInsight> WebsiteInsights { get; set; }
 		public DbSet<ApiKey> ApiKeys { get; set; }
+		public DbSet<UserActionLimit> UserActionLimits { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

@@ -13,6 +13,6 @@ namespace SeoManagement.Web.Models.ViewModels
 		public DateTime CreatedDate { get; set; }
 		public bool IsActive { get; set; }
 
-		public int DailyKeywordCheckLimit { get; set; }
+		public List<UserActionLimitViewModel> ActionLimits { get; set; } = new List<UserActionLimitViewModel>();
 	}
 }

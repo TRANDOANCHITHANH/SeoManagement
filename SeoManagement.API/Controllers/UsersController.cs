@@ -36,7 +36,11 @@ namespace SeoManagement.Api.Controllers
 						Role = roles.FirstOrDefault(),
 						CreatedDate = user.CreatedDate,
 						IsActive = user.IsActive,
-						DailyKeywordCheckLimit = (int)user.DailyKeywordCheckLimit,
+						ActionLimits = user.ActionLimits?.Select(al => new UserActionLimitDto
+						{
+							ActionType = al.ActionType,
+							DailyLimit = al.DailyLimit
+						}).ToList() ?? new List<UserActionLimitDto>()
 					});
 				}
 
@@ -75,7 +79,11 @@ namespace SeoManagement.Api.Controllers
 					Role = roles.FirstOrDefault(),
 					CreatedDate = user.CreatedDate,
 					IsActive = user.IsActive,
-					DailyKeywordCheckLimit = (int)user.DailyKeywordCheckLimit,
+					ActionLimits = user.ActionLimits?.Select(al => new UserActionLimitDto
+					{
+						ActionType = al.ActionType,
+						DailyLimit = al.DailyLimit
+					}).ToList() ?? new List<UserActionLimitDto>()
 				};
 				return Ok(userDto);
 			}
@@ -125,7 +133,26 @@ namespace SeoManagement.Api.Controllers
 				user.Email = userDto.Email;
 				user.FullName = userDto.FullName;
 				user.IsActive = userDto.IsActive;
-				user.DailyKeywordCheckLimit = userDto.DailyKeywordCheckLimit;
+				foreach (var limit in userDto.ActionLimits)
+				{
+					var existingLimit = user.ActionLimits?.FirstOrDefault(al => al.ActionType == limit.ActionType);
+					if (existingLimit != null)
+					{
+						existingLimit.DailyLimit = limit.DailyLimit;
+					}
+					else
+					{
+						user.ActionLimits ??= new List<UserActionLimit>();
+						user.ActionLimits.Add(new UserActionLimit
+						{
+							UserId = user.Id,
+							ActionType = limit.ActionType,
+							DailyLimit = limit.DailyLimit,
+							ActionsToday = 0,
+							LastActionDate = DateTime.UtcNow
+						});
+					}
+				}
 				await _userService.UpdateUserAsync(user, userDto.Role);
 				return NoContent();
 			}

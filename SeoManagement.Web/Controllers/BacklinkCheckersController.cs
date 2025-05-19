@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
+using SeoManagement.Core.Enum;
 using SeoManagement.Core.Interfaces;
 using SeoManagement.Infrastructure.Services;
 using SeoManagement.Web.Models.ViewModels;
@@ -13,6 +14,7 @@ namespace SeoManagement.Web.Controllers
 	public class BacklinkCheckersController : Controller
 	{
 		private readonly IBacklinkResultService _backlinkResultService;
+		private readonly IUserService _userService;
 		private readonly ISEOProjectService _projectService;
 		private readonly ILogger<BacklinkCheckersController> _logger;
 		private readonly UserManager<ApplicationUser> _userManager;
@@ -22,6 +24,7 @@ namespace SeoManagement.Web.Controllers
 
 		public BacklinkCheckersController(
 			IBacklinkResultService backlinkResultService,
+			IUserService userService,
 			ISEOProjectService projectService,
 			ILogger<BacklinkCheckersController> logger,
 			UserManager<ApplicationUser> userManager,
@@ -30,6 +33,7 @@ namespace SeoManagement.Web.Controllers
 			IConfiguration configuration)
 		{
 			_backlinkResultService = backlinkResultService;
+			_userService = userService;
 			_projectService = projectService;
 			_logger = logger;
 			_userManager = userManager;
@@ -126,6 +130,17 @@ namespace SeoManagement.Web.Controllers
 				backlinkUrl = "https://" + backlinkUrl;
 			}
 
+			var user = await _userManager.GetUserAsync(User);
+			if (user == null)
+			{
+				return RedirectToAction("Login", "Account");
+			}
+			var project = await _projectService.GetByIdAsync(projectId.Value);
+			if (!await _userService.CanPerformActionAsync(user.Id, ActionType.BacklinkChecker.ToString()))
+			{
+				TempData["Error"] = "Bạn đã vượt quá giới hạn kiểm tra backlink mỗi ngày.";
+				return RedirectToAction("CheckBacklinks", new { projectId = project.ProjectID });
+			}
 			try
 			{
 				_logger.LogInformation("Checking backlinks for URL: {Url}", backlinkUrl);
@@ -149,8 +164,8 @@ namespace SeoManagement.Web.Controllers
 					_logger.LogInformation("Attempting to add Backlink: {@Backlink}", backlinkResult);
 					await _backlinkResultService.AddAsync(backlinkResult);
 					_logger.LogInformation("Backlink added successfully for URL: {Url}", backlinkUrl);
+					await _userService.IncrementActionCountAsync(user.Id, ActionType.BacklinkChecker.ToString());
 
-					// Cập nhật ViewBag.BacklinkResults với dữ liệu mới từ database
 					var updatedResults = await _backlinkResultService.GetByProjectIdAsync(projectId.Value);
 					if (updatedResults == null || !updatedResults.Any())
 					{
@@ -173,7 +188,6 @@ namespace SeoManagement.Web.Controllers
 						.ToList();
 
 					ViewBag.ProjectId = projectId;
-					var project = await _projectService.GetByIdAsync(projectId.Value);
 					ViewBag.ProjectName = project.ProjectName;
 					ViewBag.ProjectDescription = project.Description;
 				}

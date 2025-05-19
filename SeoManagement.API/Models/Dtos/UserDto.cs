@@ -10,6 +10,6 @@
 		public bool IsActive { get; set; }
 		public string Role { get; set; }
 
-		public int DailyKeywordCheckLimit { get; set; }
+		public List<UserActionLimitDto> ActionLimits { get; set; } = new List<UserActionLimitDto>();
 	}
 }

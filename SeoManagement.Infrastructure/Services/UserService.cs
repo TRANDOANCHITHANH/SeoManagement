@@ -23,7 +23,12 @@ namespace SeoManagement.Infrastructure.Services
 
 		public async Task<ApplicationUser> GetByIdAsync(int id)
 		{
-			return await _userManager.FindByIdAsync(id.ToString());
+			var user = await _userRepository.GetByIdAsync(id);
+			if (user != null)
+			{
+				await _userRepository.GetContext().Entry(user).Collection(u => u.ActionLimits).LoadAsync();
+			}
+			return user;
 		}
 
 		public async Task CreateUserAsync(ApplicationUser user, string password, string role)
@@ -65,6 +70,14 @@ namespace SeoManagement.Infrastructure.Services
 				await _userManager.RemoveFromRolesAsync(existingUser, currentRoles);
 				await _userManager.AddToRoleAsync(existingUser, role);
 			}
+
+			if (user.ActionLimits != null)
+			{
+				foreach (var limit in user.ActionLimits)
+				{
+					await _userRepository.AddOrUpdateUserActionLimitAsync(limit);
+				}
+			}
 		}
 
 		public async Task DeleteUserAsync(int id)
@@ -87,36 +100,55 @@ namespace SeoManagement.Infrastructure.Services
 			return await _userManager.GetRolesAsync(user);
 		}
 
-		public async Task<bool> CanUserCheckKeywordAsync(int userId)
+		public async Task<bool> CanPerformActionAsync(int userId, string actionType)
 		{
-			var user = await _userRepository.GetByIdAsync(userId);
-			if (user == null)
-				return false;
-
-			if (user.LastCheckDate.Date != DateTime.UtcNow.Date)
+			var actionLimit = await _userRepository.GetUserActionLimitAsync(userId, actionType);
+			if (actionLimit == null)
 			{
-				user.KeywordChecksToday = 0;
-				user.LastCheckDate = DateTime.UtcNow;
-				await _userRepository.UpdateAsync(user);
+				actionLimit = new UserActionLimit
+				{
+					UserId = userId,
+					ActionType = actionType,
+					DailyLimit = 10,
+					ActionsToday = 0,
+					LastActionDate = DateTime.UtcNow
+				};
+				await _userRepository.AddOrUpdateUserActionLimitAsync(actionLimit);
 			}
 
-			return user.KeywordChecksToday < user.DailyKeywordCheckLimit;
+			if (actionLimit.LastActionDate.Date != DateTime.UtcNow.Date)
+			{
+				actionLimit.ActionsToday = 0;
+				actionLimit.LastActionDate = DateTime.UtcNow;
+				await _userRepository.AddOrUpdateUserActionLimitAsync(actionLimit);
+			}
+
+			return actionLimit.ActionsToday < actionLimit.DailyLimit;
 		}
 
-		public async Task IncrementKeywordCheckAsync(int userId)
+		public async Task IncrementActionCountAsync(int userId, string actionType)
 		{
-			var user = await _userRepository.GetByIdAsync(userId);
-			if (user == null)
-				return;
-
-			if (user.LastCheckDate.Date != DateTime.UtcNow.Date)
+			var actionLimit = await _userRepository.GetUserActionLimitAsync(userId, actionType);
+			if (actionLimit == null)
 			{
-				user.KeywordChecksToday = 0;
-				user.LastCheckDate = DateTime.UtcNow;
+				actionLimit = new UserActionLimit
+				{
+					UserId = userId,
+					ActionType = actionType,
+					DailyLimit = 10,
+					ActionsToday = 0,
+					LastActionDate = DateTime.UtcNow
+				};
 			}
 
-			user.KeywordChecksToday++;
-			await _userRepository.UpdateAsync(user);
+			if (actionLimit.LastActionDate.Date != DateTime.UtcNow.Date)
+			{
+				actionLimit.ActionsToday = 0;
+				actionLimit.LastActionDate = DateTime.UtcNow;
+			}
+
+			actionLimit.ActionsToday++;
+			await _userRepository.AddOrUpdateUserActionLimitAsync(actionLimit);
 		}
 	}
 }

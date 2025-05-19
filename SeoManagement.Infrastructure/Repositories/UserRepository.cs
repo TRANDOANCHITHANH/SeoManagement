@@ -19,7 +19,7 @@ namespace SeoManagement.Infrastructure.Repositories
 			if (pageNumber < 1 || pageSize < 1)
 				throw new ArgumentException("Page number and page size must be greater than 0.");
 
-			var query = _context.Users.AsQueryable();
+			var query = _context.Users.AsQueryable().Include(u => u.ActionLimits);
 
 			var totalItems = await query.CountAsync();
 			var items = await query
@@ -33,7 +33,9 @@ namespace SeoManagement.Infrastructure.Repositories
 
 		public async Task<ApplicationUser> GetByIdAsync(int userId)
 		{
-			return await _context.Users.FindAsync(userId);
+			return await _context.Users
+			   .Include(u => u.ActionLimits)
+			   .FirstOrDefaultAsync(u => u.Id == userId);
 		}
 
 		public async Task AddAsync(ApplicationUser user)
@@ -62,6 +64,33 @@ namespace SeoManagement.Infrastructure.Repositories
 
 			_context.Users.Remove(user);
 			await _context.SaveChangesAsync();
+		}
+
+		public async Task<UserActionLimit> GetUserActionLimitAsync(int userId, string actionType)
+		{
+			return await _context.UserActionLimits.FirstOrDefaultAsync(u => u.UserId == userId && u.ActionType == actionType);
+		}
+
+		public async Task AddOrUpdateUserActionLimitAsync(UserActionLimit actionLimit)
+		{
+			var existingLimit = await GetUserActionLimitAsync(actionLimit.UserId, actionLimit.ActionType);
+			if (existingLimit != null)
+			{
+				existingLimit.DailyLimit = actionLimit.DailyLimit;
+				existingLimit.ActionsToday = actionLimit.ActionsToday;
+				existingLimit.LastActionDate = actionLimit.LastActionDate;
+				_context.UserActionLimits.Update(existingLimit);
+			}
+			else
+			{
+				await _context.UserActionLimits.AddAsync(actionLimit);
+			}
+			await _context.SaveChangesAsync();
+		}
+
+		public DbContext GetContext()
+		{
+			return _context;
 		}
 	}
 }

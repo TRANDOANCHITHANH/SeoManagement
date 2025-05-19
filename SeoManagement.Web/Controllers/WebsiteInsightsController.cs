@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
 using SeoManagement.Core.Entities;
+using SeoManagement.Core.Enum;
 using SeoManagement.Core.Interfaces;
 using SeoManagement.Infrastructure.Services;
 using SeoManagement.Web.Models.ViewModels;
@@ -13,14 +14,16 @@ namespace SeoManagement.Web.Controllers
 	public class WebsiteInsightsController : Controller
 	{
 		private readonly IService<WebsiteInsight> _websiteInsightService;
+		private readonly IUserService _userService;
 		private readonly HttpClient _httpClient;
 		private readonly IConfiguration _configuration;
 		private readonly ISEOProjectService _projectService;
 		private readonly ILogger<WebsiteInsightsController> _logger;
 		private readonly UserManager<ApplicationUser> _userManager;
-		public WebsiteInsightsController(IService<WebsiteInsight> websiteInsightService, HttpClient httpClient, IConfiguration configuration, UserManager<ApplicationUser> userManager, ILogger<WebsiteInsightsController> logger, ISEOProjectService projectService)
+		public WebsiteInsightsController(IService<WebsiteInsight> websiteInsightService, IUserService userService, HttpClient httpClient, IConfiguration configuration, UserManager<ApplicationUser> userManager, ILogger<WebsiteInsightsController> logger, ISEOProjectService projectService)
 		{
 			_websiteInsightService = websiteInsightService;
+			_userService = userService;
 			_httpClient = httpClient;
 			_configuration = configuration;
 			_httpClient.BaseAddress = new Uri(configuration["ApiBaseUrl"]);
@@ -105,6 +108,19 @@ namespace SeoManagement.Web.Controllers
 				return View(model);
 			}
 
+			var user = await _userManager.GetUserAsync(User);
+			if (user == null)
+			{
+				TempData["Error"] = "Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.";
+				return RedirectToAction("Login", "Account");
+			}
+			if (!await _userService.CanPerformActionAsync(user.Id, ActionType.KeywordRankChecker.ToString()))
+			{
+				TempData["Error"] = "Bạn đã vượt quá giới hạn kiểm tra thứ hạng từ khóa mỗi ngày!";
+				return RedirectToAction("IndexChecker", new { projectId = model.ProjectId });
+			}
+
+
 			try
 			{
 				var insight = await ((WebsiteInsightService)_websiteInsightService).GetAndSaveWebsiteInsightsAsync(model.DomainInput, model.ProjectId);
@@ -144,6 +160,7 @@ namespace SeoManagement.Web.Controllers
 				ViewBag.ProjectId = model.ProjectId;
 
 				TempData["Success"] = "Phân tích thành công!";
+				await _userService.IncrementActionCountAsync(user.Id, ActionType.KeywordRankChecker.ToString());
 			}
 			catch (Exception ex)
 			{

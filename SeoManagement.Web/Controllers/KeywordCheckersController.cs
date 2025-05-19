@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
+using SeoManagement.Core.Enum;
 using SeoManagement.Core.Interfaces;
 using SeoManagement.Infrastructure.Services;
 using SeoManagement.Web.Models.ViewModels;
@@ -86,7 +87,7 @@ namespace SeoManagement.Web.Controllers
 					TempData["Error"] = "Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.";
 					return RedirectToAction("Login", "Account");
 				}
-				if (!await _userService.CanUserCheckKeywordAsync(user.Id))
+				if (!await _userService.CanPerformActionAsync(user.Id, ActionType.KeywordRankChecker.ToString()))
 				{
 					TempData["Error"] = "Bạn đã vượt quá giới hạn kiểm tra thứ hạng từ khóa mỗi ngày!";
 					return RedirectToAction("IndexChecker", new { projectId = model.ProjectId });
@@ -97,7 +98,7 @@ namespace SeoManagement.Web.Controllers
 
 				model.Rank = new Keyword { KeywordID = keyword.KeywordID, KeywordName = keyword.KeywordName, Domain = keyword.Domain, TopPosition = keyword.TopPosition, TopVolume = keyword.TopVolume, LastUpdate = keyword.LastUpdate };
 				model.Message = "Kiểm tra thứ hạng thành công!";
-				await _userService.IncrementKeywordCheckAsync(user.Id);
+				await _userService.IncrementActionCountAsync(user.Id, ActionType.KeywordRankChecker.ToString());
 				var allResults = await _keywordService.GetByProjectIdAsync(model.ProjectId);
 				ViewBag.Results = allResults
 					.Select(r => new

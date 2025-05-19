@@ -10,7 +10,8 @@ namespace SeoManagement.Core.Interfaces
 		Task UpdateUserAsync(ApplicationUser user, string role);
 		Task DeleteUserAsync(int id);
 		Task<IList<string>> GetUserRolesAsync(ApplicationUser user);
-		Task<bool> CanUserCheckKeywordAsync(int userId);
-		Task IncrementKeywordCheckAsync(int userId);
+
+		Task<bool> CanPerformActionAsync(int userId, string actionType);
+		Task IncrementActionCountAsync(int userId, string actionType);
 	}
 }

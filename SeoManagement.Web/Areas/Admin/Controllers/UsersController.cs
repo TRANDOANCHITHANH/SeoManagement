@@ -36,7 +36,11 @@ namespace SeoManagement.Web.Areas.Admin.Controllers
 				Username = user.UserName,
 				Email = user.Email,
 				FullName = user.FullName,
-				DailyKeywordCheckLimit = (int)user.DailyKeywordCheckLimit,
+				ActionLimits = user.ActionLimits?.Select(al => new UserActionLimitViewModel
+				{
+					ActionType = al.ActionType,
+					DailyLimit = al.DailyLimit
+				}).ToList() ?? new List<UserActionLimitViewModel>()
 			};
 			return View(userViewModel);
 		}

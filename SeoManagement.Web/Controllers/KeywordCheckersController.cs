@@ -16,17 +16,19 @@ namespace SeoManagement.Web.Controllers
 		private readonly ISEOProjectService _projectService;
 		private readonly ILogger<KeywordCheckersController> _logger;
 		private readonly UserManager<ApplicationUser> _userManager;
-
+		private readonly IUserService _userService;
 		public KeywordCheckersController(
 			IService<Keyword> keywordService,
 			ISEOProjectService projectService,
 			ILogger<KeywordCheckersController> logger,
-			UserManager<ApplicationUser> userManager)
+			UserManager<ApplicationUser> userManager,
+			IUserService userService)
 		{
 			_keywordService = keywordService;
 			_projectService = projectService;
 			_logger = logger;
 			_userManager = userManager;
+			_userService = userService;
 		}
 
 		[HttpGet]
@@ -84,12 +86,18 @@ namespace SeoManagement.Web.Controllers
 					TempData["Error"] = "Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.";
 					return RedirectToAction("Login", "Account");
 				}
+				if (!await _userService.CanUserCheckKeywordAsync(user.Id))
+				{
+					TempData["Error"] = "Bạn đã vượt quá giới hạn kiểm tra thứ hạng từ khóa mỗi ngày!";
+					return RedirectToAction("IndexChecker", new { projectId = model.ProjectId });
+				}
+
 
 				var keyword = await ((KeywordService)_keywordService).GetAndSaveKeywordRankAsync(model.Keyword, model.Domain, model.ProjectId);
 
-				model.Rank = new Keyword { KeywordID = keyword.KeywordID, KeywordName = keyword.KeywordName, Domain = keyword.Domain, TopPosition = keyword.TopPosition, TopVolume = keyword.TopVolume, LastUpdate = keyword.LastUpdate }; // Map to Rank
+				model.Rank = new Keyword { KeywordID = keyword.KeywordID, KeywordName = keyword.KeywordName, Domain = keyword.Domain, TopPosition = keyword.TopPosition, TopVolume = keyword.TopVolume, LastUpdate = keyword.LastUpdate };
 				model.Message = "Kiểm tra thứ hạng thành công!";
-
+				await _userService.IncrementKeywordCheckAsync(user.Id);
 				var allResults = await _keywordService.GetByProjectIdAsync(model.ProjectId);
 				ViewBag.Results = allResults
 					.Select(r => new

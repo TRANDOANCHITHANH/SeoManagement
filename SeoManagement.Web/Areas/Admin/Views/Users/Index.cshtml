@@ -1,32 +1,13 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Models.ViewModels.UserViewModel>
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+}
 
-<div class="page-header">
-    <h3 class="fw-bold mb-3">Users</h3>
-    <ul class="breadcrumbs mb-3">
-        <li class="nav-home">
-            <a href="#">
-                <i class="icon-home"></i>
-            </a>
-        </li>
-        <li class="separator">
-            <i class="icon-arrow-right"></i>
-        </li>
-        <li class="nav-item">
-            <a href="#">Users</a>
-        </li>
-        <li class="separator">
-            <i class="icon-arrow-right"></i>
-        </li>
-        <li class="nav-item">
-            <a href="#">Index</a>
-        </li>
-    </ul>
-</div>
 <div class="row">
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title">List User</h4>
+                <h4 class="card-title">Danh sách người dùng</h4>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -37,10 +18,10 @@
                                 <th>ID</th>
                                 <th>Họ tên</th> 
                                 <th>Email</th>
-                                <th>Role</th>
+                                <th>Vai trò</th>
                                 <th>Ngày tạo</th>
                                 <th>Trạng thái</th>
-                                <th>Action</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tfoot>
@@ -48,10 +29,10 @@
                                 <th>ID</th>
                                 <th>Họ tên</th>
                                 <th>Email</th>
-                                <th>Role</th>
+                                <th>Vai trò</th>
                                 <th>Ngày tạo</th>
                                 <th>Trạng thái</th>
-                                <th>Action</th>
+                                <th>Thao tác</th>
                             </tr>
                         </tfoot>
                         <tbody>
@@ -66,11 +47,11 @@
                                      <td> 
                                          @if (user.IsActive) 
                                          { 
-                                             <label class="badge badge-success">Active</label> 
+                                             <label class="badge badge-success">Hoạt động</label> 
                                          } 
                                          else 
                                          { 
-                                             <label class="badge badge-danger">Inactive</label> 
+                                             <label class="badge badge-danger">Không hoạt động</label> 
                                          } 
                                      </td> 
                                      <td>

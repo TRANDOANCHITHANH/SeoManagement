@@ -1,31 +1,14 @@
 ﻿@model SeoManagement.Web.Models.ViewModels.PagedResultViewModel<SeoManagement.Web.Areas.Admin.Models.ViewModels.ApiKeyViewModel>
 
 @{
-    ViewData["Title"] = "Danh sách tin tức";
+    ViewData["Title"] = "Danh sách Api Key";
 }
+<style>
+    .action-buttons {
+        white-space: nowrap;
+    }
 
-<div class="page-header">
-    <h3 class="fw-bold">News</h3>
-    <ul class="breadcrumbs">
-        <li class="nav-home">
-            <a href="#">
-                <i class="icon-home"></i>
-            </a>
-        </li>
-        <li class="separator">
-            <i class="icon-arrow-right"></i>
-        </li>
-        <li class="nav-item">
-            <a href="#">News</a>
-        </li>
-        <li class="separator">
-            <i class="icon-arrow-right"></i>
-        </li>
-        <li class="nav-item">
-            <a href="#">Index</a>
-        </li>
-    </ul>
-</div>
+</style>
 
 
 @if (TempData["Success"] != null)
@@ -46,17 +29,17 @@
         <div class="card">
             <div class="card-header">
                 <div class="d-flex align-items-center">
-                    <h4 class="card-title">List News</h4>
+                    <h4 class="card-title">Danh sách Api Key</h4>
                     <a class="btn btn-primary btn-round ms-auto" asp-action="Create">
                         <i class="fa fa-plus"></i>
-                        Add Row
+                        Thêm mới
                     </a>
                 </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table id="basic-datatables"
-                           class="display table table-striped table-hover">
+                           class="display table table-striped table-hover" style="width:100%;">
                         <thead>
                             <tr>
                                 <th>Dịch vụ</th>
@@ -74,12 +57,11 @@
                                 {
                                     <tr>
                                         <td>@item.ServiceName</td>
-                                        <td>@item.KeyValue</td>
+                                        <td class="api-key-cell" title="@item.KeyValue">@(item.KeyValue.Length > 20 ? item.KeyValue.Substring(0, 20) + "..." : item.KeyValue)</td>
                                         <td>@(item.IsActive ? "Có" : "Không")</td>
                                         <td>@item.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss")</td>
                                         <td>@(item.ExpiryDate.HasValue ? item.ExpiryDate.Value.ToString("dd/MM/yyyy HH:mm:ss") : "Không có")</td>
-                                        <td>
-                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-link btn-primary"><i class="fa fa-info"></i></a> |
+                                        <td class="action-buttons">
                                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-link btn-primary"><i class="fa fa-edit"></i></a> |
                                             <button type="button" class="btn btn-link btn-danger delete-btn" data-id="@item.Id"><i class="fa fa-times"></i></button>
                                         </td>

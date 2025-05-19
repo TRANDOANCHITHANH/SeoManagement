@@ -12,5 +12,7 @@ namespace SeoManagement.Web.Models.ViewModels
 		public string Role { get; set; }
 		public DateTime CreatedDate { get; set; }
 		public bool IsActive { get; set; }
+
+		public int DailyKeywordCheckLimit { get; set; }
 	}
 }

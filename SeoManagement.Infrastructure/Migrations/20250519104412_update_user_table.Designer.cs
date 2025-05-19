@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SeoManagement.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SeoManagement.Infrastructure.Data;
 namespace SeoManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250519104412_update_user_table")]
+    partial class update_user_table
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -187,7 +190,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ApiKeys", (string)null);
+                    b.ToTable("ApiKeys");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.ApplicationUser", b =>
@@ -318,7 +321,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.ToTable("Backlinks", (string)null);
+                    b.ToTable("Backlinks");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.Category", b =>
@@ -345,7 +348,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.Content", b =>
@@ -394,7 +397,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.ToTable("Contents", (string)null);
+                    b.ToTable("Contents");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.ContentOutline", b =>
@@ -428,7 +431,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ContentID");
 
-                    b.ToTable("ContentOutlines", (string)null);
+                    b.ToTable("ContentOutlines");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.Guide", b =>
@@ -458,7 +461,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Guides", (string)null);
+                    b.ToTable("Guides");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.IndexCheckerUrl", b =>
@@ -491,7 +494,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.ToTable("IndexCheckerUrls", (string)null);
+                    b.ToTable("IndexCheckerUrls");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.Keyword", b =>
@@ -533,7 +536,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.ToTable("Keywords", (string)null);
+                    b.ToTable("Keywords");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.KeywordGroup", b =>
@@ -559,7 +562,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.ToTable("KeywordGroups", (string)null);
+                    b.ToTable("KeywordGroups");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.KeywordHistory", b =>
@@ -583,7 +586,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("KeywordID");
 
-                    b.ToTable("KeywordHistories", (string)null);
+                    b.ToTable("KeywordHistories");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.New", b =>
@@ -610,7 +613,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasKey("NewsID");
 
-                    b.ToTable("News", (string)null);
+                    b.ToTable("News");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.PageSpeedResult", b =>
@@ -652,7 +655,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.ToTable("PageSpeedResults", (string)null);
+                    b.ToTable("PageSpeedResults");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.Prediction", b =>
@@ -683,7 +686,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("KeywordID");
 
-                    b.ToTable("Predictions", (string)null);
+                    b.ToTable("Predictions");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.Report", b =>
@@ -713,7 +716,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.ToTable("Reports", (string)null);
+                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.RewrittenContent", b =>
@@ -742,7 +745,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ContentID");
 
-                    b.ToTable("RewrittenContents", (string)null);
+                    b.ToTable("RewrittenContents");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.SEOOnPageCheck", b =>
@@ -786,7 +789,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.ToTable("SEOOnPageChecks", (string)null);
+                    b.ToTable("SEOOnPageChecks");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.SEOProject", b =>
@@ -830,7 +833,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SEOProjects", (string)null);
+                    b.ToTable("SEOProjects");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.Site", b =>
@@ -859,7 +862,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Sites", (string)null);
+                    b.ToTable("Sites");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.SystemConfig", b =>
@@ -885,7 +888,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasKey("ConfigID");
 
-                    b.ToTable("SystemConfigs", (string)null);
+                    b.ToTable("SystemConfigs");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.WebsiteInsight", b =>
@@ -982,7 +985,7 @@ namespace SeoManagement.Infrastructure.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.ToTable("WebsiteInsights", (string)null);
+                    b.ToTable("WebsiteInsights");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>

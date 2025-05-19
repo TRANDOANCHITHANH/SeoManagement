@@ -100,7 +100,6 @@ builder.Services.AddScoped<IPageSpeedResultRepository, PageSpeedResultRepository
 builder.Services.AddScoped<IPageSpeedResultService, PageSpeedResultService>();
 builder.Services.AddScoped<PageSpeedService>();
 builder.Services.AddScoped<GoogleCustomSearchService>();
-
 builder.Services.AddScoped<IBacklinkResultRepository, BacklinkResultRepository>();
 builder.Services.AddScoped<IBacklinkResultService, BacklinkResultService>();
 builder.Services.AddScoped<BacklinkService>();

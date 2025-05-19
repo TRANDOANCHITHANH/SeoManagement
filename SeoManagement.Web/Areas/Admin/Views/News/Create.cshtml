@@ -4,13 +4,27 @@
     ViewData["Title"] = "Thêm tin tức mới";
 }
 
-<div class="row">
-    <div class="col-12">
-        <div class="page-header">
-            <h4 class="page-title">Thêm tin tức mới</h4>
-            <a asp-action="Index" class="btn btn-primary float-end">Quay lại danh sách</a>
-        </div>
-    </div>
+<div class="page-header">
+    <h3 class="fw-bold">Tin tức</h3>
+    <ul class="breadcrumbs">
+        <li class="nav-home">
+            <a href="/Admin/Home/Index">
+                <i class="icon-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="/Admin/News/Index">Tin tức</a>
+        </li>
+        <li class="separator">
+            <i class="icon-arrow-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Thêm mới</a>
+        </li>
+    </ul>
 </div>
 
 <div class="row">

@@ -36,7 +36,7 @@ namespace SeoManagement.Web.Areas.Admin.Controllers
 				Username = user.UserName,
 				Email = user.Email,
 				FullName = user.FullName,
-
+				DailyKeywordCheckLimit = (int)user.DailyKeywordCheckLimit,
 			};
 			return View(userViewModel);
 		}

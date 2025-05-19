@@ -9,5 +9,7 @@
 		public DateTime CreatedDate { get; set; }
 		public bool IsActive { get; set; }
 		public string Role { get; set; }
+
+		public int DailyKeywordCheckLimit { get; set; }
 	}
 }

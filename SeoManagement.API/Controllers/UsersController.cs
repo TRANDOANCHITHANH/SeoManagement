@@ -7,7 +7,6 @@ namespace SeoManagement.Api.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	//[Authorize(Policy = "AdminOnly")]
 	public class UsersController : ControllerBase
 	{
 		private readonly IUserService _userService;
@@ -36,7 +35,8 @@ namespace SeoManagement.Api.Controllers
 						FullName = user.FullName,
 						Role = roles.FirstOrDefault(),
 						CreatedDate = user.CreatedDate,
-						IsActive = user.IsActive
+						IsActive = user.IsActive,
+						DailyKeywordCheckLimit = (int)user.DailyKeywordCheckLimit,
 					});
 				}
 
@@ -74,7 +74,8 @@ namespace SeoManagement.Api.Controllers
 					FullName = user.FullName,
 					Role = roles.FirstOrDefault(),
 					CreatedDate = user.CreatedDate,
-					IsActive = user.IsActive
+					IsActive = user.IsActive,
+					DailyKeywordCheckLimit = (int)user.DailyKeywordCheckLimit,
 				};
 				return Ok(userDto);
 			}
@@ -124,7 +125,7 @@ namespace SeoManagement.Api.Controllers
 				user.Email = userDto.Email;
 				user.FullName = userDto.FullName;
 				user.IsActive = userDto.IsActive;
-
+				user.DailyKeywordCheckLimit = userDto.DailyKeywordCheckLimit;
 				await _userService.UpdateUserAsync(user, userDto.Role);
 				return NoContent();
 			}

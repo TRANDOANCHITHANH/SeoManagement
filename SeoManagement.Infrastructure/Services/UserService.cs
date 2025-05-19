@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using SeoManagement.Core.Entities;
 using SeoManagement.Core.Interfaces;
 
@@ -86,6 +85,38 @@ namespace SeoManagement.Infrastructure.Services
 		public async Task<IList<string>> GetUserRolesAsync(ApplicationUser user)
 		{
 			return await _userManager.GetRolesAsync(user);
+		}
+
+		public async Task<bool> CanUserCheckKeywordAsync(int userId)
+		{
+			var user = await _userRepository.GetByIdAsync(userId);
+			if (user == null)
+				return false;
+
+			if (user.LastCheckDate.Date != DateTime.UtcNow.Date)
+			{
+				user.KeywordChecksToday = 0;
+				user.LastCheckDate = DateTime.UtcNow;
+				await _userRepository.UpdateAsync(user);
+			}
+
+			return user.KeywordChecksToday < user.DailyKeywordCheckLimit;
+		}
+
+		public async Task IncrementKeywordCheckAsync(int userId)
+		{
+			var user = await _userRepository.GetByIdAsync(userId);
+			if (user == null)
+				return;
+
+			if (user.LastCheckDate.Date != DateTime.UtcNow.Date)
+			{
+				user.KeywordChecksToday = 0;
+				user.LastCheckDate = DateTime.UtcNow;
+			}
+
+			user.KeywordChecksToday++;
+			await _userRepository.UpdateAsync(user);
 		}
 	}
 }

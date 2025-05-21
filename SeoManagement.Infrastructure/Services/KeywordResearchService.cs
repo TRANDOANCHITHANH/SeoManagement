@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using SeoManagement.Core.Common;
 using SeoManagement.Core.Entities;
 using SeoManagement.Core.Interfaces;
 
@@ -20,7 +21,7 @@ namespace SeoManagement.Infrastructure.Services
 			_logger = logger;
 		}
 
-		public async Task AddAsync(KeywordSuggestion entity)
+		public async Task AddAsync(SeedKeyword entity)
 		{
 			await _keywordSuggestionRepository.AddAsync(entity);
 		}
@@ -30,15 +31,15 @@ namespace SeoManagement.Infrastructure.Services
 			await _keywordSuggestionRepository.DeleteAsync(id);
 		}
 
-		public async Task<List<KeywordSuggestion>> GetByProjectIdAsync(int id)
+		public async Task<List<SeedKeyword>> GetByProjectIdAsync(int id)
 		{
 			return await _keywordSuggestionRepository.GetByProjectIdAsync(id);
 		}
 
-		public async Task<List<KeywordSuggestion>> ResearchKeywordsAsync(int projectId, string seedKeyword)
+		public async Task<List<SeedKeyword>> ResearchKeywordsAsync(int projectId, string seedKeyword)
 		{
 			var cacheKey = $"KeywordResearch_{projectId}_{seedKeyword}";
-			if (_memoryCache.TryGetValue(cacheKey, out List<KeywordSuggestion> cachedSuggestions))
+			if (_memoryCache.TryGetValue(cacheKey, out List<SeedKeyword> cachedSuggestions))
 			{
 				return cachedSuggestions;
 			}
@@ -70,34 +71,29 @@ namespace SeoManagement.Infrastructure.Services
 				}
 
 				var jsonResponse = await response.Content.ReadAsStringAsync();
+				_logger.LogDebug("API Response for seed keyword {SeedKeyword}: {JsonResponse}", seedKeyword, jsonResponse);
 				var keywordData = JsonConvert.DeserializeObject<AhrefsKeywordResponse>(jsonResponse);
-				_logger.LogInformation("JSON Response: {Json}", jsonResponse);
-				_logger.LogInformation("Keyword Data: {@KeywordData}", keywordData);
-				var suggestions = new List<KeywordSuggestion>();
 
-				// Thêm từ khóa chính
+				var seedKeywordEntity = new SeedKeyword
+				{
+					ProjectID = projectId,
+					Keyword = seedKeyword,
+					CreatedDate = DateTime.UtcNow,
+					CompetitionValue = "N/A"
+				};
+
 				if (keywordData.GlobalKeywordData != null && keywordData.GlobalKeywordData.Length > 0)
 				{
 					var mainKeyword = keywordData.GlobalKeywordData[0];
-					var suggestion = CreateKeywordSuggestion(projectId, seedKeyword, mainKeyword, true);
-					var existingSuggestion = existingSuggestions.FirstOrDefault(s => s.SeedKeyword == seedKeyword && s.SuggestedKeyword == mainKeyword.keyword);
-					if (existingSuggestion != null)
-					{
-						UpdateExistingSuggestion(existingSuggestion, suggestion);
-						await _keywordSuggestionRepository.UpdateAsync(existingSuggestion);
-						suggestions.Add(existingSuggestion);
-					}
-					else
-					{
-						suggestions.Add(suggestion);
-					}
+					UpdateKeywordWithData(seedKeywordEntity, mainKeyword);
+					var mainRelatedKeyword = CreateRelatedKeyword(seedKeywordEntity, mainKeyword);
+					seedKeywordEntity.RelatedKeywords.Add(mainRelatedKeyword);
 				}
 				else
 				{
 					_logger.LogWarning("No global keyword data found for seed keyword: {SeedKeyword}", seedKeyword);
 				}
 
-				// Thêm từ khóa liên quan
 				if (keywordData.RelatedKeywordDataGlobal != null)
 				{
 					var topRelatedKeywords = keywordData.RelatedKeywordDataGlobal
@@ -106,34 +102,22 @@ namespace SeoManagement.Infrastructure.Services
 						.ToArray();
 					foreach (var related in topRelatedKeywords)
 					{
-						var suggestion = CreateKeywordSuggestion(projectId, seedKeyword, related, false);
-						var existingSuggestion = existingSuggestions.FirstOrDefault(s => s.SeedKeyword == seedKeyword && s.SuggestedKeyword == related.keyword);
-						if (existingSuggestion != null)
-						{
-							UpdateExistingSuggestion(existingSuggestion, suggestion);
-							await _keywordSuggestionRepository.UpdateAsync(existingSuggestion);
-							suggestions.Add(existingSuggestion);
-						}
-						else
-						{
-							suggestions.Add(suggestion);
-						}
+						var relatedKeyword = CreateRelatedKeyword(seedKeywordEntity, related);
+						seedKeywordEntity.RelatedKeywords.Add(relatedKeyword);
 					}
 				}
+				_logger.LogDebug("Saving SeedKeyword: ProjectID={ProjectID}, Keyword={Keyword}, SearchVolume={SearchVolume}, Difficulty={Difficulty}, CPC={CPC}, CompetitionValue={CompetitionValue}, MonthlySearchVolumesJson={MonthlySearchVolumesJson}",
+			seedKeywordEntity.ProjectID, seedKeywordEntity.Keyword, seedKeywordEntity.SearchVolume, seedKeywordEntity.Difficulty, seedKeywordEntity.CPC, seedKeywordEntity.CompetitionValue, seedKeywordEntity.MonthlySearchVolumesJson);
+				await _keywordSuggestionRepository.AddAsync(seedKeywordEntity);
 
-				if (suggestions.Any(s => s.Id == 0))
-				{
-					var newSuggestions = suggestions.Where(s => s.Id == 0).ToList();
-					await _keywordSuggestionRepository.AddSuggestionsAsync(newSuggestions);
-					_logger.LogInformation("Added {Count} new suggestions to database", newSuggestions.Count);
-				}
-				_memoryCache.Set(cacheKey, suggestions, TimeSpan.FromHours(24));
-				_logger.LogInformation("Cached and returned {Count} suggestions for project {ProjectId} and seed {SeedKeyword}", suggestions.Count, projectId, seedKeyword);
-				return suggestions;
+				var result = new List<SeedKeyword> { seedKeywordEntity };
+				_memoryCache.Set(cacheKey, result, TimeSpan.FromHours(24));
+				_logger.LogInformation("Cached and returned {Count} seed keywords for project {ProjectId} and seed {SeedKeyword}", result.Count, projectId, seedKeyword);
+				return result;
 			}
 		}
 
-		private KeywordSuggestion CreateKeywordSuggestion(int projectId, string seedKeyword, KeywordIdea keywordIdea, bool isMainKeyword)
+		private void UpdateKeywordWithData(KeywordBase keyword, KeywordIdea keywordIdea)
 		{
 			if (keywordIdea == null) throw new ArgumentNullException(nameof(keywordIdea));
 
@@ -147,103 +131,72 @@ namespace SeoManagement.Infrastructure.Services
 				_logger.LogWarning(ex, "Failed to parse CPC for keyword {Keyword}. Setting CPC to 0.", keywordIdea.keyword);
 			}
 
-			return new KeywordSuggestion
+			keyword.SearchVolume = keywordIdea.avg_monthly_searches;
+			keyword.Difficulty = keywordIdea.competition_index;
+			keyword.CPC = cpc > 0 ? cpc : 0m;
+			keyword.CompetitionValue = keywordIdea.competition_value ?? "N/A";
+			keyword.MonthlySearchVolumes = keywordIdea.monthly_search_volumes?.Select(m => new MonthlyVolume
 			{
-				ProjectID = projectId,
-				SeedKeyword = seedKeyword,
+				Month = m.Month,
+				Year = m.Year,
+				Searches = m.Searches
+			}).ToList() ?? new List<MonthlyVolume>();
+			_logger.LogDebug("Updated KeywordBase: SearchVolume={SearchVolume}, Difficulty={Difficulty}, CPC={CPC}, CompetitionValue={CompetitionValue}, MonthlySearchVolumesJson={MonthlySearchVolumesJson}",
+		keyword.SearchVolume, keyword.Difficulty, keyword.CPC, keyword.CompetitionValue, keyword.MonthlySearchVolumesJson);
+		}
+
+		private RelatedKeyword CreateRelatedKeyword(SeedKeyword seedKeyword, KeywordIdea keywordIdea)
+		{
+			if (keywordIdea == null) throw new ArgumentNullException(nameof(keywordIdea));
+
+			var relatedKeyword = new RelatedKeyword
+			{
+				SeedKeywordId = seedKeyword.Id,
 				SuggestedKeyword = keywordIdea.keyword,
-				IsMainKeyword = isMainKeyword,
-				SearchVolume = keywordIdea.avg_monthly_searches,
-				Difficulty = keywordIdea.competition_index,
-				CPC = cpc > 0 ? cpc : 0m,
-				MonthlySearchVolumes = keywordIdea.monthly_search_volumes?.Select(m => new MonthlySearchVolume
-				{
-					Month = m.month,
-					Year = m.year,
-					Searches = m.searches
-				}).ToList() ?? new List<MonthlySearchVolume>(),
 				CreatedDate = DateTime.UtcNow
 			};
+
+			UpdateKeywordWithData(relatedKeyword, keywordIdea);
+			return relatedKeyword;
 		}
 
-		private void UpdateExistingSuggestion(KeywordSuggestion existing, KeywordSuggestion newData)
-		{
-			existing.SearchVolume = newData.SearchVolume;
-			existing.Difficulty = newData.Difficulty;
-			existing.CPC = newData.CPC;
-			existing.CreatedDate = newData.CreatedDate;
-			existing.IsMainKeyword = newData.IsMainKeyword;
-
-			var existingVolumes = existing.MonthlySearchVolumes.ToList();
-			var newVolumes = newData.MonthlySearchVolumes.ToList();
-			var volumesToRemove = existingVolumes.Where(ev => !newVolumes.Any(nv => nv.Month == ev.Month && nv.Year == ev.Year)).ToList();
-			foreach (var volume in volumesToRemove)
-			{
-				existing.MonthlySearchVolumes.Remove(volume);
-			}
-
-			foreach (var newVolume in newVolumes)
-			{
-				var existingVolume = existing.MonthlySearchVolumes.FirstOrDefault(ev => ev.Month == newVolume.Month && ev.Year == newVolume.Year);
-				if (existingVolume != null)
-				{
-					existingVolume.Searches = newVolume.Searches;
-				}
-				else
-				{
-					existing.MonthlySearchVolumes.Add(newVolume);
-				}
-			}
-		}
-
-		public async Task UpdateAsync(KeywordSuggestion entity)
+		public async Task UpdateAsync(SeedKeyword entity)
 		{
 			await _keywordSuggestionRepository.UpdateAsync(entity);
 		}
 
 		private class AhrefsKeywordResponse
 		{
-			[JsonProperty("Global Keyword Data")]
+			[JsonProperty("Global Keyword Data")] // Sử dụng JsonPropertyName
 			public KeywordIdea[] GlobalKeywordData { get; set; }
 
-			[JsonProperty("Related Keyword Data (Global)")]
+			[JsonProperty("Related Keyword Data (Global)")] // Sử dụng JsonPropertyName
 			public KeywordIdea[] RelatedKeywordDataGlobal { get; set; }
 		}
 
 		private class KeywordIdea
 		{
-			[JsonProperty("keyword")]
+			[JsonProperty("keyword")] // Sử dụng JsonPropertyName
 			public string keyword { get; set; }
 
-			[JsonProperty("avg_monthly_searches")]
+			[JsonProperty("avg_monthly_searches")] // Sử dụng JsonPropertyName
 			public int avg_monthly_searches { get; set; }
 
-			[JsonProperty("competition_index")]
+			[JsonProperty("competition_index")] // Sử dụng JsonPropertyName
 			public int competition_index { get; set; }
 
-			[JsonProperty("competition_value")]
+			[JsonProperty("competition_value")] // Sử dụng JsonPropertyName
 			public string competition_value { get; set; }
 
-			[JsonProperty("High CPC")]
+			[JsonProperty("High CPC")] // Sử dụng JsonPropertyName
 			public string High_CPC { get; set; }
 
-			[JsonProperty("Low CPC")]
+			[JsonProperty("Low CPC")] // Sử dụng JsonPropertyName
 			public string Low_CPC { get; set; }
 
-			[JsonProperty("monthly_search_volumes")]
+			[JsonProperty("monthly_search_volumes")] // Sử dụng JsonPropertyName
 			public MonthlyVolume[] monthly_search_volumes { get; set; }
-		}
-
-		private class MonthlyVolume
-		{
-			[JsonProperty("month")]
-			public string month { get; set; }
-
-			[JsonProperty("searches")]
-			public int searches { get; set; }
-
-			[JsonProperty("year")]
-			public int year { get; set; }
 		}
 	}
 }
+

@@ -12,41 +12,41 @@ namespace SeoManagement.Infrastructure.Repositories
 		{
 			_context = context;
 		}
-		public async Task<List<KeywordSuggestion>> GetByProjectIdAsync(int projectId)
+		public async Task<List<SeedKeyword>> GetByProjectIdAsync(int projectId)
 		{
-			return await _context.KeywordSuggestions
-				.Include(ks => ks.MonthlySearchVolumes)
+			return await _context.SeedKeywords
+				.Include(sk => sk.RelatedKeywords)
 				.Where(u => u.ProjectID == projectId)
 				.AsSplitQuery()
-				.ToListAsync() ?? new List<KeywordSuggestion>();
+				.ToListAsync() ?? new List<SeedKeyword>();
 		}
-		public async Task<List<KeywordSuggestion>> GetSuggestionsAsync(int projectId, string seedKeyword)
+		public async Task<List<SeedKeyword>> GetSuggestionsAsync(int projectId, string seedKeyword)
 		{
-			return await _context.KeywordSuggestions
-				.Where(ks => ks.ProjectID == projectId && ks.SeedKeyword == seedKeyword)
+			return await _context.SeedKeywords
+				.Where(ks => ks.ProjectID == projectId && ks.Keyword == seedKeyword)
 				.ToListAsync();
 		}
 
-		public async Task AddSuggestionsAsync(List<KeywordSuggestion> suggestions)
+		public async Task AddSuggestionsAsync(List<SeedKeyword> suggestions)
 		{
-			await _context.KeywordSuggestions.AddRangeAsync(suggestions);
+			await _context.SeedKeywords.AddRangeAsync(suggestions);
 			await _context.SaveChangesAsync();
 		}
 
-		public Task<KeywordSuggestion> GetByIdAsync(int id)
+		public Task<SeedKeyword> GetByIdAsync(int id)
 		{
 			throw new NotImplementedException();
 		}
 
-		public async Task AddAsync(KeywordSuggestion entity)
+		public async Task AddAsync(SeedKeyword entity)
 		{
-			await _context.KeywordSuggestions.AddAsync(entity);
+			await _context.SeedKeywords.AddAsync(entity);
 			await _context.SaveChangesAsync();
 		}
 
-		public async Task UpdateAsync(KeywordSuggestion entity)
+		public async Task UpdateAsync(SeedKeyword entity)
 		{
-			var existingResult = await _context.KeywordSuggestions.FindAsync(entity.Id);
+			var existingResult = await _context.SeedKeywords.FindAsync(entity.Id);
 			if (existingResult != null)
 			{
 				_context.Entry(existingResult).CurrentValues.SetValues(entity);
@@ -57,10 +57,10 @@ namespace SeoManagement.Infrastructure.Repositories
 
 		public async Task DeleteAsync(int id)
 		{
-			var result = await _context.KeywordSuggestions.FindAsync(id);
+			var result = await _context.SeedKeywords.FindAsync(id);
 			if (result != null)
 			{
-				_context.KeywordSuggestions.Remove(result);
+				_context.SeedKeywords.Remove(result);
 				await _context.SaveChangesAsync();
 			}
 		}

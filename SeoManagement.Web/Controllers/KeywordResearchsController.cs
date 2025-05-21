@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
 using SeoManagement.Core.Enum;
 using SeoManagement.Core.Interfaces;
-using SeoManagement.Infrastructure.Data;
 using SeoManagement.Web.Models.ViewModels;
 
 namespace SeoManagement.Web.Controllers
@@ -14,7 +13,6 @@ namespace SeoManagement.Web.Controllers
 	{
 		private readonly IUserService _userService;
 		private readonly UserManager<ApplicationUser> _userManager;
-		private readonly AppDbContext _context;
 		private readonly IKeywordResearchService _keywordResearchService;
 		private readonly ISEOProjectService _projectService;
 		private readonly ILogger<KeywordResearchsController> _logger;
@@ -22,14 +20,13 @@ namespace SeoManagement.Web.Controllers
 		public KeywordResearchsController(
 			IUserService userService,
 			UserManager<ApplicationUser> userManager,
-			AppDbContext context,
+
 			IKeywordResearchService keywordResearchService,
 			ISEOProjectService projectService,
 			ILogger<KeywordResearchsController> logger)
 		{
 			_userService = userService;
 			_userManager = userManager;
-			_context = context;
 			_keywordResearchService = keywordResearchService;
 			_projectService = projectService;
 			_logger = logger;
@@ -38,68 +35,64 @@ namespace SeoManagement.Web.Controllers
 		[HttpGet]
 		public async Task<IActionResult> IndexResearch(int? projectId = null)
 		{
+			var model = new KeywordResearchViewModel { ProjectId = projectId ?? 0 };
 			ViewBag.ProjectId = projectId;
 			if (projectId.HasValue)
 			{
-				var previousResults = await _keywordResearchService.GetByProjectIdAsync(projectId.Value);
+				var seedKeywords = await _keywordResearchService.GetByProjectIdAsync(projectId.Value);
 
 				// Kiểm tra null và khởi tạo danh sách rỗng nếu cần
-				if (previousResults == null)
+				if (seedKeywords == null)
 				{
-					previousResults = new List<KeywordSuggestion>();
+					seedKeywords = new List<SeedKeyword>();
 				}
-				var mainKeywords = previousResults
-					.Where(r => r.IsMainKeyword)
-					.Select(r => new
+
+				var mainKeywords = seedKeywords.Select(sk => new KeywordResearchViewModel.KeywordViewModel
+				{
+					SeedKeyword = sk.Keyword,
+					SuggestedKeyword = sk.Keyword,
+					SearchVolume = sk.SearchVolume,
+					Difficulty = sk.Difficulty,
+					CPC = sk.CPC,
+					CreatedDate = sk.CreatedDate.ToString("yyyy-MM-dd"),
+					CompetitionValue = sk.CompetitionValue,
+					MonthlySearchVolumes = sk.MonthlySearchVolumes.Select(m => new KeywordResearchViewModel.MonthlyVolumeViewModel
 					{
-						SeedKeyword = r.SeedKeyword,
-						SuggestedKeyword = r.SuggestedKeyword,
-						SearchVolume = r.SearchVolume > 0 ? r.SearchVolume : 0,
-						Difficulty = r.Difficulty > 0 ? r.Difficulty : 0,
-						CPC = r.CPC > 0 ? r.CPC : 0m,
-						CreatedDate = r.CreatedDate.ToString("yyyy-MM-dd"),
-						MonthlySearchVolumes = r.MonthlySearchVolumes.Select(m => new
+						Month = m.Month,
+						Year = m.Year,
+						Searches = m.Searches
+					}).ToList(),
+					IsMainKeyword = true
+				}).DistinctBy(k => k.SeedKeyword);
+
+				var relatedKeywords = seedKeywords
+					.SelectMany(sk => sk.RelatedKeywords)
+					.Select(rk => new KeywordResearchViewModel.KeywordViewModel
+					{
+						SeedKeyword = rk.SeedKeyword.Keyword,
+						SuggestedKeyword = rk.SuggestedKeyword,
+						SearchVolume = rk.SearchVolume,
+						Difficulty = rk.Difficulty,
+						CPC = rk.CPC,
+						CreatedDate = rk.CreatedDate.ToString("yyyy-MM-dd"),
+						CompetitionValue = rk.CompetitionValue,
+						MonthlySearchVolumes = rk.MonthlySearchVolumes.Select(m => new KeywordResearchViewModel.MonthlyVolumeViewModel
 						{
 							Month = m.Month,
 							Year = m.Year,
 							Searches = m.Searches
-						}).ToList()
-					})
-					.DistinctBy(r => new { r.SeedKeyword, r.SuggestedKeyword })
-					.ToList();
+						}).ToList(),
+						IsMainKeyword = false
+					});
 
-				var relatedKeywords = previousResults
-					.Where(r => !r.IsMainKeyword)
-					.GroupBy(r => r.SeedKeyword)
-					.Select(g => new
-					{
-						SeedKeyword = g.Key,
-						Keywords = g.Select(r => new
-						{
-							SuggestedKeyword = r.SuggestedKeyword,
-							SearchVolume = r.SearchVolume > 0 ? r.SearchVolume : 0,
-							Difficulty = r.Difficulty > 0 ? r.Difficulty : 0,
-							CPC = r.CPC > 0 ? r.CPC : 0m,
-							CreatedDate = r.CreatedDate.ToString("yyyy-MM-dd"),
-							MonthlySearchVolumes = r.MonthlySearchVolumes.Select(m => new
-							{
-								Month = m.Month,
-								Year = m.Year,
-								Searches = m.Searches
-							}).ToList()
-						}).ToList()
-					})
-					.ToList();
-
-				ViewBag.MainKeywords = mainKeywords;
-				ViewBag.RelatedKeywords = relatedKeywords;
+				model.Keywords = mainKeywords.Concat(relatedKeywords).ToList();
 
 				var project = await _projectService.GetByIdAsync(projectId.Value);
 				ViewBag.ProjectName = project.ProjectName;
 				ViewBag.ProjectDescription = project.Description;
 			}
 
-			return View(new KeywordResearchViewModel());
+			return View(model);
 		}
 
 
@@ -108,8 +101,8 @@ namespace SeoManagement.Web.Controllers
 		{
 			if (string.IsNullOrWhiteSpace(model.SeedKeyword) || model.ProjectId <= 0)
 			{
-				model.Message = "Vui lòng nhập từ khóa gốc và chọn ProjectId hợp lệ.";
-				return View("Index", model);
+				TempData["Error"] = "Vui lòng nhập từ khóa hợp lệ.";
+				return RedirectToAction("IndexResearch", model);
 			}
 
 
@@ -122,58 +115,52 @@ namespace SeoManagement.Web.Controllers
 			if (!await _userService.CanPerformActionAsync(user.Id, ActionType.KeywordResearch.ToString()))
 			{
 				TempData["Error"] = "Bạn đã vượt quá giới hạn nghiên cứu từ khóa mỗi ngày.";
-				return View("Index", model);
+				return RedirectToAction("IndexResearch", model);
 			}
 
 			try
 			{
-				var suggestions = await _keywordResearchService.ResearchKeywordsAsync(model.ProjectId, model.SeedKeyword);
+				var seedKeywords = await _keywordResearchService.ResearchKeywordsAsync(model.ProjectId, model.SeedKeyword);
 
-				var mainKeywords = suggestions
-				.Where(s => s.IsMainKeyword)
-				.Select(s => new
+				var mainKeywords = seedKeywords.Select(sk => new KeywordResearchViewModel.KeywordViewModel
 				{
-					SeedKeyword = s.SeedKeyword,
-					SuggestedKeyword = s.SuggestedKeyword,
-					SearchVolume = s.SearchVolume ?? 0,
-					Difficulty = s.Difficulty ?? 0,
-					CPC = s.CPC ?? 0m,
-					CreatedDate = s.CreatedDate.ToString("yyyy-MM-dd"),
-					MonthlySearchVolumes = s.MonthlySearchVolumes.Select(m => new
+					SeedKeyword = sk.Keyword,
+					SuggestedKeyword = sk.Keyword,
+					SearchVolume = sk.SearchVolume,
+					Difficulty = sk.Difficulty,
+					CPC = sk.CPC,
+					CreatedDate = sk.CreatedDate.ToString("yyyy-MM-dd"),
+					CompetitionValue = sk.CompetitionValue,
+					MonthlySearchVolumes = sk.MonthlySearchVolumes.Select(m => new KeywordResearchViewModel.MonthlyVolumeViewModel
 					{
 						Month = m.Month,
 						Year = m.Year,
 						Searches = m.Searches
-					}).ToList()
-				})
-				.DistinctBy(s => new { s.SeedKeyword, s.SuggestedKeyword })
-				.ToList();
+					}).ToList(),
+					IsMainKeyword = true
+				}).DistinctBy(k => k.SeedKeyword);
 
-				var relatedKeywords = suggestions
-					.Where(s => !s.IsMainKeyword)
-					.GroupBy(s => s.SeedKeyword)
-					.Select(g => new
+				var relatedKeywords = seedKeywords
+					.SelectMany(sk => sk.RelatedKeywords)
+					.Select(rk => new KeywordResearchViewModel.KeywordViewModel
 					{
-						SeedKeyword = g.Key,
-						Keywords = g.Select(s => new
+						SeedKeyword = rk.SeedKeyword.Keyword,
+						SuggestedKeyword = rk.SuggestedKeyword,
+						SearchVolume = rk.SearchVolume,
+						Difficulty = rk.Difficulty,
+						CPC = rk.CPC,
+						CreatedDate = rk.CreatedDate.ToString("yyyy-MM-dd"),
+						CompetitionValue = rk.CompetitionValue,
+						MonthlySearchVolumes = rk.MonthlySearchVolumes.Select(m => new KeywordResearchViewModel.MonthlyVolumeViewModel
 						{
-							SuggestedKeyword = s.SuggestedKeyword,
-							SearchVolume = s.SearchVolume ?? 0,
-							Difficulty = s.Difficulty ?? 0,
-							CPC = s.CPC ?? 0m,
-							CreatedDate = s.CreatedDate.ToString("yyyy-MM-dd"),
-							MonthlySearchVolumes = s.MonthlySearchVolumes.Select(m => new
-							{
-								Month = m.Month,
-								Year = m.Year,
-								Searches = m.Searches
-							}).ToList()
-						}).ToList()
-					})
-					.ToList();
+							Month = m.Month,
+							Year = m.Year,
+							Searches = m.Searches
+						}).ToList(),
+						IsMainKeyword = false
+					});
 
-				ViewBag.MainKeywords = mainKeywords;
-				ViewBag.RelatedKeywords = relatedKeywords;
+				model.Keywords = mainKeywords.Concat(relatedKeywords).ToList();
 
 				var project = await _projectService.GetByIdAsync(model.ProjectId);
 				ViewBag.ProjectName = project.ProjectName;
@@ -206,11 +193,11 @@ namespace SeoManagement.Web.Controllers
 				}
 
 				var suggestion = (await _keywordResearchService.GetByProjectIdAsync(projectId))
-					.FirstOrDefault(w => w.SeedKeyword == seedKeyword);
+					.FirstOrDefault(w => w.Keyword == seedKeyword);
 				if (suggestion == null)
 				{
 					TempData["Error"] = "Từ khóa không tồn tại trong dự án.";
-					return RedirectToAction(nameof(Index), new { projectId });
+					return RedirectToAction(nameof(IndexResearch), new { projectId });
 				}
 
 				await _keywordResearchService.DeleteAsync(suggestion.Id);

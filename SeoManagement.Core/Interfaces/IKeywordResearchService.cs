@@ -2,8 +2,8 @@
 
 namespace SeoManagement.Core.Interfaces
 {
-	public interface IKeywordResearchService : IService<KeywordSuggestion>
+	public interface IKeywordResearchService : IService<SeedKeyword>
 	{
-		Task<List<KeywordSuggestion>> ResearchKeywordsAsync(int projectId, string seedKeyword);
+		Task<List<SeedKeyword>> ResearchKeywordsAsync(int projectId, string seedKeyword);
 	}
 }

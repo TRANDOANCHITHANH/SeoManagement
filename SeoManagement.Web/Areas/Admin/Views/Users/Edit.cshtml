@@ -38,51 +38,69 @@
                         }
                     </div>
                 }
-                <form asp-action="Edit" method="post">
+                <form asp-action="Edit" method="post" class="row row-demo-grid">
                     <input type="hidden" asp-for="UserID" />
-                    <div class="form-group">
-                        <label asp-for="Username">Tên đăng nhập</label>
-                        <input asp-for="Username" class="form-control" placeholder="Nhập tên đăng nhập" />
-                        <span asp-validation-for="Username" class="text-danger"></span>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label asp-for="Username">Tên đăng nhập</label>
+                            <input asp-for="Username" class="form-control" placeholder="Nhập tên đăng nhập" />
+                            <span asp-validation-for="Username" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="Email">Email</label>
-                        <input asp-for="Email" class="form-control" placeholder="Nhập email" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label asp-for="Email">Email</label>
+                            <input asp-for="Email" class="form-control" placeholder="Nhập email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="FullName">Họ tên</label>
-                        <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên" />
-                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label asp-for="FullName">Họ tên</label>
+                            <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="Role">Vai trò</label>
-                        <select asp-for="Role" class="form-control">
-                            <option value="Admin">Admin</option>
-                            <option value="User">User</option>
-                        </select>
-                        <span asp-validation-for="Role" class="text-danger"></span>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label asp-for="Role">Vai trò</label>
+                            <select asp-for="Role" class="form-control">
+                                <option value="Admin">Admin</option>
+                                <option value="User">User</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="IsActive">Trạng thái</label>
-                        <select asp-for="IsActive" class="form-control">
-                            <option value="true">Active</option>
-                            <option value="false">Inactive</option>
-                        </select>
-                        <span asp-validation-for="IsActive" class="text-danger"></span>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label asp-for="IsActive">Trạng thái</label>
+                            <select asp-for="IsActive" class="form-control">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                            <span asp-validation-for="IsActive" class="text-danger"></span>
+                        </div>
                     </div>
-                    <h5>Giới hạn hành động mỗi ngày</h5>
+                    <div class="col-12">
+                        <h5>Giới hạn hành động mỗi ngày</h5>
+                    </div>
                     @for (int i = 0; i < Model.ActionLimits.Count; i++)
                     {
-                        <div class="form-group">
-                            <label asp-for="ActionLimits[i].DailyLimit">@Model.ActionLimits[i].ActionType</label>
-                            <input type="hidden" asp-for="ActionLimits[i].ActionType" />
-                            <input asp-for="ActionLimits[i].DailyLimit" type="number" min="0" class="form-control" placeholder="Nhập giới hạn (số lần/ngày)" />
-                            <span asp-validation-for="ActionLimits[i].DailyLimit" class="text-danger"></span>
+                        <div class="col-6">
+                            <div class="form-group row align-items-center mb-3">
+                                <label asp-for="ActionLimits[i].DailyLimit" class="col-6 col-form-label mb-0">@Model.ActionLimits[i].ActionType</label>
+                                <div class="col-6">
+                                    <input type="hidden" asp-for="ActionLimits[i].ActionType" />
+                                    <input asp-for="ActionLimits[i].DailyLimit" type="number" min="0" class="form-control" placeholder="Nhập giới hạn (số lần/ngày)" />
+                                    <span asp-validation-for="ActionLimits[i].DailyLimit" class="text-danger"></span>
+                                </div>
+                            </div>
                         </div>
                     }
-                    <button type="submit" class="btn btn-primary">Cập nhật</button>
-                    <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+                    <div class="col-12 text-end mt-3">
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                        <a asp-action="Index" class="btn btn-secondary ms-2">Hủy</a>
+                    </div>
                 </form>
             </div>
         </div>

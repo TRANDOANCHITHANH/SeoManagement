@@ -42,7 +42,6 @@ namespace SeoManagement.Core.Entities
 		public virtual ICollection<IndexCheckerUrl> IndexCheckerUrls { get; set; }
 		public virtual ICollection<PageSpeedResult> PageSpeedResults { get; set; }
 		public virtual ICollection<WebsiteInsight> WebsiteInsights { get; set; }
-		public virtual ICollection<KeywordSuggestion> KeywordSuggestions { get; set; }
 		public virtual ICollection<SeedKeyword> SeedKeywords { get; set; }
 	}
 }

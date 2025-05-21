@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <Folder Include="Areas\Admin\Data\" />
-    <Folder Include="Views\Keywords\" />
     <Folder Include="Views\Users\" />
   </ItemGroup>
 

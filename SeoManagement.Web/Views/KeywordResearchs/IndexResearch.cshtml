@@ -1,0 +1,261 @@
+﻿@model SeoManagement.Web.Models.ViewModels.KeywordResearchViewModel
+
+@{
+    ViewData["Title"] = "Nghiên cứu từ khóa";
+}
+
+<div class="container">
+    <div class="page-header mb-3">
+        <h4 class="fw-bold">Nghiên cứu từ khóa</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a asp-action="Index" asp-controller="Home">
+                    <i class="icon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-controller="SEOProjects" asp-route-projectType="KeywordResearch">Nghiên cứu từ khóa</a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Chi tiết</a>
+            </li>
+        </ul>
+    </div>
+    <h2 class="text-center mb-4">Nghiên cứu từ khóa</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success text-center">@TempData["Success"]</div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-@(Model.Message.Contains("Lỗi") ? "danger" : "success") text-center">@Model.Message</div>
+    }
+
+    @if (ViewBag.ProjectId != null)
+    {
+        <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px;">
+            <div class="card-body">
+                <h4 class="card-title">Tổng quan dự án</h4>
+                <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-2 rounded">
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Tên dự án:</span>
+                        <input type="text" class="form-control" value="@ViewBag.ProjectName" readonly />
+                    </div>
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Mô tả:</span>
+                        <input type="text" class="form-control" value="@ViewBag.ProjectDescription" readonly />
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="overlay" id="loadingOverlay">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <span>Đang phân tích...</span>
+        </div>
+    </div>
+
+    <form asp-action="IndexResearch" method="post" class="mb-4" id="checkForm">
+        <input type="hidden" name="ProjectId" value="@ViewBag.ProjectId" />
+        <div class="input-group">
+            <input type="text" name="SeedKeyword" class="form-control" placeholder="Nhập từ khóa gốc (ví dụ: dịch vụ SEO)" value="@Model.SeedKeyword" />
+            <button type="submit" class="btn btn-primary">Phân tích</button>
+        </div>
+    </form>
+
+    @if (ViewBag.MainKeywords != null && ViewBag.MainKeywords.Count > 0)
+    {
+        <div class="card shadow p-4 mb-4">
+            <h4 class="mb-3">Từ khóa chính</h4>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered" id="mainKeywordTable">
+                    <thead>
+                        <tr>
+                            <th>Từ khóa gốc</th>
+                            <th>Từ khóa chính</th>
+                            <th>Khối lượng tìm kiếm</th>
+                            <th>Độ khó</th>
+                            <th>CPC</th>
+                            <th>Ngày tạo</th>
+                            <th>Chi tiết</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var main in ViewBag.MainKeywords)
+                        {
+                            <tr>
+                                <td>@main.SeedKeyword</td>
+                                <td>@main.SuggestedKeyword</td>
+                                <td>@(main.SearchVolume > 0 ? main.SearchVolume.ToString() : "N/A")</td>
+                                <td>@(main.Difficulty > 0 ? main.Difficulty.ToString() : "N/A")</td>
+                                <td>@(main.CPC > 0 ? main.CPC.ToString("F2") : "N/A")</td>
+                                <td>@main.CreatedDate</td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#monthlySearchModal_@main.SeedKeyword.Replace(" ", "_")">
+                                        Xem chi tiết
+                                    </button>
+                                </td>
+                                <td>
+                                    <form asp-action="DeleteKeyword" method="post" style="display:inline;">
+                                        <input type="hidden" name="projectId" value="@ViewBag.ProjectId" />
+                                        <input type="hidden" name="seedKeyword" value="@main.SeedKeyword" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa từ khóa này?')"><i class="fa fa-trash-o"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal cho từ khóa chính -->
+        @foreach (var main in ViewBag.MainKeywords)
+        {
+            <div class="modal fade" id="monthlySearchModal_@main.SeedKeyword.Replace(" ", "_")" tabindex="-1" aria-labelledby="monthlySearchModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="monthlySearchModalLabel">Chi tiết khối lượng tìm kiếm - @main.SuggestedKeyword</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Tháng</th>
+                                            <th>Năm</th>
+                                            <th>Khối lượng tìm kiếm</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var volume in main.MonthlySearchVolumes)
+                                        {
+                                            <tr>
+                                                <td>@volume.Month</td>
+                                                <td>@volume.Year</td>
+                                                <td>@volume.Searches</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    @if (ViewBag.RelatedKeywords != null && ViewBag.RelatedKeywords.Count > 0)
+    {
+        <div class="card shadow p-4 mb-4">
+            <h4 class="mb-3">Từ khóa liên quan</h4>
+            @foreach (var group in ViewBag.RelatedKeywords)
+            {
+                <h5 class="mt-4">Từ khóa gốc: @group.SeedKeyword</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered" id="relatedKeywordTable_@group.SeedKeyword.Replace(" ", "_")">
+                        <thead>
+                            <tr>
+                                <th>Từ khóa gợi ý</th>
+                                <th>Khối lượng tìm kiếm</th>
+                                <th>Độ khó</th>
+                                <th>CPC</th>
+                                <th>Ngày tạo</th>
+                                <th>Chi tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var related in group.Keywords)
+                            {
+                                <tr>
+                                    <td>@related.SuggestedKeyword</td>
+                                    <td>@(related.SearchVolume > 0 ? related.SearchVolume.ToString() : "N/A")</td>
+                                    <td>@(related.Difficulty > 0 ? related.Difficulty.ToString() : "N/A")</td>
+                                    <td>@(related.CPC > 0 ? related.CPC.ToString("F2") : "N/A")</td>
+                                    <td>@related.CreatedDate</td>
+                                    <td>
+                                        <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#relatedMonthlySearchModal_@related.SuggestedKeyword.Replace(" ", "_")">
+                                            Xem chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Modal cho từ khóa liên quan -->
+                @foreach (var related in group.Keywords)
+                {
+                    <div class="modal fade" id="relatedMonthlySearchModal_@related.SuggestedKeyword.Replace(" ", "_")" tabindex="-1" aria-labelledby="relatedMonthlySearchModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="relatedMonthlySearchModalLabel">Chi tiết khối lượng tìm kiếm - @related.SuggestedKeyword</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tháng</th>
+                                                    <th>Năm</th>
+                                                    <th>Khối lượng tìm kiếm</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var volume in related.MonthlySearchVolumes)
+                                                {
+                                                    <tr>
+                                                        <td>@volume.Month</td>
+                                                        <td>@volume.Year</td>
+                                                        <td>@volume.Searches</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            <a asp-action="ExportToExcel" asp-route-projectId="@ViewBag.ProjectId" class="btn btn-success mt-3">Xuất Excel</a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('checkForm').addEventListener('submit', function () {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        });
+    </script>
+}

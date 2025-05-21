@@ -30,7 +30,10 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<WebsiteInsight> WebsiteInsights { get; set; }
 		public DbSet<ApiKey> ApiKeys { get; set; }
 		public DbSet<UserActionLimit> UserActionLimits { get; set; }
-
+		public DbSet<KeywordSuggestion> KeywordSuggestions { get; set; }
+		public DbSet<MonthlySearchVolume> MonthlySearchVolumes { get; set; }
+		public DbSet<SeedKeyword> SeedKeywords { get; set; }
+		public DbSet<RelatedKeyword> RelatedKeywords { get; set; }
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
@@ -99,6 +102,15 @@ namespace SeoManagement.Infrastructure.Data
 				   .HasForeignKey(w => w.ProjectID)
 				   .OnDelete(DeleteBehavior.Cascade);
 
+				entity.HasMany(p => p.KeywordSuggestions)
+				   .WithOne(w => w.Project)
+				   .HasForeignKey(w => w.ProjectID)
+				   .OnDelete(DeleteBehavior.Cascade);
+
+				entity.HasMany(p => p.SeedKeywords)
+					.WithOne(w => w.Project)
+					.HasForeignKey(w => w.ProjectID)
+					.OnDelete(DeleteBehavior.Cascade);
 			});
 			// Cấu hình mối quan hệ cho Content
 			modelBuilder.Entity<Content>(entity =>
@@ -119,6 +131,35 @@ namespace SeoManagement.Infrastructure.Data
 			   .WithOne(h => h.Keyword)
 			   .HasForeignKey(h => h.KeywordID);
 
+			modelBuilder.Entity<KeywordSuggestion>()
+				.HasMany(k => k.MonthlySearchVolumes)
+				.WithOne(h => h.KeywordSuggestion)
+				.HasForeignKey(h => h.KeywordSuggestionId);
+
+			modelBuilder.Entity<SeedKeyword>()
+			  .Property(sk => sk.MonthlySearchVolumesJson)
+			  .HasColumnType("nvarchar(max)")
+			  .IsRequired();
+
+			modelBuilder.Entity<RelatedKeyword>()
+				.Property(rk => rk.MonthlySearchVolumesJson)
+				.HasColumnType("nvarchar(max)")
+				.IsRequired();
+
+			// Cấu hình cột CompetitionValue
+			modelBuilder.Entity<SeedKeyword>()
+				.Property(sk => sk.CompetitionValue)
+				.HasColumnType("nvarchar(50)");
+
+			modelBuilder.Entity<RelatedKeyword>()
+				.Property(rk => rk.CompetitionValue)
+				.HasColumnType("nvarchar(50)");
+
+			modelBuilder.Entity<RelatedKeyword>()
+							.HasOne(rk => rk.SeedKeyword)
+							.WithMany(sk => sk.RelatedKeywords)
+							.HasForeignKey(rk => rk.SeedKeywordId)
+							.OnDelete(DeleteBehavior.Cascade);
 		}
 	}
 }

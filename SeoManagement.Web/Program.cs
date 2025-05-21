@@ -105,6 +105,8 @@ builder.Services.AddScoped<IBacklinkResultService, BacklinkResultService>();
 builder.Services.AddScoped<BacklinkService>();
 builder.Services.AddScoped<IWebsiteInsightRepository, WebsiteInsightRepository>();
 builder.Services.AddScoped<IService<WebsiteInsight>, WebsiteInsightService>();
+builder.Services.AddScoped<IKeywordSuggestionRepository, KeywordSuggestionRepository>();
+builder.Services.AddScoped<IKeywordResearchService, KeywordResearchService>();
 
 builder.Services.AddCors(options =>
 {

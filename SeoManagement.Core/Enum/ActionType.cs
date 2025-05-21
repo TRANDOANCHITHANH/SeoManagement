@@ -6,5 +6,6 @@
 		BacklinkChecker,
 		PageSpeedChecker,
 		WebsiteInsight,
+		KeywordResearch,
 	}
 }

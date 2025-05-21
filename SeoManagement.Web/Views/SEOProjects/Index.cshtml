@@ -9,6 +9,7 @@
         "BacklinkChecker" => "Kiểm tra Backlink",
         "WebsiteInsight" => "Kiểm tra hiệu suất Website",
         "KeywordRankChecker" => "Kiểm tra thứ hạng Keyword",
+        "KeywordResearch" => "Phân tích từ khóa",
         _ => "Danh Sách Dự Án SEO"
     };
 }
@@ -57,6 +58,10 @@
                     @if (string.IsNullOrEmpty(ViewBag.ProjectType) || ViewBag.ProjectType == "KeywordRankChecker")
                     {
                         <a asp-action="Create" asp-route-projectType="KeywordRankChecker" class="btn btn-primary">Tạo dự án kiểm tra thứ hạng Keyword</a>
+                    }
+                    @if (string.IsNullOrEmpty(ViewBag.ProjectType) || ViewBag.ProjectType == "KeywordResearch")
+                    {
+                        <a asp-action="Create" asp-route-projectType="KeywordResearch" class="btn btn-primary">Tạo dự án phân tích từ khóa</a>
                     }
                     
                 </div>
@@ -135,6 +140,11 @@
                                             else if (project.ProjectType == "KeywordRankChecker")
                                             {
                                                 <a asp-controller="KeywordCheckers" asp-action="IndexChecker" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra</a>
+                                                <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-warning">Sửa</a>
+                                            }
+                                            else if (project.ProjectType == "KeywordResearch")
+                                            {
+                                                <a asp-controller="KeywordResearchs" asp-action="IndexResearch" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra</a>
                                                 <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-warning">Sửa</a>
                                             }
                                             

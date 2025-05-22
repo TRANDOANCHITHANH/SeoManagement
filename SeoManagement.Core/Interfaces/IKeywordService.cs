@@ -9,5 +9,6 @@ namespace SeoManagement.Core.Interfaces
 		Task CreateKeywordAsync(Keyword keyword);
 		Task UpdateKeywordAsync(Keyword keyword);
 		Task DeleteKeywordAsync(int id);
+
 	}
 }

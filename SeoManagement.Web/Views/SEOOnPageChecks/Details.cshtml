@@ -265,26 +265,147 @@
                                 </div>
                             </div>
 
-                            <!-- Page Speed Score -->
-                            <div class="col-12">
-                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@analysisResult.PageSpeedScore%">
+                            <!-- H1 Count -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.H1Count == 1 ? "Tối ưu" : "Không tối ưu")">
                                     <div class="card-body d-flex align-items-center p-3">
-                                        <i class="fa fa-tachometer-alt fa-2x me-3 @(analysisResult.PageSpeedScore >= 50 ? "text-success" : "text-danger")"></i>
+                                        <i class="fa fa-heading fa-2x me-3 @(analysisResult.H1Count == 1 ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Số Lượng Thẻ H1</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @analysisResult.H1Count
+                                                @if (analysisResult.H1Count != 1)
+                                                {
+                                                    <span class="text-danger"> - Nên có đúng 1 H1.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Broken Links -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.BrokenLinkCount == 0 ? "Không có lỗi" : $"{analysisResult.BrokenLinkCount} lỗi")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-unlink fa-2x me-3 @(analysisResult.BrokenLinkCount == 0 ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Liên Kết Hỏng</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @analysisResult.BrokenLinkCount
+                                                @if (analysisResult.BrokenLinkCount > 0)
+                                                {
+                                                    <span class="text-danger"> - Sửa các liên kết hỏng.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Canonical URL -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.HasCanonicalUrl ? "Có" : "Thiếu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-link fa-2x me-3 @(analysisResult.HasCanonicalUrl ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Thẻ Canonical URL</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.HasCanonicalUrl ? "Có" : "Thiếu")
+                                                @if (!analysisResult.HasCanonicalUrl)
+                                                {
+                                                    <span class="text-danger"> - Thêm thẻ canonical.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Structured Data -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.HasStructuredData ? "Có" : "Thiếu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-code fa-2x me-3 @(analysisResult.HasStructuredData ? "text-success" : "text-warning")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Structured Data</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.HasStructuredData ? "Có" : "Thiếu")
+                                                @if (!analysisResult.HasStructuredData)
+                                                {
+                                                    <span class="text-warning"> - Thêm schema markup.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- HTTPS -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.IsHttps ? "Có" : "Thiếu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-lock fa-2x me-3 @(analysisResult.IsHttps ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">HTTPS</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.IsHttps ? "Có" : "Thiếu")
+                                                @if (!analysisResult.IsHttps)
+                                                {
+                                                    <span class="text-danger"> - Chuyển sang HTTPS.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Page Speed Score Mobile -->
+                            <div class="col-12">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@analysisResult.PageSpeedScoreMobile%">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-tachometer-alt fa-2x me-3 @(analysisResult.PageSpeedScoreMobile >= 50 ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Điểm Tốc Độ Trang (Mobile)</strong>
+                                            <div class="progress mt-2" style="height: 25px;">
+                                                <div class="progress-bar @(analysisResult.PageSpeedScoreMobile >= 50 ? "bg-success" : "bg-danger") progress-bar-striped progress-bar-animated"
+                                                     role="progressbar"
+                                                     style="width: @analysisResult.PageSpeedScoreMobile%;"
+                                                     aria-valuenow="@analysisResult.PageSpeedScoreMobile"
+                                                     aria-valuemin="0"
+                                                     aria-valuemax="100">
+                                                    @analysisResult.PageSpeedScoreMobile%
+                                                </div>
+                                            </div>
+                                            @if (analysisResult.PageSpeedScoreMobile < 50)
+                                            {
+                                                <p class="mb-0 text-danger small"> - Cải thiện: Tối ưu hóa hình ảnh, sử dụng AMP.</p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Page Speed Score Desktop -->
+                            <div class="col-12">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@analysisResult.PageSpeedScoreDesktop%">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-tachometer-alt fa-2x me-3 @(analysisResult.PageSpeedScoreDesktop >= 50 ? "text-success" : "text-danger")"></i>
                                         <div class="flex-grow-1">
                                             <strong class="text-dark">Điểm Tốc Độ Trang (Desktop)</strong>
                                             <div class="progress mt-2" style="height: 25px;">
-                                                <div class="progress-bar @(analysisResult.PageSpeedScore >= 50 ? "bg-success" : "bg-danger") progress-bar-striped progress-bar-animated"
+                                                <div class="progress-bar @(analysisResult.PageSpeedScoreDesktop >= 50 ? "bg-success" : "bg-danger") progress-bar-striped progress-bar-animated"
                                                      role="progressbar"
-                                                     style="width: @analysisResult.PageSpeedScore%;"
-                                                     aria-valuenow="@analysisResult.PageSpeedScore"
+                                                     style="width: @analysisResult.PageSpeedScoreDesktop%;"
+                                                     aria-valuenow="@analysisResult.PageSpeedScoreDesktop"
                                                      aria-valuemin="0"
                                                      aria-valuemax="100">
-                                                    @analysisResult.PageSpeedScore%
+                                                    @analysisResult.PageSpeedScoreDesktop%
                                                 </div>
                                             </div>
-                                            @if (analysisResult.PageSpeedScore < 50)
+                                            @if (analysisResult.PageSpeedScoreDesktop < 50)
                                             {
-                                                <p class="mb-0 text-danger small"> - Cải thiện: Nén hình ảnh, giảm yêu cầu HTTP.</p>
+                                                <p class="mb-0 text-danger small"> - Cải thiện: Tối ưu hóa hình ảnh, sử dụng AMP.</p>
                                             }
                                         </div>
                                     </div>

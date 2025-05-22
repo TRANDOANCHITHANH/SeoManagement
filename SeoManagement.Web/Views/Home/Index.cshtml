@@ -3,7 +3,83 @@
 @{
     ViewData["Title"] = "Trang chủ";
     var configs = ViewBag.Configs as Dictionary<string, string>;
+    var recentPerformances = ViewBag.RecentPerformances;
 }
+
+@if (recentPerformances != null)
+{
+    <div class="row mt-2 mb-3">
+        <div class="col-12">
+            <h4 class="page-title font-bold mb-3">THỐNG KÊ HIỆU SUẤT SEO</h4>
+            <div class="card shadow p-4">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <canvas id="performanceLineChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        @foreach (var perf in recentPerformances)
+                        {
+                            <div class="mb-3">
+                                <h6 class="mb-1">Dự án @perf.ProjectId (@perf.ProjectType)</h6>
+                                @switch (perf.ProjectType)
+                                {
+                                    case "KeywordRankChecker":
+                                        <div class="progress">
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: @(perf.AverageKeywordRank * 10)%;" aria-valuenow="@(perf.AverageKeywordRank * 10)" aria-valuemin="0" aria-valuemax="1000">
+                                                Thứ hạng TB: @(perf.AverageKeywordRank.ToString("F2"))
+                                            </div>
+                                        </div>
+                                        break;
+                                    case "SEOOnPage":
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: @perf.AverageOnPageScore%;" aria-valuenow="@perf.AverageOnPageScore" aria-valuemin="0" aria-valuemax="100">
+                                                Điểm On-Page TB: @perf.AverageOnPageScore%
+                                            </div>
+                                        </div>
+                                        <div class="progress mt-2">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: @perf.PageSpeedScore%;" aria-valuenow="@perf.PageSpeedScore" aria-valuemin="0" aria-valuemax="100">
+                                                Tốc độ Trang: @perf.PageSpeedScore%
+                                            </div>
+                                        </div>
+                                        break;
+                                    case "PageSpeedChecker":
+                                        <div class="progress">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: @perf.PageSpeedScore%;" aria-valuenow="@perf.PageSpeedScore" aria-valuemin="0" aria-valuemax="100">
+                                                Tốc độ Trang: @perf.PageSpeedScore%
+                                            </div>
+                                        </div>
+                                        break;
+                                    case "BacklinkChecker":
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: @(Math.Min(perf.BacklinkCount, 100))%;" aria-valuenow="@(Math.Min(perf.BacklinkCount, 100))" aria-valuemin="0" aria-valuemax="100">
+                                                Số Backlink: @perf.BacklinkCount
+                                            </div>
+                                        </div>
+                                        break;
+                                    case "IndexChecker":
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: @((perf.IndexedPageCount ?? 0) * 100 / (perf.IndexedPageCount ?? 0 + perf.UnindexedPageCount ?? 0))%;" aria-valuenow="@(perf.IndexedPageCount ?? 0)" aria-valuemin="0" aria-valuemax="100">
+                                                Đã Index: @(perf.IndexedPageCount ?? 0)
+                                            </div>
+                                        </div>
+                                        <div class="progress mt-2">
+                                            <div class="progress-bar bg-danger" role="progressbar" style="width: @((perf.UnindexedPageCount ?? 0) * 100 / (perf.IndexedPageCount ?? 0 + perf.UnindexedPageCount ?? 0))%;" aria-valuenow="@(perf.UnindexedPageCount ?? 0)" aria-valuemin="0" aria-valuemax="100">
+                                                Chưa Index: @(perf.UnindexedPageCount ?? 0)
+                                            </div>
+                                        </div>
+                                        break;
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 
 <div class="row">
     <div class="col-12">
@@ -14,6 +90,17 @@
 </div>
 
 <div class="row">
+    <div class="col-md-4 stretch-card grid-margin">
+        <div class="card card-img-holder text-center">
+            <div class="card-body">
+                <i class="mdi mdi-chart-line card-img-absolute fs-30 text-primary"></i>
+                <h4 class="card-title mt-3">Theo dõi hiệu suất SEO</h4>
+                <p class="card-text text-muted">Xem hiệu suất</p>
+                <a asp-controller="SEOPerformances" asp-action="SelectProject" class="btn btn-primary btn-sm mt-2">Chi tiết</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Card 1: Outline -->
     <div class="col-md-4 stretch-card grid-margin">
         <div class="card card-img-holder text-center">
@@ -34,18 +121,6 @@
                 <h4 class="card-title mt-3">Keyword Rank</h4>
                 <p class="card-text text-muted">Công cụ kiểm tra thứ hạng từ khóa</p>
                 <a asp-controller="SEOProjects" asp-action="Index" asp-route-projectType="KeywordRankChecker" class="btn btn-primary btn-sm mt-2">Chi tiết</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card 3: Check AllInTitle -->
-    <div class="col-md-4 stretch-card grid-margin">
-        <div class="card card-img-holder text-center">
-            <div class="card-body">
-                <i class="mdi mdi-magnify card-img-absolute fs-30 text-primary"></i>
-                <h4 class="card-title mt-3">Check AllInTitle</h4>
-                <p class="card-text text-muted">Công cụ kiểm tra số lượng bài viết dựa trên AllInTitle.</p>
-                <a asp-controller="Tools" asp-action="CheckAllInTitle" class="btn btn-primary btn-sm mt-2">Chi tiết</a>
             </div>
         </div>
     </div>
@@ -74,18 +149,19 @@
         </div>
     </div>
 
-    <!-- Card 6-->
+    <!-- Card 6 -->
     <div class="col-md-4 stretch-card grid-margin">
         <div class="card card-img-holder text-center">
             <div class="card-body">
                 <i class="mdi mdi-link-variant card-img-absolute fs-30 text-primary"></i>
                 <h4 class="card-title mt-3">On Page Check</h4>
                 <p class="card-text text-muted">Công cụ kiểm tra seo on-page</p>
-                <a asp-controller="SeoProjects" asp-action="Index" asp-route-projectType="SEOOnPage" class="btn btn-primary btn-sm mt-2">Chi tiết</a>
+                <a asp-controller="SEOProjects" asp-action="Index" asp-route-projectType="SEOOnPage" class="btn btn-primary btn-sm mt-2">Chi tiết</a>
             </div>
         </div>
     </div>
 </div>
+
 
 <div class="row mt-3">
     <div class="col-12">
@@ -173,6 +249,127 @@
     </div>
 </div>
 
+<!-- Thêm Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const performanceData = @Html.Raw(Json.Serialize(ViewBag.RecentPerformances));
+            performanceData.forEach(perf => {
+        const date = new Date(perf.RecordedAt);
+        console.log(`RecordedAt: ${perf.RecordedAt}, Date: ${date}, Valid: ${!isNaN(date)}`);
+    });
+        console.log("Performance Data:", performanceData); // Debug dữ liệu
+
+        // Sắp xếp dữ liệu theo RecordedAt
+        performanceData.sort((a, b) => {
+            const dateA = new Date(a.RecordedAt);
+            const dateB = new Date(b.RecordedAt);
+            return dateA - dateB;
+        });
+
+        // Chuẩn bị nhãn (trục X) từ RecordedAt
+       const labels = performanceData.map(perf => {
+          const date = new Date(perf.recordedAt);
+            return isNaN(date) ? "Invalid Date" : date.toLocaleString();
+        });
+
+        // Chuẩn bị dữ liệu cho các chỉ số
+         const datasets = [
+        {
+            label: 'Thứ hạng từ khóa TB',
+            data: performanceData.map(perf => perf.averageKeywordRank || 0),
+            borderColor: '#FF6384',
+            fill: false,
+            tension: 0.1
+        },
+        {
+            label: 'Điểm On-Page TB (%)',
+            data: performanceData.map(perf => perf.averageOnPageScore || 0),
+            borderColor: '#36A2EB',
+            fill: false,
+            tension: 0.1
+        },
+        {
+            label: 'Tốc độ trang (%)',
+            data: performanceData.map(perf => perf.pageSpeedScore || 0),
+            borderColor: '#FFCE56',
+            fill: false,
+            tension: 0.1
+        },
+        {
+            label: 'Số Backlink',
+            data: performanceData.map(perf => perf.backlinkCount || 0),
+            borderColor: '#4BC0C0',
+            fill: false,
+            tension: 0.1
+        },
+        {
+            label: 'Số trang Index',
+            data: performanceData.map(perf => perf.indexedPageCount || 0),
+            borderColor: '#9966FF',
+            fill: false,
+            tension: 0.1
+        },
+        {
+            label: 'Số trang Chưa Index',
+            data: performanceData.map(perf => perf.unindexedPageCount || 0),
+            borderColor: '#FF4500', // Màu cam đậm cho trang chưa index
+            fill: false,
+            tension: 0.1
+        }
+    ];
+
+        const ctx = document.getElementById('performanceLineChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Xu hướng hiệu suất theo thời gian'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                               const label = context.dataset.label || '';
+                                const value = context.parsed.y !== undefined ? context.parsed.y : 0;
+                                const project = performanceData[context.dataIndex] || {};
+                                const projectId = project.projectId !== undefined ? project.projectId : 'N/A';
+                                const projectType = project.projectType || 'N/A';
+                                return `${label}: ${value} (Dự án: ${projectId} - ${projectType})`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Thời gian'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Chỉ số'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+
 <style>
     .card-img-holder {
         position: relative;
@@ -207,4 +404,15 @@
         margin-bottom: 15px;
     }
 
+    .progress {
+        height: 20px;
+        margin-bottom: 10px;
+    }
+
+    .progress-bar {
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 </style>

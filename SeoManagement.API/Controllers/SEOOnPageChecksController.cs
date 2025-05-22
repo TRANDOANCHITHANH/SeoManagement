@@ -149,8 +149,12 @@ namespace SeoManagement.API.Controllers
 				result.ImageCountWithoutAlt = htmlAnalysis.ImageCountWithoutAlt;
 				result.KeywordDensity = htmlAnalysis.KeywordDensity;
 				result.InternalLinkCount = htmlAnalysis.InternalLinkCount;
-
-				result.PageSpeedScore = await AnalyzePageSpeed(check.Url);
+				result.BrokenLinkCount = htmlAnalysis.BrokenLinkCount;
+				result.HasCanonicalUrl = htmlAnalysis.HasCanonicalUrl;
+				result.HasStructuredData = htmlAnalysis.HasStructuredData;
+				result.IsHttps = new Uri(check.Url).Scheme == "https";
+				result.PageSpeedScoreDesktop = await AnalyzePageSpeed(check.Url, "desktop");
+				result.PageSpeedScoreMobile = await AnalyzePageSpeed(check.Url, "mobile");
 
 				result.Summary = GenerateSummary(result);
 
@@ -163,16 +167,26 @@ namespace SeoManagement.API.Controllers
 			}
 		}
 
-		private async Task<(int HeadingCount, int ImageCountWithoutAlt, double KeywordDensity, int InternalLinkCount)> AnalyzeHtml(string url, string mainKeyword)
+		private async Task<(int HeadingCount, int H1Count, int ImageCountWithoutAlt, double KeywordDensity, int InternalLinkCount, int BrokenLinkCount, bool HasCanonicalUrl, bool HasStructuredData)> AnalyzeHtml(string url, string mainKeyword)
 		{
 			var httpClient = _httpClientFactory.CreateClient();
-			var html = await httpClient.GetStringAsync(url);
+			httpClient.Timeout = TimeSpan.FromSeconds(10); // Thêm timeout để tránh treo
+			string html;
+			try
+			{
+				html = await httpClient.GetStringAsync(url);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogWarning(ex, "Failed to fetch HTML for URL: {Url}", url);
+				return (0, 0, 0, 0, 0, 0, false, false); // Fallback nếu không tải được HTML
+			}
 
 			var htmlDoc = new HtmlDocument();
 			htmlDoc.LoadHtml(html);
 
 			int headingCount = htmlDoc.DocumentNode.SelectNodes("//h1|//h2|//h3")?.Count ?? 0;
-
+			int h1Count = htmlDoc.DocumentNode.SelectNodes("//h1")?.Count ?? 0;
 			int imageCountWithoutAlt = htmlDoc.DocumentNode.SelectNodes("//img[not(@alt) or @alt='']")?.Count ?? 0;
 
 			var bodyText = htmlDoc.DocumentNode.SelectSingleNode("//body")?.InnerText ?? "";
@@ -184,38 +198,77 @@ namespace SeoManagement.API.Controllers
 			int internalLinkCount = htmlDoc.DocumentNode.SelectNodes("//a[@href]")
 				?.Count(a => a.GetAttributeValue("href", "").Contains(domain) && !a.GetAttributeValue("href", "").StartsWith("http")) ?? 0;
 
-			return (headingCount, imageCountWithoutAlt, keywordDensity, internalLinkCount);
+			// Kiểm tra broken links
+			int brokenLinkCount = 0;
+			var links = htmlDoc.DocumentNode.SelectNodes("//a[@href]");
+			if (links != null)
+			{
+				foreach (var link in links.Take(10)) // Giới hạn số link kiểm tra để tối ưu hiệu suất
+				{
+					var href = link.GetAttributeValue("href", "");
+					if (!string.IsNullOrEmpty(href) && href.StartsWith("http"))
+					{
+						try
+						{
+							var response = await httpClient.GetAsync(href);
+							if (!response.IsSuccessStatusCode) brokenLinkCount++;
+						}
+						catch
+						{
+							brokenLinkCount++;
+						}
+					}
+				}
+			}
+
+			bool hasCanonicalUrl = htmlDoc.DocumentNode.SelectSingleNode("//link[@rel='canonical']") != null;
+			bool hasStructuredData = htmlDoc.DocumentNode.SelectSingleNode("//script[@type='application/ld+json']") != null;
+
+			return (headingCount, h1Count, imageCountWithoutAlt, keywordDensity, internalLinkCount, brokenLinkCount, hasCanonicalUrl, hasStructuredData);
 		}
 
-		private async Task<int> AnalyzePageSpeed(string url)
+		private async Task<int> AnalyzePageSpeed(string url, string strategy)
 		{
 			var httpClient = _httpClientFactory.CreateClient();
-			var apiUrl = $"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={Uri.EscapeDataString(url)}&key={_pageSpeedApiKey}&strategy=desktop";
-			var response = await httpClient.GetFromJsonAsync<PageSpeedResponse>(apiUrl);
-
-			if (response?.LighthouseResult?.Categories?.Performance?.Score != null)
+			var apiUrl = $"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={Uri.EscapeDataString(url)}&key={_pageSpeedApiKey}&strategy={strategy}";
+			try
 			{
-				return (int)(response.LighthouseResult.Categories.Performance.Score * 100);
+				var response = await httpClient.GetFromJsonAsync<PageSpeedResponse>(apiUrl);
+				if (response?.LighthouseResult?.Categories?.Performance?.Score != null)
+				{
+					return (int)(response.LighthouseResult.Categories.Performance.Score * 100);
+				}
 			}
-			return 0;
+			catch (Exception ex)
+			{
+				_logger.LogWarning(ex, "Failed to fetch Page Speed score for URL: {Url}, Strategy: {Strategy}", url, strategy);
+			}
+			return 0; // Fallback nếu API thất bại
 		}
 
 		private string GenerateSummary(SEOOnPageAnalysisResult result)
 		{
 			var issues = new List<string>();
-			if (!result.IsTitleLengthOptimal) issues.Add("Độ dài tiêu đề không tối ưu (nên từ 30-60 ký tự).");
-			if (!result.IsMetaDescriptionLengthOptimal) issues.Add("Độ dài của Meta Description không tối ưu (nên từ 120-160 ký tự).");
-			if (!result.IsMainKeywordInTitle) issues.Add("Tiêu đề thiếu từ khóa chính.");
-			if (!result.IsMainKeywordInMetaDescription) issues.Add("Meta Description thiếu từ khóa chính.");
-			if (!result.IsWordCountSufficient) issues.Add("Số lượng từ quá ít (phải có ít nhất 300 từ).");
-			if (result.ImageCountWithoutAlt > 0) issues.Add($"{result.ImageCountWithoutAlt} images are missing alt text.");
-			if (result.KeywordDensity < 1 || result.KeywordDensity > 3) issues.Add($"Mật độ từ khóa ({result.KeywordDensity:F1}%) không tối ưu (nên là 1-3%).");
-			if (result.HeadingCount == 0) issues.Add("Không tìm thấy tiêu đề (H1, H2, H3) trên trang.");
-			if (result.PageSpeedScore < 50) issues.Add($"Điểm tốc độ trang ({result.PageSpeedScore}) thấp. Hãy cân nhắc việc tối ưu hóa hiệu suất.");
+			if (!result.IsTitleLengthOptimal) issues.Add("Độ dài tiêu đề không tối ưu (nên từ 30-60 ký tự). Gợi ý: Rút ngắn hoặc mở rộng tiêu đề để nằm trong khoảng này.");
+			if (!result.IsMetaDescriptionLengthOptimal) issues.Add("Độ dài Meta Description không tối ưu (nên từ 120-160 ký tự). Gợi ý: Điều chỉnh Meta Description để nằm trong khoảng này.");
+			if (!result.IsMainKeywordInTitle) issues.Add($"Tiêu đề thiếu từ khóa chính.");
+			if (!result.IsMainKeywordInMetaDescription) issues.Add($"Meta Description thiếu từ khóa chính.");
+			if (!result.IsWordCountSufficient) issues.Add($"Số lượng từ quá ít, tối thiểu 300 từ). Gợi ý: Bổ sung nội dung để đạt ít nhất 300 từ.");
+			if (result.H1Count != 1) issues.Add($"Trang nên có đúng 1 thẻ H1 (hiện có {result.H1Count}). Gợi ý: Đảm bảo chỉ có 1 thẻ H1 duy nhất.");
+			if (result.ImageCountWithoutAlt > 0) issues.Add($"{result.ImageCountWithoutAlt} hình ảnh thiếu alt text. Gợi ý: Thêm thuộc tính alt mô tả nội dung hình ảnh.");
+			if (result.KeywordDensity < 1) issues.Add($"Mật độ từ khóa ({result.KeywordDensity:F1}%) quá thấp (nên là 1-3%). Gợi ý: Thêm từ khóa vào nội dung, ví dụ trong các đoạn văn hoặc tiêu đề phụ.");
+			if (result.KeywordDensity > 3) issues.Add($"Mật độ từ khóa ({result.KeywordDensity:F1}%) quá cao (nên là 1-3%).");
+			if (result.HeadingCount == 0) issues.Add("Không tìm thấy tiêu đề (H1, H2, H3) trên trang. Gợi ý: Thêm ít nhất 1 thẻ H1 và các thẻ H2/H3 để cấu trúc nội dung.");
+			if (result.BrokenLinkCount > 0) issues.Add($"Có {result.BrokenLinkCount} liên kết hỏng trên trang. Gợi ý: Kiểm tra và sửa các liên kết bị lỗi (404, 500).");
+			if (!result.HasCanonicalUrl) issues.Add("Thiếu thẻ canonical URL. Gợi ý: Thêm thẻ <link rel='canonical'> để tránh trùng lặp nội dung.");
+			if (!result.HasStructuredData) issues.Add("Trang chưa sử dụng structured data (schema markup). Gợi ý: Thêm schema markup (ví dụ: Article, FAQ) để tăng khả năng hiển thị trên SERP.");
+			if (!result.IsHttps) issues.Add("Trang không sử dụng HTTPS. Gợi ý: Chuyển sang HTTPS để tăng độ tin cậy và bảo mật.");
+			if (result.PageSpeedScoreDesktop < 50) issues.Add($"Điểm tốc độ trang desktop ({result.PageSpeedScoreDesktop}) thấp. Gợi ý: Nén hình ảnh, giảm yêu cầu HTTP, sử dụng lazy loading.");
+			if (result.PageSpeedScoreMobile < 50) issues.Add($"Điểm tốc độ trang mobile ({result.PageSpeedScoreMobile}) thấp. Gợi ý: Tối ưu hóa hình ảnh, sử dụng AMP nếu cần.");
 
 			return issues.Count == 0
 				? "Trang web đạt các tiêu chí SEO On-Page cơ bản."
-				: $"Trang web cần cải thiện một số yếu tố SEO On-Page: {string.Join(", ", issues)}";
+				: $"Trang web cần cải thiện: {string.Join(", ", issues)}";
 		}
 
 		public class PageSpeedResponse

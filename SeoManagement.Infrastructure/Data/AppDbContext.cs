@@ -32,6 +32,7 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<UserActionLimit> UserActionLimits { get; set; }
 		public DbSet<SeedKeyword> SeedKeywords { get; set; }
 		public DbSet<RelatedKeyword> RelatedKeywords { get; set; }
+		public DbSet<SEOPerformanceHistory> SEOPerformanceHistories { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -104,6 +105,11 @@ namespace SeoManagement.Infrastructure.Data
 				entity.HasMany(p => p.SeedKeywords)
 					.WithOne(w => w.Project)
 					.HasForeignKey(w => w.ProjectID)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				entity.HasMany(p => p.SEOPerformanceHistories)
+					.WithOne(h => h.Project)
+					.HasForeignKey(h => h.ProjectId)
 					.OnDelete(DeleteBehavior.Cascade);
 			});
 			// Cấu hình mối quan hệ cho Content

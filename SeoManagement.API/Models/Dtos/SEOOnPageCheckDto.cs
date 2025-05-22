@@ -19,12 +19,17 @@
 		public bool IsMainKeywordInTitle { get; set; }
 		public bool IsMainKeywordInMetaDescription { get; set; }
 		public bool IsWordCountSufficient { get; set; }
-
 		public int HeadingCount { get; set; }
+		public int H1Count { get; set; }
 		public int ImageCountWithoutAlt { get; set; }
 		public double KeywordDensity { get; set; }
 		public int InternalLinkCount { get; set; }
-		public int PageSpeedScore { get; set; }
+		public int BrokenLinkCount { get; set; }
+		public bool HasCanonicalUrl { get; set; }
+		public bool HasStructuredData { get; set; }
+		public bool IsHttps { get; set; }
+		public int PageSpeedScoreDesktop { get; set; }
+		public int PageSpeedScoreMobile { get; set; }
 		public string Summary { get; set; }
 	}
 }

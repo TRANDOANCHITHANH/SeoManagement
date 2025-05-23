@@ -7,5 +7,6 @@
 		PageSpeedChecker,
 		WebsiteInsight,
 		KeywordResearch,
+		ContentOptimization,
 	}
 }

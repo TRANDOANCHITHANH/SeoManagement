@@ -10,6 +10,7 @@
         "WebsiteInsight" => "Kiểm tra hiệu suất Website",
         "KeywordRankChecker" => "Kiểm tra thứ hạng Keyword",
         "KeywordResearch" => "Phân tích từ khóa",
+        "ContentOptimization" => "Tối ưu hóa nội dung",
         _ => "Danh Sách Dự Án SEO"
     };
 }
@@ -63,7 +64,10 @@
                     {
                         <a asp-action="Create" asp-route-projectType="KeywordResearch" class="btn btn-primary">Tạo dự án phân tích từ khóa</a>
                     }
-                    
+                    @if (string.IsNullOrEmpty(ViewBag.ProjectType) || ViewBag.ProjectType == "ContentOptimization")
+                    {
+                        <a asp-action="Create" asp-route-projectType="ContentOptimization" class="btn btn-primary">Tạo dự án tối ưu hóa nội dung</a>
+                    }
                 </div>
                 @if (Model.Items == null || !Model.Items.Any())
                 {
@@ -147,7 +151,11 @@
                                                 <a asp-controller="KeywordResearchs" asp-action="IndexResearch" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem kiểm tra</a>
                                                 <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-warning">Sửa</a>
                                             }
-                                            
+                                            else if (project.ProjectType == "ContentOptimization")
+                                            {
+                                                <a asp-controller="ContentOptimization" asp-action="Index" asp-route-projectId="@project.ProjectID" class="btn btn-primary">Xem</a>
+                                                <a asp-action="Edit" asp-route-id="@project.ProjectID" class="btn btn-warning">Sửa</a>
+                                            }
                                             <button type="button" class="btn btn-danger" onclick="showDeleteModal(@project.ProjectID, '@project.ProjectName')">Xóa</button>
                                         </td>
                                         <td>

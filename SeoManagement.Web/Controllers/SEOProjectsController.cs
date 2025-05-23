@@ -24,7 +24,7 @@ namespace SeoManagement.Web.Controllers
 			_userManager = userManager;
 		}
 
-		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10, string projectType = null)
+		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 1000, string projectType = null)
 		{
 			var user = await _userManager.GetUserAsync(User);
 

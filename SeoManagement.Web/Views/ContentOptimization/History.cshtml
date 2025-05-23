@@ -1,0 +1,113 @@
+﻿@model IEnumerable<SeoManagement.Core.Entities.ContentOptimizationAnalysis>
+
+@{
+    ViewData["Title"] = "Lịch sử tối ưu nội dung";
+}
+
+<div class="container">
+    <div class="page-header mb-3">
+        <h4 class="fw-bold">Lịch sử tối ưu nội dung</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a asp-action="Index" asp-controller="Home">
+                    <i class="icon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-controller="SEOProjects" asp-route-projectType="ContentOptimization">Tối ưu nội dung</a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Lịch sử</a>
+            </li>
+        </ul>
+    </div>
+    <h2 class="text-center mb-4">Lịch sử tối ưu nội dung</h2>
+
+    @if (TempData["Error"] != null)
+    {
+            <div class="alert alert-danger text-center">@TempData["Error"]</div>
+    }
+
+    @if (ViewBag.ProjectId > 0)
+    {
+            <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px;">
+                <div class="card-body">
+                    <h4 class="card-title">Tổng quan dự án</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-2 rounded">
+                        <div class="input-group w-25">
+                            <span class="input-group-text">Tên dự án:</span>
+                            <input type="text" class="form-control" value="@ViewBag.ProjectName" readonly />
+                        </div>
+                        <div class="input-group w-25">
+                            <span class="input-group-text">Mô tả:</span>
+                            <input type="text" class="form-control" value="@ViewBag.ProjectDescription" readonly />
+                        </div>
+                    </div>
+                </div>
+            </div>
+    }
+
+    <div class="card shadow p-4 mb-4">
+        <h4 class="mb-3">Danh sách lịch sử phân tích</h4>
+        @if (Model != null && Model.Any())
+        {
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Thời gian phân tích</th>
+                                <th>Từ khóa mục tiêu</th>
+                                <th>Keyword Usage</th>
+                                <th>Keyword Density</th>
+                                <th>Related Keywords</th>
+                                <th>Alt Attributes</th>
+                                <th>Image Suggestion</th>
+                                <th>Title Issues</th>
+                                <th>Meta Suggestions</th>
+                                <th>Word Count</th>
+                                <th>Readability Score</th>
+                                <th>Tone of Voice</th>
+                                <th>Originality Check</th>
+                                <th>Content Structure</th>
+                                <th>Link Issues</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var analysis in Model)
+                        {
+                                    <tr>
+                                        <td>@analysis.AnalyzedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                        <td>@analysis.TargetKeyword</td>
+                                        <td>@analysis.KeywordUsage</td>
+                                        <td>@analysis.KeywordDensity</td>
+                                        <td>@analysis.RelatedKeywords</td>
+                                        <td>@analysis.AltAttributeIssues</td>
+                                        <td>@analysis.ImageSuggestion</td>
+                                        <td>@analysis.TitleIssues</td>
+                                        <td>@analysis.MetaSuggestions</td>
+                                        <td>@analysis.WordCount</td>
+                                        <td>@analysis.ReadabilityScore</td>
+                                        <td>@analysis.ToneOfVoice</td>
+                                        <td>@analysis.OriginalityCheck</td>
+                                        <td>@analysis.ContentStructureIssues</td>
+                                        <td>@analysis.LinkIssues</td>
+                                    </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+        }
+        else
+        {
+                <p class="text-center">Chưa có lịch sử phân tích nào cho dự án này.</p>
+        }
+    
+
+    <a asp-action="Index" asp-route-projectId="@ViewBag.ProjectId" class="btn btn-primary mb-3">Quay lại phân tích</a>
+</div>

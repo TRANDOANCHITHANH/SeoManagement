@@ -257,24 +257,19 @@
         const performanceData = @Html.Raw(Json.Serialize(ViewBag.RecentPerformances));
             performanceData.forEach(perf => {
         const date = new Date(perf.RecordedAt);
-        console.log(`RecordedAt: ${perf.RecordedAt}, Date: ${date}, Valid: ${!isNaN(date)}`);
     });
-        console.log("Performance Data:", performanceData); // Debug dữ liệu
 
-        // Sắp xếp dữ liệu theo RecordedAt
         performanceData.sort((a, b) => {
             const dateA = new Date(a.RecordedAt);
             const dateB = new Date(b.RecordedAt);
             return dateA - dateB;
         });
 
-        // Chuẩn bị nhãn (trục X) từ RecordedAt
        const labels = performanceData.map(perf => {
           const date = new Date(perf.recordedAt);
             return isNaN(date) ? "Invalid Date" : date.toLocaleString();
         });
 
-        // Chuẩn bị dữ liệu cho các chỉ số
          const datasets = [
         {
             label: 'Thứ hạng từ khóa TB',

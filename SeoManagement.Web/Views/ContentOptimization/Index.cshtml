@@ -1,0 +1,161 @@
+﻿@model SeoManagement.Web.Models.ViewModels.ContentViewmodel
+
+@{
+    ViewData["Title"] = "Tối ưu nội dung";
+}
+
+<div class="container">
+    <div class="page-header mb-3">
+        <h4 class="fw-bold">Tối ưu nội dung</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a asp-action="Index" asp-controller="Home">
+                    <i class="icon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-controller="SEOProjects" asp-route-projectType="ContentOptimization">Tối ưu nội dung</a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Chi tiết</a>
+            </li>
+        </ul>
+    </div>
+    <h2 class="text-center mb-4">Tối ưu nội dung</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success text-center">@TempData["Success"]</div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-@(Model.Message.Contains("Lỗi") ? "danger" : "success") text-center">@Model.Message</div>
+    }
+
+    @if (ViewBag.ProjectId > 0)
+    {
+        <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px;">
+            <div class="card-body">
+                <h4 class="card-title">Tổng quan dự án</h4>
+                <div class="d-flex justify-content-between align-items-center mb-3 bg-light p-2 rounded">
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Tên dự án:</span>
+                        <input type="text" class="form-control" value="@ViewBag.ProjectName" readonly />
+                    </div>
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Mô tả:</span>
+                        <input type="text" class="form-control" value="@ViewBag.ProjectDescription" readonly />
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="overlay" id="loadingOverlay">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <span>Đang phân tích...</span>
+        </div>
+    </div>
+
+    <!-- Chia layout thành 2 cột -->
+    <div class="row">
+        <!-- Cột trái: Form CKEditor và TargetKeyword -->
+        <div class="col-md-6">
+            <form asp-controller="ContentOptimization" asp-action="Analyze" method="post" class="mb-4" id="checkForm">
+                <input type="hidden" name="ProjectId" value="@Model.ProjectId" />
+                <div class="mb-3">
+                    <input type="text" name="TargetKeyword" class="form-control" placeholder="Nhập từ khóa mục tiêu" value="@Model?.TargetKeyword" required />
+                    <span asp-validation-for="TargetKeyword" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <textarea class="form-control" id="contentEditor" name="Content" rows="20" placeholder="Nhập nội dung cần phân tích">@Model?.Content</textarea>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Phân tích và tối ưu</button>
+
+            </form>
+        </div>
+
+        <!-- Cột phải: Kết quả phân tích -->
+        <div class="col-md-6">
+
+            @if (Model.Result != null)
+            {
+                <div class="card shadow p-4 mb-4">
+                    <h4 class="mb-3">Kết quả phân tích nội dung</h4>
+                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table table-hover table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Tiêu chí</th>
+                                    <th>Kết quả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Keyword Usage</td><td>@Model.Result.KeywordUsage</td></tr>
+                                <tr><td>Keyword Density</td><td>@Model.Result.KeywordDensity</td></tr>
+                                <tr><td>Related Keywords</td><td>@Model.Result.RelatedKeywords</td></tr>
+                                <tr><td>Alt Attributes</td><td>@Model.Result.AltAttributeIssues</td></tr>
+                                <tr><td>Image Suggestion</td><td>@Model.Result.ImageSuggestion</td></tr>
+                                <tr><td>Title Issues</td><td>@Model.Result.TitleIssues</td></tr>
+                                <tr><td>Meta Suggestions</td><td>@Model.Result.MetaSuggestions</td></tr>
+                                <tr><td>Word Count</td><td>@Model.Result.WordCount</td></tr>
+                                <tr><td>Readability Score</td><td>@Model.Result.ReadabilityScore</td></tr>
+                                <tr><td>Tone of Voice</td><td>@Model.Result.ToneOfVoice</td></tr>
+                                <tr><td>Originality Check</td><td>@Model.Result.OriginalityCheck</td></tr>
+                                <tr><td>Content Structure</td><td>@Model.Result.ContentStructureIssues</td></tr>
+                                <tr><td>Link Issues</td><td>@Model.Result.LinkIssues</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (ViewBag.ProjectId != null && ViewBag.ProjectId > 0)
+    {
+        <a asp-action="History" asp-route-projectId="@ViewBag.ProjectId" class="btn btn-secondary mb-3">Xem lịch sử</a>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+    <script>
+        const form = document.getElementById('checkForm');
+        let isSubmitting = false;
+
+        form.addEventListener('submit', function (e) {
+            if (isSubmitting) {
+                e.preventDefault();
+                return;
+            }
+            isSubmitting = true;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        });
+
+        window.addEventListener('load', function () {
+            isSubmitting = false;
+            document.getElementById('loadingOverlay').style.display = 'none';
+        });
+
+        ClassicEditor
+            .create(document.querySelector('#contentEditor'))
+            .catch(error => {
+                console.error(error);
+            });
+    </script>
+}

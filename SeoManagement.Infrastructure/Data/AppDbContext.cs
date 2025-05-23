@@ -33,6 +33,7 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<SeedKeyword> SeedKeywords { get; set; }
 		public DbSet<RelatedKeyword> RelatedKeywords { get; set; }
 		public DbSet<SEOPerformanceHistory> SEOPerformanceHistories { get; set; }
+		public DbSet<ContentOptimizationAnalysis> ContentOptimizationAnalyses { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -110,6 +111,11 @@ namespace SeoManagement.Infrastructure.Data
 				entity.HasMany(p => p.SEOPerformanceHistories)
 					.WithOne(h => h.Project)
 					.HasForeignKey(h => h.ProjectId)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				entity.HasMany(p => p.ContentOptimizationAnalyses)
+					.WithOne(h => h.Project)
+					.HasForeignKey(h => h.ProjectID)
 					.OnDelete(DeleteBehavior.Cascade);
 			});
 			// Cấu hình mối quan hệ cho Content

@@ -44,6 +44,7 @@ namespace SeoManagement.Core.Entities
 		public virtual ICollection<WebsiteInsight> WebsiteInsights { get; set; }
 		public virtual ICollection<SeedKeyword> SeedKeywords { get; set; }
 		public virtual ICollection<SEOPerformanceHistory> SEOPerformanceHistories { get; set; }
+		public virtual ICollection<ContentOptimizationAnalysis> ContentOptimizationAnalyses { get; set; }
 
 	}
 }

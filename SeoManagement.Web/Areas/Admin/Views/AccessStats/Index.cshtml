@@ -1,0 +1,111 @@
+﻿@model SeoManagement.Web.Areas.Admin.Models.ViewModels.AccessStatsViewModel
+
+@{
+    ViewData["Title"] = "Thống kê truy cập";
+}
+
+<h2>Thống kê truy cập tháng: @Model.SelectedMonth/@Model.SelectedYear</h2>
+
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Index" method="get">
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label>Chọn tháng:</label>
+                    <select asp-items="Model.Months" asp-for="SelectedMonth" name="month" class="form-control" onchange="this.form.submit()"></select>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label>Chọn năm:</label>
+                    <select asp-items="Model.Years" asp-for="SelectedYear" name="year" class="form-control" onchange="this.form.submit()"></select>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h4>Thống kê theo ngày</h4>
+        <canvas id="dailyStatsChart" style="max-height: 400px;"></canvas>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <h4>Tổng quan</h4>
+        <p>Hôm nay: @Model.Today</p>
+        <p>Hôm qua: @Model.Yesterday</p>
+        <p>Tháng này: @Model.ThisMonth</p>
+        <p>Tháng trước: @Model.LastMonth</p>
+        <p>Tổng cộng: @Model.TotalPageViews</p>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Thêm Chart.js qua CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script>
+        // Biến toàn cục để lưu instance của chart
+        let dailyStatsChartInstance = null;
+
+        // Hàm để vẽ hoặc cập nhật chart
+        function drawChart() {
+            // Hủy chart cũ nếu đã tồn tại
+            if (dailyStatsChartInstance) {
+                dailyStatsChartInstance.destroy();
+            }
+
+            // Lấy dữ liệu từ Model
+            const labels = @Html.Raw(Json.Serialize(Model.DailyStats.Select(d => d.AccessDate.ToString("dd"))));
+            const data = @Html.Raw(Json.Serialize(Model.DailyStats.Select(d => d.PageViews)));
+
+            // Tạo chart mới
+            const ctx = document.getElementById('dailyStatsChart').getContext('2d');
+            dailyStatsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Số lượt truy cập',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Số lượt truy cập'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày trong tháng'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        title: {
+                            display: true,
+                            text: 'Thống kê truy cập tháng: @Model.SelectedMonth - @Model.SelectedYear'
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            drawChart();
+        });
+    </script>
+}

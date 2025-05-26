@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using SeoManagement.Core.Entities;
 using SeoManagement.Core.Interfaces;
 using SeoManagement.Infrastructure.Data;
+using SeoManagement.Infrastructure.Middleware;
 using SeoManagement.Infrastructure.Repositories;
 using SeoManagement.Infrastructure.Services;
 using SeoManagement.Web.Utilities;
@@ -47,7 +48,11 @@ builder.Services.Configure<IdentityOptions>(options =>
 	options.User.RequireUniqueEmail = true;
 });
 
-builder.Services.AddAuthentication("DynamicAuth")
+builder.Services.AddAuthentication(options =>
+{
+	options.DefaultAuthenticateScheme = "DynamicAuth";
+	options.DefaultChallengeScheme = "DynamicAuth";
+})
 	.AddCookie("MainAuth", options =>
 	{
 		options.LoginPath = "/Account/Login";
@@ -80,6 +85,8 @@ builder.Services.AddAuthorization(options =>
 });
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IAccessStatsService, AccessStatsService>();
+builder.Services.AddSingleton<VisitorCounterService>();
 builder.Services.AddSingleton<GoogleSearchConsoleService>();
 builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
 builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
@@ -151,6 +158,7 @@ app.UseHangfireDashboard("/admin/hangfire", new DashboardOptions
 	Authorization = new[] { new HangfireDashboardAuthorizationFilter() }
 });
 
+app.UseVisitorTracking();
 app.MapControllerRoute(
 	name: "areas",
 	pattern: "{area:exists}/{controller=Admin}/{action=Index}/{id?}"

@@ -34,6 +34,7 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<RelatedKeyword> RelatedKeywords { get; set; }
 		public DbSet<SEOPerformanceHistory> SEOPerformanceHistories { get; set; }
 		public DbSet<ContentOptimizationAnalysis> ContentOptimizationAnalyses { get; set; }
+		public DbSet<AccessStatistics> AccessStatistics { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

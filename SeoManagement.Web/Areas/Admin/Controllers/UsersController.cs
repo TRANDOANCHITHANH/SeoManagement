@@ -18,7 +18,7 @@ namespace SeoManagement.Web.Areas.Admin.Controllers
 		}
 
 
-		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 5)
+		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 10)
 		{
 			var response = await _httpClient.GetFromJsonAsync<PagedResultViewModel<UserViewModel>>($"https://localhost:7186/api/users?pageNumber={pageNumber}&pageSize={pageSize}");
 			return View(response);

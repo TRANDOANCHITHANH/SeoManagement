@@ -72,8 +72,6 @@ namespace SeoManagement.Web.Controllers
 				})
 				.ToList();
 				ViewBag.RecentPerformances = performanceDataForView;
-				var alerts = await _alertService.CheckAlertsAsync(user.Id, sendEmail: false);
-				ViewBag.Alerts = alerts;
 			}
 			else
 			{

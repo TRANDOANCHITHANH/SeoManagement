@@ -23,59 +23,6 @@
 
 <div id="alertContainer"></div>
 
-<div class="mt-3">
-    <h3>Cảnh báo</h3>
-    @if (ViewBag.Alerts != null && ViewBag.Alerts.Count > 0)
-    {
-        <ul>
-            @foreach (var alert in ViewBag.Alerts)
-            {
-                <li>@alert.Type: @alert.Message (Thời gian: @alert.Timestamp)</li>
-            }
-        </ul>
-    }
-    else
-    {
-        <p>Không có cảnh báo nào.</p>
-    }
-    <button type="button" class="btn btn-info mt-2" data-bs-toggle="modal" data-bs-target="#monitoringModal">
-        Cài đặt theo dõi và gửi cảnh báo tự động
-    </button>
-</div>
-
-<div class="modal fade" id="monitoringModal" tabindex="-1" aria-labelledby="monitoringModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="monitoringModalLabel">Chọn dự án để theo dõi và gửi cảnh báo tự động</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="monitoringForm">
-                    @foreach (var type in projectTypes)
-                    {
-                        <h3>@type</h3>
-                        <div class="form-group">
-                            @foreach (var project in projects.Where(p => p.ProjectType == type))
-                            {
-                                <div class="form-check" style="padding-left:5%;">
-                                    <input type="checkbox" name="selectedProjects" value="@project.ProjectID"
-                                    @(project.IsMonitored == true ? "checked" : "") class="form-check-input" />
-                                    <label class="form-check-label">@project.ProjectName</label>
-                                </div>
-                            }
-                        </div>
-                    }
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" onclick="saveMonitoring()">Lưu</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @if (recentPerformances != null)
 {
     <div class="row mt-2 mb-3">
@@ -433,74 +380,6 @@
             }
         });
     });
-
-    function loadMonitoringData() {
-        // Tải lại dữ liệu dự án để đảm bảo trạng thái IsMonitored chính xác
-        $.ajax({
-            url: '@Url.Action("Index", "Home")',
-            type: 'GET',
-            data: { categoryId: null }, // Gửi request để lấy dữ liệu mới
-            success: function(response) {
-                // Cập nhật danh sách dự án trong modal
-                var $modalBody = $('#monitoringModal .modal-body');
-                $modalBody.html('<form id="monitoringForm">');
-                var projectTypes = response.ViewBag.ProjectTypes;
-                var projects = response.ViewBag.Projects;
-                projectTypes.forEach(function(type) {
-                    $modalBody.append('<h3>' + type + '</h3><div class="form-group">');
-                    projects.filter(p => p.ProjectType === type).forEach(function(project) {
-                        $modalBody.append(
-                            '<div class="form-check">' +
-                            '<input type="checkbox" name="selectedProjects" value="' + project.ProjectID + '" ' +
-                            (project.IsMonitored ? 'checked' : '') + ' class="form-check-input" />' +
-                            '<label class="form-check-label">' + project.ProjectName + '</label>' +
-                            '</div>'
-                        );
-                    });
-                    $modalBody.append('</div>');
-                });
-                $modalBody.append('</form>');
-            },
-            error: function(xhr, status, error) {
-                console.log('Lỗi khi tải dữ liệu modal: ' + error);
-            }
-        });
-    }
-
-    function saveMonitoring() {
-        var selectedProjects = [];
-        $('#monitoringForm input[name="selectedProjects"]:checked').each(function() {
-            selectedProjects.push(parseInt($(this).val()));
-        });
-
-        $.ajax({
-            url: '@Url.Action("UpdateMonitoring", "Home")',
-            type: 'POST',
-            data: { selectedProjects: selectedProjects },
-            headers: {
-                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-            },
-            success: function(response) {
-                $('#monitoringModal').modal('hide');
-
-                $('#alertContainer').empty();
-
-                if (response.success) {
-                    $('#alertContainer').append('<div class="alert alert-success">' + response.message + '</div>');
-                    if (response.warning) {
-                        $('#alertContainer').append('<div class="alert alert-warning">' + response.warning + '</div>');
-                    }
-                } else {
-                    $('#alertContainer').append('<div class="alert alert-danger">' + response.message + '</div>');
-                }
-            },
-            error: function(xhr, status, error) {
-                $('#monitoringModal').modal('hide');
-                $('#alertContainer').empty();
-                $('#alertContainer').append('<div class="alert alert-danger">Đã xảy ra lỗi khi lưu. Vui lòng thử lại.</div>');
-            }
-        });
-    }
 </script>
 
 <style>

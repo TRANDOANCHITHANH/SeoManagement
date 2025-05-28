@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.Extensions.Caching.Memory;
+using SeoManagement.Core.Entities;
+using SeoManagement.Core.Entities.Dtos;
+using SeoManagement.Infrastructure.Services;
 using SeoManagement.Web.Areas.Admin.Models.ViewModels;
 using SeoManagement.Web.Models.ViewModels;
 using System.Text.Json;
@@ -14,18 +18,21 @@ namespace SeoManagement.Web.TagHelpers
 		private readonly HttpClient _httpClient;
 		private readonly IConfiguration _configuration;
 		private readonly IMemoryCache _cache;
+		private readonly AlertService _alertService;
+		private readonly UserManager<ApplicationUser> _userManager;
 		private const string CacheKey = "SystemConfigs";
 		private const int CacheDurationInMinutes = 10;
 		[ViewContext]
 		public ViewContext ViewContext { get; set; }
 
-
-		public SettingsTagHelper(HttpClient httpClient, IConfiguration configuration, IMemoryCache cache)
+		public SettingsTagHelper(HttpClient httpClient, IConfiguration configuration, IMemoryCache cache, AlertService alertService, UserManager<ApplicationUser> userManager)
 		{
 			_httpClient = httpClient;
 			_configuration = configuration;
 			_httpClient.BaseAddress = new Uri(_configuration["ApiBaseUrl"]);
 			_cache = cache;
+			_alertService = alertService;
+			_userManager = userManager;
 		}
 
 		public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
@@ -38,7 +45,35 @@ namespace SeoManagement.Web.TagHelpers
 				_cache.Set(CacheKey, configs, TimeSpan.FromMinutes(CacheDurationInMinutes));
 			}
 
+			IEnumerable<Alert> alerts;
+			var user = await _userManager.GetUserAsync(ViewContext.HttpContext.User);
+			if (user != null)
+			{
+				alerts = await _alertService.CheckAlertsAsync(user.Id, sendEmail: false);
+			}
+			else
+			{
+				alerts = new List<Alert>();
+			}
+
+			List<SEOProjectViewModel> projects;
+			string[] projectTypes = new[] { "KeywordRankChecker", "IndexChecker", "PageSpeedChecker", "BacklinkChecker" };
+			if (user != null)
+			{
+				var projectsResponse = await _httpClient.GetFromJsonAsync<PagedResultViewModel<SEOProjectViewModel>>(
+					$"/api/seoprojects?pageNumber=1&pageSize=1000&userId={user.Id}");
+				projects = projectsResponse?.Items?.ToList() ?? new List<SEOProjectViewModel>();
+			}
+			else
+			{
+				projects = new List<SEOProjectViewModel>();
+			}
+
 			output.TagName = null;
+			ViewContext.ViewData["Configs"] = configs;
+			ViewContext.ViewBag.Alerts = alerts;
+			ViewContext.ViewBag.Projects = projects;
+			ViewContext.ViewBag.ProjectTypes = projectTypes;
 
 			var settingLogo = configs.GetValueOrDefault("SettingLogo", "");
 			var settingTitleSeo = configs.GetValueOrDefault("SettingTitleSeo", "");
@@ -142,8 +177,6 @@ namespace SeoManagement.Web.TagHelpers
 			htmlContent.AddRange(schemas);
 
 			output.Content.SetHtmlContent(string.Join("\n", htmlContent));
-
-			ViewContext.ViewData["Configs"] = configs;
 		}
 	}
 }

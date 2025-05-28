@@ -114,6 +114,54 @@ namespace SeoManagement.Web.Controllers
 			return View(check);
 		}
 
+		public async Task<IActionResult> Update(int id)
+		{
+			var response = await _httpClient.GetAsync($"api/seoonpagechecks/{id}");
+			if (!response.IsSuccessStatusCode)
+			{
+				TempData["Error"] = "Không tìm thấy kiểm tra để chỉnh sửa.";
+				return NotFound();
+			}
+
+			var check = await response.Content.ReadFromJsonAsync<SEOOnPageCheckViewModel>();
+			if (check == null)
+			{
+				TempData["Error"] = "Không thể tải dữ liệu kiểm tra.";
+				return NotFound();
+			}
+
+			return View(check);
+		}
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> Update(SEOOnPageCheckViewModel check)
+		{
+			if (!ModelState.IsValid)
+				return View(check);
+
+			try
+			{
+				var response = await _httpClient.PutAsJsonAsync($"api/seoonpagechecks?id={check.CheckID}", check);
+				if (response.IsSuccessStatusCode)
+				{
+					TempData["Success"] = "Kiểm tra SEO On-Page đã được cập nhật thành công";
+					return RedirectToAction(nameof(Index), new { projectId = check.ProjectID });
+				}
+
+				var errorContent = await response.Content.ReadAsStringAsync();
+				_logger.LogError("Lỗi khi cập nhật kiểm tra SEO On-Page: {ErrorContent}", errorContent);
+				ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật kiểm tra SEO On-Page. Vui lòng thử lại");
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Lỗi hệ thống khi cập nhật kiểm tra SEO On-Page");
+				ModelState.AddModelError("", "Không thể cập nhật kiểm tra do lỗi hệ thống. Vui lòng thử lại sau.");
+			}
+
+			return View(check);
+		}
+
 		public async Task<IActionResult> Delete(int id, int projectId)
 		{
 			var response = await _httpClient.DeleteAsync($"api/seoonpagechecks/{id}");

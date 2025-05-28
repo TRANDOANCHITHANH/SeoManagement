@@ -76,6 +76,7 @@ namespace SeoManagement.Web.Controllers
 		public async Task<IActionResult> Logout()
 		{
 			await _signInManager.SignOutAsync();
+			await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
 			return RedirectToAction("Login", "Account");
 		}
 
@@ -100,7 +101,7 @@ namespace SeoManagement.Web.Controllers
 			{
 				return View(model);
 			}
-
+			await _signInManager.SignOutAsync();
 			var user = new ApplicationUser
 			{
 				UserName = model.UserName,

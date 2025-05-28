@@ -6,5 +6,8 @@ namespace SeoManagement.Core.Interfaces
 	{
 		Task<(List<SEOProject> Items, int TotalItems)> GetPagedAsync(int pageNumber, int pageSize, int? userId = null);
 		Task<IEnumerable<SEOProject>> GetAllAsync(string projectType);
+		Task BeginTransactionAsync();
+		Task CommitTransactionAsync();
+		Task RollbackTransactionAsync();
 	}
 }

@@ -212,7 +212,7 @@
                                             <tr>
                                                 <td>@(hasPosition ? positionProp.GetInt32() : "N/A")</td>
                                                 <td>@(hasTitle ? titleProp.GetString() : "N/A")</td>
-                                                <td>@(hasUrl ? urlProp.GetString() : "N/A")</td>
+                                                    <td><a href="@(hasUrl ? urlProp.GetString() : "N/A")" target="_blank">@(hasUrl ? urlProp.GetString() : "N/A")</a></td>
                                                 <td>@(hasRank ? rankProp.GetInt64() : "N/A")</td>
                                                 <td>@(hasTraffic ? trafficProp.GetInt32() : "N/A")</td>
                                                 <td>@(hasDomainRating ? drProp.GetInt32() : "N/A")</td>

@@ -1,4 +1,4 @@
-using Hangfire;
+﻿using Hangfire;
 using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -85,6 +85,7 @@ builder.Services.AddAuthorization(options =>
 });
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IRecurringJobManager, RecurringJobManager>();
 builder.Services.AddScoped<IAccessStatsService, AccessStatsService>();
 builder.Services.AddSingleton<VisitorCounterService>();
 builder.Services.AddSingleton<GoogleSearchConsoleService>();
@@ -118,7 +119,8 @@ builder.Services.AddScoped<ISEOPerformanceRepository, SEOPerformanceRepository>(
 builder.Services.AddScoped<ISEOPerformanceService, SEOPerformanceService>();
 builder.Services.AddScoped<IContentOptimizationRepository, ContentOptimizationRepository>();
 builder.Services.AddScoped<IContentOptimizationService, ContentOptimizationService>();
-
+builder.Services.AddScoped<AlertService>();
+builder.Services.AddHostedService<UserAlertScheduler>();
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll", builder =>
@@ -145,20 +147,25 @@ if (!app.Environment.IsDevelopment())
 	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 	app.UseHsts();
 }
+else
+{
+	app.UseDeveloperExceptionPage();
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 app.UseAuthentication();
-app.UseAuthorization();
 app.UseCors("AllowAll");
 app.UseHangfireDashboard("/admin/hangfire", new DashboardOptions
 {
 	Authorization = new[] { new HangfireDashboardAuthorizationFilter() }
 });
-
 app.UseVisitorTracking();
+app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
+app.UseAuthorization();
+
 app.MapControllerRoute(
 	name: "areas",
 	pattern: "{area:exists}/{controller=Admin}/{action=Index}/{id?}"

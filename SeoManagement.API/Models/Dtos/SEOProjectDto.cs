@@ -26,5 +26,7 @@ namespace SeoManagement.API.Models.Dtos
 
 		[Required]
 		public int Status { get; set; }
+		public bool IsMonitored { get; set; }
+		public bool IsAlertMonitored { get; set; }
 	}
 }

@@ -51,5 +51,20 @@ namespace SeoManagement.Infrastructure.Services
 		{
 			return await _seoProjectRepository.GetAllAsync(projectType);
 		}
+
+		public async Task BeginTransactionAsync()
+		{
+			await _seoProjectRepository.BeginTransactionAsync();
+		}
+
+		public async Task CommitTransactionAsync()
+		{
+			await _seoProjectRepository.CommitTransactionAsync();
+		}
+
+		public async Task RollbackTransactionAsync()
+		{
+			await _seoProjectRepository.RollbackTransactionAsync();
+		}
 	}
 }

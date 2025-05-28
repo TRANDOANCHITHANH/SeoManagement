@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SeoManagement.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SeoManagement.Infrastructure.Data;
 namespace SeoManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250527164235_update_add_IsMonitored_to_seoproject_table")]
+    partial class update_add_IsMonitored_to_seoproject_table
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -172,28 +175,6 @@ namespace SeoManagement.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AccessStatistics");
-                });
-
-            modelBuilder.Entity("SeoManagement.Core.Entities.AlertConfiguration", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsAlertMonitored")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId")
-                        .IsUnique();
-
-                    b.ToTable("AlertConfigurations");
                 });
 
             modelBuilder.Entity("SeoManagement.Core.Entities.ApiKey", b =>
@@ -1312,17 +1293,6 @@ namespace SeoManagement.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SeoManagement.Core.Entities.AlertConfiguration", b =>
-                {
-                    b.HasOne("SeoManagement.Core.Entities.SEOProject", "Project")
-                        .WithOne("AlertConfiguration")
-                        .HasForeignKey("SeoManagement.Core.Entities.AlertConfiguration", "ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-                });
-
             modelBuilder.Entity("SeoManagement.Core.Entities.Backlink", b =>
                 {
                     b.HasOne("SeoManagement.Core.Entities.SEOProject", "Project")
@@ -1579,9 +1549,6 @@ namespace SeoManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("SeoManagement.Core.Entities.SEOProject", b =>
                 {
-                    b.Navigation("AlertConfiguration")
-                        .IsRequired();
-
                     b.Navigation("Backlinks");
 
                     b.Navigation("ContentOptimizationAnalyses");

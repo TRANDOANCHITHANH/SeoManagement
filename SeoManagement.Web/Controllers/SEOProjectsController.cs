@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
+using SeoManagement.Core.Interfaces;
 using SeoManagement.Web.Models.ViewModels;
 using System.Text.Json;
 
@@ -14,14 +15,15 @@ namespace SeoManagement.Web.Controllers
 		private readonly IConfiguration _configuration;
 		private readonly ILogger<SEOProjectsController> _logger;
 		private readonly UserManager<ApplicationUser> _userManager;
-
-		public SEOProjectsController(HttpClient httpClient, IConfiguration configuration, ILogger<SEOProjectsController> logger, UserManager<ApplicationUser> userManager)
+		private readonly ISEOProjectService _sEOProjectService;
+		public SEOProjectsController(HttpClient httpClient, IConfiguration configuration, ILogger<SEOProjectsController> logger, UserManager<ApplicationUser> userManager, ISEOProjectService sEOProjectService)
 		{
 			_httpClient = httpClient;
 			_configuration = configuration;
 			_httpClient.BaseAddress = new Uri(_configuration["ApiBaseUrl"]);
 			_logger = logger;
 			_userManager = userManager;
+			_sEOProjectService = sEOProjectService;
 		}
 
 		public async Task<IActionResult> Index(int pageNumber = 1, int pageSize = 1000, string projectType = null)
@@ -138,6 +140,7 @@ namespace SeoManagement.Web.Controllers
 					EndDate = project.EndDate,
 					Description = project.Description,
 					Status = (int)project.Status,
+					IsAlertMonitored = project.IsAlertMonitored,
 				};
 
 				var response = await _httpClient.PostAsJsonAsync("/api/seoprojects", projectViewModel);
@@ -230,6 +233,7 @@ namespace SeoManagement.Web.Controllers
 					StartDate = project.StartDate,
 					EndDate = project.EndDate,
 					Status = (int)project.Status,
+					IsAlertMonitored = project.IsAlertMonitored,
 				};
 
 				var response = await _httpClient.PutAsJsonAsync($"/api/seoprojects/{id}", projectViewModel);

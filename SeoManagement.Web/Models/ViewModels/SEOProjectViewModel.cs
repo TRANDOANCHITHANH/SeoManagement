@@ -20,6 +20,8 @@ namespace SeoManagement.Web.Models.ViewModels
 
 		public string ProjectType { get; set; }
 
+		public bool IsMonitored { get; set; }
+		public bool IsAlertMonitored { get; set; }
 		[DataType(DataType.DateTime)]
 		public DateTime StartDate { get; set; } = DateTime.Now;
 

@@ -1,0 +1,33 @@
+﻿@model IEnumerable<SeoManagement.Web.Models.ViewModels.SEOProjectViewModel>
+
+<div class="container">
+    <h1>Chọn dự án để theo dõi và gửi cảnh báo tự động</h1>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <form asp-action="UpdateMonitoring" method="post">
+        @foreach (var type in ViewBag.ProjectTypes as string[])
+        {
+            <h3>@type</h3>
+            <div class="form-group">
+                @foreach (var project in Model.Where(p => p.ProjectType == type))
+                {
+                    <div class="form-check">
+                        <input type="checkbox" name="selectedProjects" value="@project.ProjectID"
+                        @(project.IsMonitored == true ? "checked" : "") />
+                        <label>@project.ProjectName</label>
+                    </div>
+                }
+            </div>
+        }
+        <button type="submit" class="btn btn-primary">Lưu</button>
+        <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>

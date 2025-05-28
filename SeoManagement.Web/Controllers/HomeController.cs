@@ -1,8 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SeoManagement.Core.Entities;
 using SeoManagement.Core.Interfaces;
+using SeoManagement.Infrastructure.Services;
 using SeoManagement.Web.Areas.Admin.Models.ViewModels;
 using SeoManagement.Web.Models;
 using SeoManagement.Web.Models.ViewModels;
@@ -18,8 +20,9 @@ namespace SeoManagement.Web.Controllers
 		private readonly HttpClient _httpClient;
 		private readonly ISEOPerformanceService _performanceService;
 		private readonly UserManager<ApplicationUser> _userManager;
-
-		public HomeController(ILogger<HomeController> logger, IConfiguration configuration, HttpClient httpClient, ISEOPerformanceService sEOPerformanceService, UserManager<ApplicationUser> userManager)
+		private readonly AlertService _alertService;
+		private readonly ISEOProjectService _seoProjectService;
+		public HomeController(ILogger<HomeController> logger, IConfiguration configuration, HttpClient httpClient, ISEOPerformanceService sEOPerformanceService, UserManager<ApplicationUser> userManager, AlertService alertService, ISEOProjectService seoProjectService)
 		{
 			_logger = logger;
 			_configuration = configuration;
@@ -27,6 +30,8 @@ namespace SeoManagement.Web.Controllers
 			_httpClient.BaseAddress = new Uri(_configuration["ApiBaseUrl"]);
 			_performanceService = sEOPerformanceService;
 			_userManager = userManager;
+			_alertService = alertService;
+			_seoProjectService = seoProjectService;
 		}
 
 		public async Task<IActionResult> Index(int? categoryId)
@@ -38,7 +43,8 @@ namespace SeoManagement.Web.Controllers
 				var projectsResponse = await _httpClient.GetFromJsonAsync<PagedResultViewModel<SEOProjectViewModel>>(
 					$"/api/seoprojects?pageNumber=1&pageSize=1000&userId={user.Id}");
 				var projectIds = projectsResponse?.Items.Select(p => p.ProjectID).ToList() ?? new List<int>();
-
+				ViewBag.Projects = projectsResponse?.Items ?? new List<SEOProjectViewModel>();
+				ViewBag.ProjectTypes = new[] { "KeywordRankChecker", "IndexChecker", "PageSpeedChecker", "BacklinkChecker" };
 				var recentPerformances = new List<SEOPerformanceHistory>();
 				foreach (var projectId in projectIds)
 				{
@@ -66,6 +72,8 @@ namespace SeoManagement.Web.Controllers
 				})
 				.ToList();
 				ViewBag.RecentPerformances = performanceDataForView;
+				var alerts = await _alertService.CheckAlertsAsync(user.Id, sendEmail: false);
+				ViewBag.Alerts = alerts;
 			}
 			else
 			{
@@ -89,15 +97,151 @@ namespace SeoManagement.Web.Controllers
 			return View(response);
 		}
 
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> UpdateMonitoring(List<int> selectedProjects)
+		{
+			var user = await _userManager.GetUserAsync(User);
+			if (user == null)
+			{
+				TempData["Error"] = "Không thể xác định thông tin người dùng.";
+				return RedirectToAction("Login", "Account");
+			}
+
+			var userId = user.Id;
+			var projects = (await _seoProjectService.GetPagedAsync(1, int.MaxValue, userId)).Items;
+
+			var projectTypes = new[] { "KeywordRankChecker", "IndexChecker", "PageSpeedChecker", "BacklinkChecker" };
+			var selectedByType = new Dictionary<string, int>();
+
+			foreach (var projectId in selectedProjects)
+			{
+				var project = projects.FirstOrDefault(p => p.ProjectID == projectId);
+				if (project != null)
+				{
+					var projectType = project.ProjectType;
+					if (!selectedByType.ContainsKey(projectType) && projectTypes.Contains(projectType))
+					{
+						selectedByType[projectType] = projectId;
+					}
+				}
+			}
+
+			if (selectedByType.Count != 4)
+			{
+				return Json(new { success = false, message = "Bạn phải chọn đúng 1 dự án cho mỗi loại: Kiểm tra thứ hạng từ khóa, Kiểm tra Index, Kiểm tra tốc độ tải trang, Kiểm tra Backlink." });
+			}
+
+			try
+			{
+				await _seoProjectService.BeginTransactionAsync();
+				foreach (var project in projects.Where(p => p.IsMonitored == true))
+				{
+					project.IsMonitored = false;
+					if (project.AlertConfiguration != null)
+					{
+						project.AlertConfiguration.IsAlertMonitored = false;
+					}
+					else
+					{
+						project.AlertConfiguration = new AlertConfiguration
+						{
+							ProjectId = project.ProjectID,
+							IsAlertMonitored = false
+						};
+					}
+					await _seoProjectService.UpdateSEOProjectAsync(project);
+				}
+				foreach (var projectId in selectedProjects)
+				{
+					var project = projects.FirstOrDefault(p => p.ProjectID == projectId);
+					if (project != null)
+					{
+						var projectType = project.ProjectType;
+						if (selectedByType.ContainsKey(projectType) && selectedByType[projectType] == projectId)
+						{
+							project.IsMonitored = true;
+							if (project.AlertConfiguration != null)
+							{
+								project.AlertConfiguration.IsAlertMonitored = true;
+							}
+							else
+							{
+								project.AlertConfiguration = new AlertConfiguration
+								{
+									ProjectId = project.ProjectID,
+									IsAlertMonitored = true
+								};
+							}
+							await _seoProjectService.UpdateSEOProjectAsync(project);
+						}
+					}
+				}
+
+				await _seoProjectService.CommitTransactionAsync();
+				return Json(new { success = true, message = "Đã cập nhật danh sách dự án theo dõi. Hệ thống sẽ tự động gửi email cảnh báo hàng ngày vào lúc 0h00." });
+			}
+			catch (Exception ex)
+			{
+				await _seoProjectService.RollbackTransactionAsync();
+				_logger.LogError(ex, "Lỗi khi cập nhật trạng thái theo dõi dự án cho người dùng {UserId}", userId);
+				return Json(new { success = false, message = "Đã xảy ra lỗi khi lưu. Vui lòng thử lại." });
+			}
+		}
+
+		[HttpPost]
+		public async Task<IActionResult> SendAlerts()
+		{
+			var user = await _userManager.GetUserAsync(User);
+			if (user == null)
+			{
+				return Unauthorized();
+			}
+
+			var alerts = await _alertService.CheckAlertsAsync(user.Id, sendEmail: true);
+			if (alerts.Any())
+			{
+				TempData["Success"] = "Cảnh báo đã được gửi qua email.";
+			}
+			else
+			{
+				TempData["Info"] = "Không có cảnh báo nào để gửi.";
+			}
+			return RedirectToAction(nameof(Index));
+		}
+
 		public IActionResult Privacy()
 		{
 			return View();
 		}
 
+		[Route("/Home/Error/{statusCode?}")]
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-		public IActionResult Error()
+		public IActionResult Error(int? statusCode = null)
 		{
-			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+			var model = new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier };
+
+			if (statusCode.HasValue)
+			{
+				model.StatusCode = statusCode.Value;
+				if (statusCode == 404)
+				{
+					return View("NotFound", model);
+				}
+				if (statusCode >= 500)
+				{
+					return View("ServerError", model);
+				}
+			}
+
+			var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+			if (exceptionHandlerPathFeature?.Error != null)
+			{
+				_logger.LogError(exceptionHandlerPathFeature.Error, "An error occurred at {Path}", exceptionHandlerPathFeature.Path);
+				model.ErrorMessage = "An unexpected error occurred.";
+			}
+
+			return View("Error", model);
 		}
 	}
 }

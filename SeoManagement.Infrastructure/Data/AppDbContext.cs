@@ -35,6 +35,7 @@ namespace SeoManagement.Infrastructure.Data
 		public DbSet<SEOPerformanceHistory> SEOPerformanceHistories { get; set; }
 		public DbSet<ContentOptimizationAnalysis> ContentOptimizationAnalyses { get; set; }
 		public DbSet<AccessStatistics> AccessStatistics { get; set; }
+		public DbSet<AlertConfiguration> AlertConfigurations { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -187,6 +188,11 @@ namespace SeoManagement.Infrastructure.Data
 				.WithMany(sk => sk.RelatedKeywords)
 				.HasForeignKey(rk => rk.SeedKeywordId)
 				.OnDelete(DeleteBehavior.Cascade);
+
+			modelBuilder.Entity<SEOProject>()
+			   .HasOne(p => p.AlertConfiguration)
+			   .WithOne(ac => ac.Project)
+			   .HasForeignKey<AlertConfiguration>(ac => ac.ProjectId);
 		}
 	}
 }

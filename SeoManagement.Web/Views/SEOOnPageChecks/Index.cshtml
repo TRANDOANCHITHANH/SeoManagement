@@ -57,6 +57,7 @@
                                         <td>@check.CreatedAt.ToString("dd/MM/yyyy")</td>
                                         <td>
                                             <a asp-action="Details" asp-route-id="@check.CheckID" class="btn btn-sm btn-info" onclick="showSpinner()">Xem</a>
+                                            <a asp-action="Update" asp-route-id="@check.CheckID" class="btn btn-sm btn-warning">Cập nhật</a>
                                             <button type="button" class="btn btn-sm btn-danger" onclick="showDeleteModal(@check.CheckID, '@check.Url', @projectId)">Xóa</button>
                                         </td>
                                     </tr>

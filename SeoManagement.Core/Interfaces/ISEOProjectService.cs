@@ -10,5 +10,9 @@ namespace SeoManagement.Core.Interfaces
 		Task UpdateSEOProjectAsync(SEOProject project);
 		Task DeleteSEOProjectAsync(int projectId);
 		Task<IEnumerable<SEOProject>> GetAllAsync(string projectType);
+
+		Task BeginTransactionAsync();
+		Task CommitTransactionAsync();
+		Task RollbackTransactionAsync();
 	}
 }

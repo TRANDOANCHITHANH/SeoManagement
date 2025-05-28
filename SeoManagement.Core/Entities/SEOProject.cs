@@ -30,6 +30,8 @@ namespace SeoManagement.Core.Entities
 
 		public bool? IsAutoReportEnabled { get; set; }
 
+		public bool? IsMonitored { get; set; }
+
 		// Navigation properties
 		[ForeignKey("UserId")]
 		public virtual ApplicationUser User { get; set; }
@@ -45,6 +47,6 @@ namespace SeoManagement.Core.Entities
 		public virtual ICollection<SeedKeyword> SeedKeywords { get; set; }
 		public virtual ICollection<SEOPerformanceHistory> SEOPerformanceHistories { get; set; }
 		public virtual ICollection<ContentOptimizationAnalysis> ContentOptimizationAnalyses { get; set; }
-
+		public virtual AlertConfiguration AlertConfiguration { get; set; }
 	}
 }

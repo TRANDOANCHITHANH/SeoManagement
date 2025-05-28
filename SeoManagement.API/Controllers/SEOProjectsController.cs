@@ -48,7 +48,9 @@ namespace SeoManagement.API.Controllers
 				ProjectType = project.ProjectType,
 				StartDate = project.StartDate,
 				EndDate = project.EndDate,
-				Status = project.Status
+				Status = project.Status,
+				IsMonitored = project.IsMonitored ?? false,
+				IsAlertMonitored = project.AlertConfiguration?.IsAlertMonitored ?? false
 			};
 		}
 
@@ -67,7 +69,8 @@ namespace SeoManagement.API.Controllers
 				ProjectType = project.ProjectType,
 				StartDate = project.StartDate,
 				EndDate = project.EndDate,
-				Status = project.Status
+				Status = project.Status,
+				IsAlertMonitored = project.AlertConfiguration?.IsAlertMonitored ?? false
 			};
 			return Ok(projectDto);
 		}
@@ -114,7 +117,8 @@ namespace SeoManagement.API.Controllers
 					StartDate = projectDto.StartDate,
 					EndDate = projectDto.EndDate,
 					Status = projectDto.Status,
-					ProjectType = projectDto.ProjectType ?? "IndexChecker"
+					ProjectType = projectDto.ProjectType ?? "IndexChecker",
+
 				};
 
 				await _seoProjectService.CreateSEOProjectAsync(project);
@@ -141,6 +145,14 @@ namespace SeoManagement.API.Controllers
 			project.StartDate = projectDto.StartDate;
 			project.EndDate = projectDto.EndDate;
 			project.Status = projectDto.Status;
+			if (project.AlertConfiguration == null)
+			{
+				project.AlertConfiguration = new AlertConfiguration { ProjectId = id, IsAlertMonitored = projectDto.IsAlertMonitored };
+			}
+			else
+			{
+				project.AlertConfiguration.IsAlertMonitored = projectDto.IsAlertMonitored;
+			}
 
 			await _seoProjectService.UpdateSEOProjectAsync(project);
 			return NoContent();

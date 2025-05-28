@@ -37,5 +37,13 @@ namespace SeoManagement.Infrastructure.Services
 			httpClient.DefaultRequestHeaders.Add("x-rapidapi-key", apiKey);
 			return httpClient;
 		}
+
+		public async Task<HttpClient> CreateHuggingFaceClientAsync()
+		{
+			var apiKey = await _apiKeyService.GetActiveApiKeyAsync("HuggingFace");
+			var httpClient = _httpClientFactory.CreateClient();
+			httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+			return httpClient;
+		}
 	}
 }

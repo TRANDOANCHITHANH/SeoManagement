@@ -38,12 +38,13 @@ namespace SeoManagement.Infrastructure.Services
 			return httpClient;
 		}
 
-		public async Task<HttpClient> CreateHuggingFaceClientAsync()
+		public async Task<(HttpClient Client, string ApiKey)> CreateHuggingFaceClientAsync()
 		{
 			var apiKey = await _apiKeyService.GetActiveApiKeyAsync("HuggingFace");
 			var httpClient = _httpClientFactory.CreateClient();
+			httpClient.BaseAddress = new Uri("https://api-inference.huggingface.co/");
 			httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-			return httpClient;
+			return (httpClient, apiKey);
 		}
 	}
 }

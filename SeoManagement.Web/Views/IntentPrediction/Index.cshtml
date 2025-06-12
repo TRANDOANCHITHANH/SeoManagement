@@ -1,0 +1,229 @@
+﻿@using SeoManagement.Core.Entities.Dtos
+@model SeoManagement.Web.Models.ViewModels.IntentViewModel
+
+@{
+    ViewData["Title"] = "Intent Prediction";
+}
+<style>
+    .section-title {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .keyword-tag {
+        font-size: 1.2rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .main-intent {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .sub-intent {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .ai-content {
+        border: 1px solid #ddd;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+    }
+</style>
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Phân tích Ý định Tìm kiếm</h2>
+    <form method="post" asp-action="Index" asp-controller="IntentPrediction" class="needs-validation" novalidate id="analysisForm">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="Query" class="form-label">Từ khóa:</label>
+                    <input asp-for="Query" class="form-control" placeholder="Nhập từ khóa tìm kiếm" required />
+                    <span asp-validation-for="Query" class="text-danger"></span>
+                    <div class="invalid-feedback">Vui lòng nhập từ khóa.</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="Content" class="form-label">Nội dung sẵn (tùy chọn):</label>
+                    <input asp-for="Content" class="form-control" placeholder="Nhập nội dung hiện có" />
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary">Phân tích</button>
+        </div>
+    </form>
+
+    @if (@ViewData.ModelState.ErrorCount > 0)
+    {
+        <div class="alert alert-danger mt-3">
+            @Html.ValidationSummary()
+        </div>
+    }
+
+    @if (Model != null && !string.IsNullOrEmpty(Model.Query))
+    {
+        <div class="mt-5">
+            <h3 class="section-title mb-4 text-center">Kết quả phân tích</h3>
+
+            <!-- Từ khóa -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">Từ khóa</div>
+                <div class="card-body">
+                    <h5 class="card-title">Từ khóa:</h5>
+                    <span class="badge bg-info text-dark fs-5">@Model.Query</span>
+                </div>
+            </div>
+
+            <!-- Intents -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">Ý định</div>
+                <div class="card-body">
+                    <h5 class="card-title">Ý định chính:</h5>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        @if (Model.MainIntents != null && Model.MainIntents.Any())
+                        {
+                            @foreach (var intent in Model.MainIntents)
+                            {
+                                <span class="badge bg-success text-white p-2">@intent.Intent (Score: @intent.Score.ToString("0.0000"))</span>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">Không có ý định chính. (Debug: Count=@Model.MainIntents?.Count)</p>
+                        }
+                    </div>
+
+                    <h5 class="card-title mt-3">Ý định phụ:</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        @if (Model.SubIntents != null && Model.SubIntents.Any())
+                        {
+                            @foreach (var intent in Model.SubIntents)
+                            {
+                                <span class="badge bg-secondary text-white p-2">@intent.Intent (Score: @intent.Score.ToString("0.0000"))</span>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">Không có ý định phụ. (Debug: Count=@Model.SubIntents?.Count)</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gợi ý SEO -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">Gợi ý SEO</div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.SeoSuggestion))
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var suggestion in Model.SeoSuggestion.Split(new[] { ". " }, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <li class="list-group-item">@suggestion.Trim()</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Không có gợi ý SEO.</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Nút tạo nội dung AI -->
+            <div class="text-center mb-4">
+                <button type="button" class="btn btn-success" id="generateAiContentBtn">Tạo nội dung mẫu AI</button>
+            </div>
+
+            <!-- Nội dung mẫu AI (ẩn ban đầu) -->
+            <div class="card mb-4 shadow-sm" id="aiContentCard" style="display: none;">
+                <div class="card-header bg-primary text-white">Nội dung mẫu AI</div>
+                <div class="card-body">
+                    <div class="ai-content mb-3" style="white-space: pre-wrap;" id="aiContentOutput">Chưa tạo nội dung.</div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-secondary me-2" onclick="copyAiContent()">Sao chép nội dung</button>
+                        <button class="btn btn-primary" onclick="regenerateAiContent()">Tạo lại</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts
+{
+    <script>
+        // Enable Bootstrap validation
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+
+        // Hàm tạo nội dung AI qua AJAX
+        document.getElementById('generateAiContentBtn').addEventListener('click', function () {
+            const query = '@Model.Query'; // Lấy từ model
+            const content = '@Model.Content'; // Lấy từ model
+            const mainIntents = @Html.Raw(Json.Serialize(Model?.MainIntents ?? new List<IntentScore>()));
+            const subIntents = @Html.Raw(Json.Serialize(Model?.SubIntents ?? new List<IntentScore>()));
+            console.log('Sending data:', { query, content, mainIntents, subIntents });
+            if (!query || query === '') {
+                alert('Vui lòng phân tích trước.');
+                return;
+            }
+            fetch('/IntentPrediction/GenerateAiContent', {
+                method: 'POST',
+                body: JSON.stringify({
+                    Query: query,
+                    Content: content,
+                    MainIntents: mainIntents,
+                    SubIntents: subIntents
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status); // Debug
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('aiContentOutput').textContent = data.aiContent;
+                    document.getElementById('aiContentCard').style.display = 'block';
+                } else {
+                    alert(data.message || 'Lỗi khi tạo nội dung.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Lỗi khi kết nối server.');
+            });
+        });
+
+        function copyAiContent() {
+            const aiContent = document.getElementById('aiContentOutput').innerText;
+            navigator.clipboard.writeText(aiContent).then(() => {
+                alert('Đã sao chép nội dung AI!');
+            }).catch(err => {
+                console.error('Lỗi khi sao chép:', err);
+            });
+        }
+
+        function regenerateAiContent() {
+            document.getElementById('generateAiContentBtn').click(); // Gọi lại hàm tạo
+        }
+    </script>
+}

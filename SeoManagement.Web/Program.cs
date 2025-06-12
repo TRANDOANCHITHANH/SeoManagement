@@ -121,6 +121,7 @@ builder.Services.AddScoped<IContentOptimizationRepository, ContentOptimizationRe
 builder.Services.AddScoped<IContentOptimizationService, ContentOptimizationService>();
 builder.Services.AddScoped<AlertService>();
 builder.Services.AddHostedService<UserAlertScheduler>();
+builder.Services.AddScoped<IAiContentService, AiContentService>();
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll", builder =>

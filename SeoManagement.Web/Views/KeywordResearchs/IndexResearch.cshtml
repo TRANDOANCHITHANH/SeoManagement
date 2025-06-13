@@ -71,15 +71,19 @@
     </div>
 
     <form asp-action="IndexResearch" method="post" class="mb-4" id="checkForm">
-        <input type="hidden" name="ProjectId" value="@Model.ProjectId" />
+        <input type="hidden" name="ProjectId" value="@Model.ProjectId"/>
         <div class="input-group">
             <input type="text" name="SeedKeyword" class="form-control" placeholder="Nhập từ khóa gốc (ví dụ: dịch vụ SEO)" value="@Model.SeedKeyword" />
-            <button type="submit" class="btn btn-primary">Phân tích</button>
+            <button type="submit" class="btn btn-primary btn-border ms-2">Phân tích</button>
+            @if (!string.IsNullOrEmpty(Model.SeedKeyword))
+        {
+            <a asp-action="AnalyzeIntent" asp-controller="KeywordResearchs" asp-route-projectId="@Model.ProjectId" asp-route-keyword="@Model.SeedKeyword" class="btn btn-success btn-border ms-3">Xem ý định tìm kiếm và gợi ý SEO</a>
+        }
         </div>
     </form>
 
     @if (Model.Keywords != null && Model.Keywords.Any())
-    {
+    {   
         <div class="card shadow p-4 mb-4">
             <h4 class="mb-3">Danh sách từ khóa</h4>
             <div class="table-responsive">
@@ -129,6 +133,7 @@
                                         <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa từ khóa này?')"><i class="fa fa-trash-o"></i></button>
                                     </form>
                                 </td>
+                                 
                             </tr>
                         }
                     </tbody>

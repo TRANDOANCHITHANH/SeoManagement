@@ -47,6 +47,10 @@ namespace SeoManagement.Web.Controllers
 					seedKeywords = new List<SeedKeyword>();
 				}
 
+				if (seedKeywords.Any())
+				{
+					model.SeedKeyword = seedKeywords.First().Keyword;
+				}
 				var mainKeywords = seedKeywords.Select(sk => new KeywordResearchViewModel.KeywordViewModel
 				{
 					SeedKeyword = sk.Keyword,
@@ -178,6 +182,13 @@ namespace SeoManagement.Web.Controllers
 			}
 
 			return RedirectToAction("IndexResearch", new { model.ProjectId });
+		}
+
+		[HttpGet]
+		public IActionResult AnalyzeIntent(int projectId, string keyword)
+		{
+			// Chuyển sang IntentPredictionController
+			return RedirectToAction("Index", "IntentPrediction", new { projectId, query = keyword });
 		}
 
 		[HttpPost]

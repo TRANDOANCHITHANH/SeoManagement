@@ -8,118 +8,74 @@ namespace SeoManagement.Infrastructure.Services
 {
 	public class AiContentService : IAiContentService
 	{
-		private readonly IApiServiceFactory _apiServiceFactory;
 		private readonly ILogger<AiContentService> _logger;
-		private readonly string[] _modelEndpoints = new[]
-		{
-			"models/mistralai/Mixtral-8x7B-Instruct-v0.1", // Model chính, text generation
-            "models/google/pegasus-xsum"                  // Fallback, nhẹ và nhanh
-        };
+		private readonly IApiServiceFactory _apiServiceFactory;
 
 		public AiContentService(IApiServiceFactory apiServiceFactory, ILogger<AiContentService> logger)
 		{
-			_apiServiceFactory = apiServiceFactory;
-			_logger = logger;
+			_apiServiceFactory = apiServiceFactory ?? throw new ArgumentNullException(nameof(apiServiceFactory));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		public async Task<string> GenerateAiContentSuggestion(string intent, string query, string existingContent, List<IntentScore> subIntents)
 		{
+			if (string.IsNullOrWhiteSpace(query))
+			{
+				throw new ArgumentException("Query cannot be empty.", nameof(query));
+			}
+
 			try
 			{
-				var (httpClient, apiKey) = await _apiServiceFactory.CreateHuggingFaceClientAsync();
-				httpClient.Timeout = TimeSpan.FromSeconds(200);
+				// Tạo HttpClient với RapidAPI key và host
+				using var httpClient = await _apiServiceFactory.CreateRapidApiClientAsync("open-ai21.p.rapidapi.com");
+				httpClient.Timeout = TimeSpan.FromSeconds(100);
 
 				// Prompt tối ưu
-				var prompt = $"Tạo nội dung liên quan đến '{query}' theo ý định '{intent}'. " +
-							 $"Dựa trên nội dung hiện có: {(string.IsNullOrEmpty(existingContent) ? "không có" : $"'{existingContent}'")}. " +
-							 $"Ý định phụ: {(subIntents?.Any() == true ? string.Join(", ", subIntents.Select(s => s.Intent)) : "không có")}. " +
-							 "Viết bằng tiếng Việt, 50-100 từ, có tiêu đề, nêu 2-3 điểm chính phù hợp với chủ đề, kèm gợi ý hành động. ";
+				var prompt = $"Viết nội dung ngắn gọn bằng tiếng Việt cho query '{query}' với ý định '{intent}', 50-100 từ, sử dụng định dạng HTML. " +
+							$"Chỉ sử dụng nội dung sẵn '{(string.IsNullOrEmpty(existingContent) ? "không có" : existingContent)}' nếu nó liên quan trực tiếp đến query, nếu không thì bỏ qua. " +
+							$"Ý phụ: {(subIntents?.Any() == true ? string.Join(", ", subIntents.Select(s => s.Intent)) : "không có")}. " +
+							"Tạo tiêu đề với thẻ <b> hoặc <strong>, nêu 2-3 điểm chính trong thẻ <ul><li>, và đưa ra gợi ý hành động cụ thể liên quan đến query. ";
 
 				var payload = new
 				{
-					inputs = prompt,
-					parameters = new
-					{
-						max_length = 120,
-						min_length = 50,
-						num_beams = 2,
-						temperature = 0.7,
-						early_stopping = true
-					}
+					messages = new[] { new { role = "user", content = prompt } },
+					web_access = false
 				};
 
-				var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-				_logger.LogInformation("Sending request to Hugging Face API with payload: {Payload}", JsonSerializer.Serialize(payload));
-
-				// Thử từng endpoint với retry
-				for (int retry = 0; retry < 2; retry++)
+				var request = new HttpRequestMessage
 				{
-					foreach (var endpoint in _modelEndpoints)
-					{
-						_logger.LogInformation("Trying endpoint: {Endpoint}, Retry: {Retry}", endpoint, retry);
-						try
-						{
-							var response = await httpClient.PostAsync(endpoint, content);
+					Method = HttpMethod.Post,
+					RequestUri = new Uri("https://open-ai21.p.rapidapi.com/chatgpt"),
+					Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+				};
 
-							var responseContent = await response.Content.ReadAsStringAsync();
-							_logger.LogInformation("Received response from Hugging Face API: StatusCode={StatusCode}, Content={Content}", response.StatusCode, responseContent);
+				_logger.LogInformation("Sending request to Open AI21 with payload: {Payload}", JsonSerializer.Serialize(payload));
 
-							if (!response.IsSuccessStatusCode)
-							{
-								_logger.LogWarning("Failed at endpoint {Endpoint}: StatusCode={StatusCode}, Content={Content}", endpoint, response.StatusCode, responseContent);
-								continue;
-							}
+				using var response = await httpClient.SendAsync(request);
+				var responseContent = await response.Content.ReadAsStringAsync();
+				_logger.LogInformation("Nhận response từ Open AI21: StatusCode={StatusCode}, Content={Content}", response.StatusCode, responseContent);
 
-							var jsonResult = JsonSerializer.Deserialize<JsonElement>(responseContent);
-
-							// Xử lý generated_text hoặc summary_text
-							if (jsonResult.ValueKind == JsonValueKind.Array && jsonResult.GetArrayLength() > 0)
-							{
-								var firstItem = jsonResult[0];
-								if (firstItem.TryGetProperty("generated_text", out JsonElement generatedText) ||
-									firstItem.TryGetProperty("summary_text", out generatedText))
-								{
-									var result = generatedText.GetString()?.Trim() ?? "Không có nội dung được tạo.";
-									_logger.LogInformation("Generated text: {Result}", result);
-									return result;
-								}
-							}
-							else if (jsonResult.TryGetProperty("generated_text", out JsonElement generatedText) ||
-									 jsonResult.TryGetProperty("summary_text", out generatedText))
-							{
-								var result = generatedText.GetString()?.Trim() ?? "Không có nội dung được tạo.";
-								_logger.LogInformation("Generated text: {Result}", result);
-								return result;
-							}
-
-							_logger.LogWarning("No generated_text or summary_text found in response at {Endpoint}: {Content}", endpoint, responseContent);
-						}
-						catch (HttpRequestException ex)
-						{
-							_logger.LogWarning(ex, "HTTP Error at endpoint {Endpoint}, Retry: {Retry}: {Message}", endpoint, retry, ex.Message);
-							continue;
-						}
-					}
-					await Task.Delay(1000); // Đợi 1s trước khi retry
+				if (!response.IsSuccessStatusCode)
+				{
+					_logger.LogWarning("Failed at Open AI21: StatusCode={StatusCode}, Content={Content}", response.StatusCode, responseContent);
+					return "Không thể tạo nội dung: API lỗi.";
 				}
 
-				_logger.LogError("All model endpoints failed to generate content.");
-				return "Không thể tạo nội dung: Tất cả các model đều không khả dụng.";
-			}
-			catch (HttpRequestException ex)
-			{
-				_logger.LogError(ex, "HTTP Error occurred: {Message}", ex.Message);
-				return $"Lỗi HTTP: {ex.Message}";
-			}
-			catch (JsonException ex)
-			{
-				_logger.LogError(ex, "JSON parsing error occurred: {Message}", ex.Message);
-				return $"Lỗi phân tích JSON: {ex.Message}";
+				var jsonResult = JsonSerializer.Deserialize<JsonElement>(responseContent);
+				if (jsonResult.TryGetProperty("result", out JsonElement resultElement))
+				{
+					var result = resultElement.GetString()?.Trim() ?? "Không có nội dung được tạo.";
+					_logger.LogInformation("Generated text: {Result}", result);
+					return result;
+				}
+
+				_logger.LogWarning("No result found in response: {Content}", responseContent);
+				return "Không có nội dung được tạo.";
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Unexpected error occurred: {Message}", ex.Message);
-				return $"Lỗi không xác định: {ex.Message}";
+				_logger.LogError(ex, "Lỗi khi gọi Open AI21: {Message}", ex.Message);
+				return $"Lỗi: {ex.Message}";
 			}
 		}
 	}

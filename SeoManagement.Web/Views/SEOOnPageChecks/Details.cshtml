@@ -6,6 +6,27 @@
     var analysisResult = ViewBag.AnalysisResult as SEOOnPageAnalysisResultViewModel;
 }
 
+    <style>
+        .text-break {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .summary-container {
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .summary-line {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-line strong {
+            color: #dc3545; /* Màu đỏ cho "Gợi ý:" để nổi bật */
+        }
+    </style>
 <div class="container py-4">
     <div class="page-header mb-3">
         <h4 class="fw-bold">SEO On-Page</h4>
@@ -53,20 +74,8 @@
                             <dd class="col-12 text-break fw-medium">@Model.Url</dd>
                         </div>
                         <div class="col">
-                            <dt class="col-12 text-muted">Tiêu Đề</dt>
-                            <dd class="col-12 fw-medium">@Model.Title</dd>
-                        </div>
-                        <div class="col">
-                            <dt class="col-12 text-muted">Meta Description</dt>
-                            <dd class="col-12 fw-medium">@Model.MetaDescription</dd>
-                        </div>
-                        <div class="col">
                             <dt class="col-12 text-muted">Từ Khóa Chính</dt>
                             <dd class="col-12 fw-medium">@Model.MainKeyword</dd>
-                        </div>
-                        <div class="col">
-                            <dt class="col-12 text-muted">Số Lượng Từ</dt>
-                            <dd class="col-12 fw-medium">@Model.WordCount</dd>
                         </div>
                         <div class="col">
                             <dt class="col-12 text-muted">Ngày Tạo</dt>
@@ -89,7 +98,25 @@
                         <!-- Tổng quan -->
                         <div class="mb-4">
                             <h5 class="text-muted fw-semibold">Tổng Quan</h5>
-                            <p class="lead text-dark">@analysisResult.Summary</p>
+                            @if (!string.IsNullOrEmpty(analysisResult.Summary))
+                            {
+                                <div class="summary-container">
+                                    <p class="lead text-dark">
+                                       @foreach (var line in analysisResult.Summary.Split(new[] { '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries))
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(line.Trim()))
+                                            {
+                                                var trimmedLine = line.Trim().TrimStart(',').Trim();
+                                                <span class="summary-line">@trimmedLine.Replace("Gợi ý:", "Gợi ý:").</span>
+                                            }
+                                        }
+                                    </p>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="lead text-dark">Không có gợi ý cải thiện nào.</p>
+                            }
                         </div>
 
                         <!-- Danh sách kết quả phân tích -->
@@ -108,6 +135,7 @@
                                                     <span class="text-danger"> - Nên giữ 30-60 ký tự.</span>
                                                 }
                                             </p>
+                                            <p class="mb-0 fw-medium text-dark">Tiêu đề: @analysisResult.Title</p>
                                         </div>
                                     </div>
                                 </div>
@@ -127,6 +155,7 @@
                                                     <span class="text-danger"> - Nên giữ 120-160 ký tự.</span>
                                                 }
                                             </p>
+                                            <p class="mb-0 fw-medium text-dark">Meta Description: @analysisResult.MetaDescription</p>
                                         </div>
                                     </div>
                                 </div>
@@ -184,6 +213,7 @@
                                                     <span class="text-danger"> - Tăng lên ≥ 300 từ.</span>
                                                 }
                                             </p>
+                                            <p class="mb-0 fw-medium text-dark">Số từ: @analysisResult.WordCount</p>
                                         </div>
                                     </div>
                                 </div>
@@ -433,14 +463,6 @@
     </div>
 </div>
 
-@section Styles {
-    <style>
-        .text-break {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-    </style>
-}
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -51,11 +51,11 @@ namespace SeoManagement.Infrastructure.Services
 				return existingSuggestions;
 			}
 
-			var httpClient = await _apiServiceFactory.CreateRapidApiClientAsync("ahrefs-keyword-tool.p.rapidapi.com");
+			var httpClient = await _apiServiceFactory.CreateRapidApiClientAsync("ai-google-keyword-research-planner.p.rapidapi.com");
 			var request = new HttpRequestMessage
 			{
 				Method = HttpMethod.Get,
-				RequestUri = new Uri($"https://ahrefs-keyword-tool.p.rapidapi.com/global-volume?keyword={Uri.EscapeDataString(seedKeyword)}"),
+				RequestUri = new Uri($"https://ai-google-keyword-research-planner.p.rapidapi.com/global-volume?keyword={Uri.EscapeDataString(seedKeyword)}"),
 			};
 
 			using (var response = await httpClient.SendAsync(request))

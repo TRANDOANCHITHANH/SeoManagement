@@ -118,11 +118,11 @@ namespace SeoManagement.Infrastructure.Services
 		{
 			double score = 0;
 			double maxScore = 6;
-			if (check.Title?.Length >= 30 && check.Title.Length <= 60) score += 1;
-			if (check.MetaDescription?.Length >= 120 && check.MetaDescription.Length <= 160) score += 1;
-			if (check.MainKeyword != null && check.Title != null && check.Title.ToLower().Contains(check.MainKeyword.ToLower())) score += 1;
-			if (check.MainKeyword != null && check.MetaDescription != null && check.MetaDescription.ToLower().Contains(check.MainKeyword.ToLower())) score += 1;
-			if (check.WordCount >= 300) score += 1;
+			//if (check.Title?.Length >= 30 && check.Title.Length <= 60) score += 1;
+			//if (check.MetaDescription?.Length >= 120 && check.MetaDescription.Length <= 160) score += 1;
+			//if (check.MainKeyword != null && check.Title != null && check.Title.ToLower().Contains(check.MainKeyword.ToLower())) score += 1;
+			//if (check.MainKeyword != null && check.MetaDescription != null && check.MetaDescription.ToLower().Contains(check.MainKeyword.ToLower())) score += 1;
+			//if (check.WordCount >= 300) score += 1;
 			if (check.CreatedAt != default) score += 1;
 			return (score / maxScore) * 100;
 		}

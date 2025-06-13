@@ -17,6 +17,11 @@
                         <span asp-validation-for="Url" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="MainKeyword" class="form-label"></label>
+                        <input asp-for="MainKeyword" class="form-control" placeholder="Nhập từ khóa chính" />
+                        <span asp-validation-for="MainKeyword" class="text-danger"></span>
+                    </div>
+                    @* <div class="form-group">
                         <label asp-for="Title" class="form-label"></label>
                         <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề trang" />
                         <span asp-validation-for="Title" class="text-danger"></span>
@@ -27,15 +32,10 @@
                         <span asp-validation-for="MetaDescription" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="MainKeyword" class="form-label"></label>
-                        <input asp-for="MainKeyword" class="form-control" placeholder="Nhập từ khóa chính" />
-                        <span asp-validation-for="MainKeyword" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
                         <label asp-for="WordCount" class="form-label"></label>
                         <input asp-for="WordCount" class="form-control" type="number" placeholder="Nhập số lượng từ" />
                         <span asp-validation-for="WordCount" class="text-danger"></span>
-                    </div>
+                    </div> *@
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary me-2">Thêm</button>
                         <a asp-action="Index" asp-route-projectId="@Model.ProjectID" class="btn btn-secondary">Quay Lại</a>

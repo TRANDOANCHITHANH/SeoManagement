@@ -104,6 +104,7 @@ namespace SeoManagement.Web.Controllers
 			if (analysisResponse.IsSuccessStatusCode)
 			{
 				var analysisResult = await analysisResponse.Content.ReadFromJsonAsync<SEOOnPageAnalysisResultViewModel>();
+				_logger.LogInformation("AnalysisResult - KeywordDensity: {KeywordDensity}", analysisResult?.KeywordDensity);
 				ViewBag.AnalysisResult = analysisResult;
 			}
 			else

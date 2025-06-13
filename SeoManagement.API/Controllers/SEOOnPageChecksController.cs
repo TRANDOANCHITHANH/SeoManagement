@@ -32,10 +32,7 @@ namespace SeoManagement.API.Controllers
 					CheckID = c.CheckID,
 					ProjectID = c.ProjectID,
 					Url = c.Url,
-					Title = c.Title,
-					MetaDescription = c.MetaDescription,
 					MainKeyword = c.MainKeyword,
-					WordCount = c.WordCount,
 					CreatedAt = c.CreatedAt
 				}).ToList();
 
@@ -70,10 +67,7 @@ namespace SeoManagement.API.Controllers
 				CheckID = check.CheckID,
 				ProjectID = check.ProjectID,
 				Url = check.Url,
-				Title = check.Title,
-				MetaDescription = check.MetaDescription,
 				MainKeyword = check.MainKeyword,
-				WordCount = check.WordCount,
 				CreatedAt = check.CreatedAt
 			};
 			return Ok(checkDto);
@@ -86,10 +80,7 @@ namespace SeoManagement.API.Controllers
 			{
 				ProjectID = checkDto.ProjectID,
 				Url = checkDto.Url,
-				Title = checkDto.Title,
-				MetaDescription = checkDto.MetaDescription,
 				MainKeyword = checkDto.MainKeyword,
-				WordCount = checkDto.WordCount
 			};
 
 			await _seoOnPageCheckService.CreateSEOOnPageCheckAsync(check);
@@ -108,10 +99,7 @@ namespace SeoManagement.API.Controllers
 
 			check.ProjectID = checkDto.ProjectID;
 			check.Url = checkDto.Url;
-			check.Title = checkDto.Title;
-			check.MetaDescription = checkDto.MetaDescription;
 			check.MainKeyword = checkDto.MainKeyword;
-			check.WordCount = checkDto.WordCount;
 
 			await _seoOnPageCheckService.UpdateSEOOnPageCheckAsync(check);
 			return NoContent();
@@ -135,24 +123,31 @@ namespace SeoManagement.API.Controllers
 
 			try
 			{
+				var analysisResult = await AnalyzeHtml(check.Url, check.MainKeyword, _logger);
 				var result = new SEOOnPageAnalysisResult
 				{
-					IsTitleLengthOptimal = check.Title != null && check.Title.Length >= 30 && check.Title.Length <= 60,
-					IsMetaDescriptionLengthOptimal = check.MetaDescription != null && check.MetaDescription.Length >= 120 && check.MetaDescription.Length <= 160,
-					IsMainKeywordInTitle = check.MainKeyword != null && check.Title != null && check.Title.ToLower().Contains(check.MainKeyword.ToLower()),
-					IsMainKeywordInMetaDescription = check.MainKeyword != null && check.MetaDescription != null && check.MetaDescription.ToLower().Contains(check.MainKeyword.ToLower()),
-					IsWordCountSufficient = check.WordCount >= 300
+					Title = analysisResult.Title,
+					MetaDescription = analysisResult.MetaDescription,
+					WordCount = analysisResult.WordCount,
+					IsTitleLengthOptimal = !string.IsNullOrEmpty(analysisResult.Title) && analysisResult.Title.Length >= 30 && analysisResult.Title.Length <= 60,
+					IsMetaDescriptionLengthOptimal = !string.IsNullOrEmpty(analysisResult.MetaDescription) && analysisResult.MetaDescription.Length >= 120 && analysisResult.MetaDescription.Length <= 160,
+					IsMainKeywordInTitle = !string.IsNullOrEmpty(check.MainKeyword) && !string.IsNullOrEmpty(analysisResult.Title) && analysisResult.Title.ToLower().Contains(check.MainKeyword.ToLower()),
+					IsMainKeywordInMetaDescription = !string.IsNullOrEmpty(check.MainKeyword) && !string.IsNullOrEmpty(analysisResult.MetaDescription) && analysisResult.MetaDescription.ToLower().Contains(check.MainKeyword.ToLower()),
+					IsWordCountSufficient = analysisResult.WordCount >= 300,
+					HeadingCount = analysisResult.HeadingCount,
+					H1Count = analysisResult.H1Count,
+					ImageCountWithoutAlt = analysisResult.ImageCountWithoutAlt,
+					KeywordDensity = analysisResult.KeywordDensity,
+					InternalLinkCount = analysisResult.InternalLinkCount,
+					BrokenLinkCount = analysisResult.BrokenLinkCount,
+					HasCanonicalUrl = analysisResult.HasCanonicalUrl,
+					HasStructuredData = analysisResult.HasStructuredData
 				};
 
-				var htmlAnalysis = await AnalyzeHtml(check.Url, check.MainKeyword);
-				result.HeadingCount = htmlAnalysis.HeadingCount;
-				result.ImageCountWithoutAlt = htmlAnalysis.ImageCountWithoutAlt;
-				result.KeywordDensity = htmlAnalysis.KeywordDensity;
-				result.InternalLinkCount = htmlAnalysis.InternalLinkCount;
-				result.BrokenLinkCount = htmlAnalysis.BrokenLinkCount;
-				result.HasCanonicalUrl = htmlAnalysis.HasCanonicalUrl;
-				result.HasStructuredData = htmlAnalysis.HasStructuredData;
-				result.IsHttps = new Uri(check.Url).Scheme == "https";
+				// Kiểm tra HTTPS
+				result.IsHttps = !string.IsNullOrEmpty(check.Url) && Uri.TryCreate(check.Url, UriKind.Absolute, out var uriResult) && uriResult.Scheme == Uri.UriSchemeHttps;
+
+				// Phân tích tốc độ trang
 				result.PageSpeedScoreDesktop = await AnalyzePageSpeed(check.Url, "desktop");
 				result.PageSpeedScoreMobile = await AnalyzePageSpeed(check.Url, "mobile");
 
@@ -167,43 +162,114 @@ namespace SeoManagement.API.Controllers
 			}
 		}
 
-		private async Task<(int HeadingCount, int H1Count, int ImageCountWithoutAlt, double KeywordDensity, int InternalLinkCount, int BrokenLinkCount, bool HasCanonicalUrl, bool HasStructuredData)> AnalyzeHtml(string url, string mainKeyword)
+		private string RemoveDiacritics(string text)
+		{
+			string[] vietnameseSigns = new string[]
+			{
+		"aAeEoOuUiIdDyY",
+		"áàạảãâấầậẩẫăắằặẳẵ",
+		"ÁÀẠẢÃÂẤẦẬẨẪĂẮẰẶẲẴ",
+		"éèẹẻẽêếềệểễ",
+		"ÉÈẸẺẼÊẾỀỆỂỄ",
+		"óòọỏõôốồộổỗơớờợởỡ",
+		"ÓÒỌỎÕÔỐỒỘỔỖƠỚỜỢỞỠ",
+		"úùụủũưứừựửữ",
+		"ÚÙỤỦŨƯỨỪỰỬỮ",
+		"íìịỉĩ",
+		"ÍÌỊỈĨ",
+		"đ",
+		"Đ",
+		"ýỳỵỷỹ",
+		"ÝỲỴỶỸ"
+			};
+			for (int i = 1; i < vietnameseSigns.Length; i++)
+			{
+				for (int j = 0; j < vietnameseSigns[i].Length; j++)
+					text = text.Replace(vietnameseSigns[i][j], vietnameseSigns[0][i - 1]);
+			}
+			return text.Normalize().Trim();
+		}
+
+		private async Task<(string Title, string MetaDescription, int WordCount, int HeadingCount, int H1Count, int ImageCountWithoutAlt, double KeywordDensity, int InternalLinkCount, int BrokenLinkCount, bool HasCanonicalUrl, bool HasStructuredData)> AnalyzeHtml(string url, string mainKeyword, ILogger logger)
 		{
 			var httpClient = _httpClientFactory.CreateClient();
-			httpClient.Timeout = TimeSpan.FromSeconds(10); // Thêm timeout để tránh treo
+			httpClient.Timeout = TimeSpan.FromSeconds(15);
 			string html;
 			try
 			{
-				html = await httpClient.GetStringAsync(url);
+				using var response = await httpClient.GetAsync(url);
+				response.EnsureSuccessStatusCode();
+				html = await response.Content.ReadAsStringAsync();
+				html = System.Text.Encoding.UTF8.GetString(System.Text.Encoding.Convert(System.Text.Encoding.Default, System.Text.Encoding.UTF8, System.Text.Encoding.Default.GetBytes(html)));
 			}
 			catch (Exception ex)
 			{
-				_logger.LogWarning(ex, "Failed to fetch HTML for URL: {Url}", url);
-				return (0, 0, 0, 0, 0, 0, false, false); // Fallback nếu không tải được HTML
+				logger.LogWarning(ex, "Failed to fetch HTML for URL: {Url}", url);
+				return (null, null, 0, 0, 0, 0, 0, 0, 0, false, false);
 			}
 
 			var htmlDoc = new HtmlDocument();
 			htmlDoc.LoadHtml(html);
 
-			int headingCount = htmlDoc.DocumentNode.SelectNodes("//h1|//h2|//h3")?.Count ?? 0;
-			int h1Count = htmlDoc.DocumentNode.SelectNodes("//h1")?.Count ?? 0;
-			int imageCountWithoutAlt = htmlDoc.DocumentNode.SelectNodes("//img[not(@alt) or @alt='']")?.Count ?? 0;
+			// Trích xuất Title
+			var titleNode = htmlDoc.DocumentNode.SelectSingleNode("//title");
+			var title = titleNode?.InnerText.Trim() ?? "";
 
-			var bodyText = htmlDoc.DocumentNode.SelectSingleNode("//body")?.InnerText ?? "";
-			var words = bodyText.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-			var keywordCount = words.Count(w => w.Equals(mainKeyword, StringComparison.OrdinalIgnoreCase));
-			double keywordDensity = words.Length > 0 ? (keywordCount * 100.0 / words.Length) : 0;
+			// Trích xuất Meta Description
+			var metaDescriptionNode = htmlDoc.DocumentNode.SelectSingleNode("//meta[@name='description']");
+			var metaDescription = metaDescriptionNode?.GetAttributeValue("content", "").Trim() ?? "";
 
+			// Tính WordCount từ nội dung
+			var bodyTextNodes = htmlDoc.DocumentNode.SelectNodes("//body//text()[not(ancestor::script) and not(ancestor::style)] | //body//p//text() | //body//h1//text() | //body//h2//text() | //body//div//text()")
+				?.Select(n => n.InnerText.Trim())
+				?.Where(t => !string.IsNullOrEmpty(t));
+			var bodyText = string.Join(" ", bodyTextNodes ?? new List<string>());
+			var words = bodyText.Split(new[] { ' ', '\n', '\r', '\t', '.', ',', '!', '?', ';', ':', '(', ')', '-', '—', '–' }, StringSplitOptions.RemoveEmptyEntries)
+				.Select(w => w.Trim())
+				.Where(w => !string.IsNullOrWhiteSpace(w))
+				.Select(w => RemoveDiacritics(w));
+			var wordCount = words.Count();
+
+			// Phân tích Heading
+			int headingCount = htmlDoc.DocumentNode.SelectNodes("//h1|//h2|//h3")
+				?.Where(h => string.IsNullOrEmpty(h.GetAttributeValue("style", "")) || !h.GetAttributeValue("style", "").ToLower().Contains("display: none"))
+				?.Count() ?? 0;
+			int h1Count = htmlDoc.DocumentNode.SelectNodes("//h1")
+				?.Where(h => string.IsNullOrEmpty(h.GetAttributeValue("style", "")) || !h.GetAttributeValue("style", "").ToLower().Contains("display: none"))
+				?.Count() ?? 0;
+
+			// Đếm ảnh không có alt
+			int imageCountWithoutAlt = htmlDoc.DocumentNode.SelectNodes("//img[not(@alt) or normalize-space(@alt)='']")
+				?.Where(img => img.Ancestors("script").Count() == 0 && img.Ancestors("style").Count() == 0)
+				?.Count() ?? 0;
+
+			// Tính KeywordDensity
+			var normalizedKeyword = RemoveDiacritics(mainKeyword);
+			var keywordWords = normalizedKeyword.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+			var keywordPhraseCount = 0;
+			var wordArray = words.ToArray();
+			for (int i = 0; i < wordArray.Length - keywordWords.Length + 1; i++)
+			{
+				var phrase = string.Join(" ", wordArray.Skip(i).Take(keywordWords.Length));
+				if (phrase.Equals(normalizedKeyword, StringComparison.OrdinalIgnoreCase))
+				{
+					keywordPhraseCount++;
+				}
+			}
+			var keywordWordCount = keywordWords.Sum(kw => words.Count(w => w.Equals(kw, StringComparison.OrdinalIgnoreCase)));
+			double keywordDensity = keywordPhraseCount > 0 ? (keywordPhraseCount * 100.0 / words.Count()) : (keywordWordCount > 0 ? (keywordWordCount / keywordWords.Length * 100.0 / words.Count()) : 0);
+			keywordDensity = Math.Max(keywordDensity, Math.Min(keywordDensity + (keywordWordCount / keywordWords.Length * 100.0 / words.Count()) * 0.3, 3.0));
+
+			// Đếm InternalLink và BrokenLink
 			var domain = new Uri(url).Host;
 			int internalLinkCount = htmlDoc.DocumentNode.SelectNodes("//a[@href]")
-				?.Count(a => a.GetAttributeValue("href", "").Contains(domain) && !a.GetAttributeValue("href", "").StartsWith("http")) ?? 0;
+				?.Count(a => !string.IsNullOrEmpty(a.GetAttributeValue("href", "")) && (a.GetAttributeValue("href", "").StartsWith("/") || a.GetAttributeValue("href", "").Contains(domain))) ?? 0;
 
-			// Kiểm tra broken links
 			int brokenLinkCount = 0;
 			var links = htmlDoc.DocumentNode.SelectNodes("//a[@href]");
 			if (links != null)
 			{
-				foreach (var link in links.Take(10)) // Giới hạn số link kiểm tra để tối ưu hiệu suất
+				foreach (var link in links.Take(20))
 				{
 					var href = link.GetAttributeValue("href", "");
 					if (!string.IsNullOrEmpty(href) && href.StartsWith("http"))
@@ -221,10 +287,11 @@ namespace SeoManagement.API.Controllers
 				}
 			}
 
+			// Kiểm tra Canonical URL và Structured Data
 			bool hasCanonicalUrl = htmlDoc.DocumentNode.SelectSingleNode("//link[@rel='canonical']") != null;
 			bool hasStructuredData = htmlDoc.DocumentNode.SelectSingleNode("//script[@type='application/ld+json']") != null;
 
-			return (headingCount, h1Count, imageCountWithoutAlt, keywordDensity, internalLinkCount, brokenLinkCount, hasCanonicalUrl, hasStructuredData);
+			return (title, metaDescription, wordCount, headingCount, h1Count, imageCountWithoutAlt, keywordDensity, internalLinkCount, brokenLinkCount, hasCanonicalUrl, hasStructuredData);
 		}
 
 		private async Task<int> AnalyzePageSpeed(string url, string strategy)

@@ -2,151 +2,149 @@
 @model SeoManagement.Web.Models.ViewModels.IntentViewModel
 
 @{
-    ViewData["Title"] = "Intent Prediction";
+    ViewData["Title"] = "Phân tích Ý định Tìm kiếm";
 }
+
+<!-- CSS tùy chỉnh -->
 <style>
-    .section-title {
-        font-weight: bold;
-        color: #333;
+    .ai-content-card {
+        transition: all 0.3s ease;
     }
 
-    .keyword-tag {
-        font-size: 1.2rem;
-        padding: 0.5rem 1rem;
-    }
-
-    .main-intent {
-        font-size: 1rem;
-        padding: 0.5rem 1rem;
-    }
-
-    .sub-intent {
-        font-size: 0.9rem;
-        padding: 0.4rem 0.8rem;
-    }
-
-    .ai-content {
-        border: 1px solid #ddd;
-        padding: 1rem;
+    .ck-editor__editable {
+        min-height: 200px;
         border-radius: 0.25rem;
-        background-color: #f8f9fa;
+    }
+
+    #aiContentOutput .ck-editor__editable {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
     }
 </style>
-<div class="container mt-4">
-    <h2 class="mb-4 text-center">Phân tích Ý định Tìm kiếm</h2>
-    <form method="post" asp-action="Index" asp-controller="IntentPrediction" class="needs-validation" novalidate id="analysisForm">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label asp-for="Query" class="form-label">Từ khóa:</label>
-                    <input asp-for="Query" class="form-control" placeholder="Nhập từ khóa tìm kiếm" required />
+
+<div class="container py-5">
+    <h2 class="section-title mb-5 text-center">Phân tích Ý định Tìm kiếm</h2>
+
+    <!-- Form và kết quả phân tích -->
+    <div class="row g-4">
+        <!-- Cột trái: Form CKEditor và input Query -->
+        <div class="col-md-6">
+            <form method="post" asp-action="Index" asp-controller="IntentPrediction" class="needs-validation" novalidate id="analysisForm">
+                <div class="mb-4">
+                    <label asp-for="Query" class="form-label fw-bold text-dark">Từ khóa:</label>
+                    <input asp-for="Query" class="form-control" placeholder="Nhập từ khóa để phân tích ý định tìm kiếm" required />
                     <span asp-validation-for="Query" class="text-danger"></span>
                     <div class="invalid-feedback">Vui lòng nhập từ khóa.</div>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label asp-for="Content" class="form-label">Nội dung sẵn (tùy chọn):</label>
-                    <input asp-for="Content" class="form-control" placeholder="Nhập nội dung hiện có" />
+                <div class="mb-4">
+                    <label asp-for="Content" class="form-label fw-bold text-dark">Nội dung sẵn (tùy chọn):</label>
+                    <textarea class="form-control" id="contentEditor" name="Content" placeholder="Nhập nội dung hiện có">@Model?.Content</textarea>
                     <span asp-validation-for="Content" class="text-danger"></span>
                 </div>
-            </div>
+            </form>
         </div>
-        <div class="text-center">
-            <button type="submit" class="btn btn-primary">Phân tích</button>
-        </div>
-    </form>
 
+        <!-- Nút Phân tích giữa -->
+        <div class="col-md-1 d-flex align-items-center justify-content-center">
+            <button type="submit" form="analysisForm" class="btn btn-primary btn-modern">
+                <span role="img" aria-label="arrow-right" class="anticon anticon-arrow-right" style="font-size: 20px;"><svg viewBox="64 64 896 896" focusable="false" data-icon="arrow-right" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M869 487.8L491.2 159.9c-2.9-2.5-6.6-3.9-10.5-3.9h-88.5c-7.4 0-10.8 9.2-5.2 14l350.2 304H152c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h585.1L386.9 854c-5.6 4.9-2.2 14 5.2 14h91.5c1.9 0 3.8-.7 5.2-2L869 536.2a32.07 32.07 0 000-48.4z"></path></svg></span>
+            </button>
+        </div>
+
+        <!-- Cột phải: Kết quả phân tích -->
+        <div class="col-md-5">
+            @if (Model != null && !string.IsNullOrEmpty(Model.Query))
+            {
+                <div>
+                    <!-- Ý định -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">Ý định Tìm kiếm</div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                @if (Model.MainIntents != null && Model.MainIntents.Any())
+                                {
+                                    @foreach (var intent in Model.MainIntents)
+                                    {
+                                        <span class="">@intent.Intent (Score: @intent.Score.ToString("0.0000"))</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted">Không có ý định chính.</p>
+                                }
+                                @if (Model.SubIntents != null && Model.SubIntents.Any())
+                                {
+                                    @foreach (var intent in Model.SubIntents)
+                                    {
+                                        <span class="">@intent.Intent (Score: @intent.Score.ToString("0.0000"))</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted">Không có ý định phụ.</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gợi ý SEO -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">Gợi ý SEO</div>
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(Model.SeoSuggestion))
+                            {
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var suggestion in Model.SeoSuggestion.Split(new[] { ". " }, StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        <li class="list-group-item text-dark">@suggestion.Trim()</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-muted">Không có gợi ý SEO.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Thông báo lỗi -->
     @if (@ViewData.ModelState.ErrorCount > 0)
     {
-        <div class="alert alert-danger mt-3">
+        <div class="alert alert-danger mt-4">
             @Html.ValidationSummary()
         </div>
     }
 
+    <!-- Loading overlay -->
+    <div class="overlay" id="loadingOverlay">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <span class="text-dark">Đang xử lý...</span>
+        </div>
+    </div>
+
+    <!-- Nút tạo nội dung và nội dung mẫu AI -->
     @if (Model != null && !string.IsNullOrEmpty(Model.Query))
     {
-        <div class="mt-5">
-            <h3 class="section-title mb-4 text-center">Kết quả phân tích</h3>
-
-            <!-- Từ khóa -->
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white">Từ khóa</div>
-                <div class="card-body">
-                    <h5 class="card-title">Từ khóa:</h5>
-                    <span class="badge bg-info text-dark fs-5">@Model.Query</span>
-                </div>
-            </div>
-
-            <!-- Intents -->
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white">Ý định</div>
-                <div class="card-body">
-                    <h5 class="card-title">Ý định chính:</h5>
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        @if (Model.MainIntents != null && Model.MainIntents.Any())
-                        {
-                            @foreach (var intent in Model.MainIntents)
-                            {
-                                <span class="badge bg-success text-white p-2">@intent.Intent (Score: @intent.Score.ToString("0.0000"))</span>
-                            }
-                        }
-                        else
-                        {
-                            <p class="text-muted">Không có ý định chính. (Debug: Count=@Model.MainIntents?.Count)</p>
-                        }
-                    </div>
-
-                    <h5 class="card-title mt-3">Ý định phụ:</h5>
-                    <div class="d-flex flex-wrap gap-2">
-                        @if (Model.SubIntents != null && Model.SubIntents.Any())
-                        {
-                            @foreach (var intent in Model.SubIntents)
-                            {
-                                <span class="badge bg-secondary text-white p-2">@intent.Intent (Score: @intent.Score.ToString("0.0000"))</span>
-                            }
-                        }
-                        else
-                        {
-                            <p class="text-muted">Không có ý định phụ. (Debug: Count=@Model.SubIntents?.Count)</p>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gợi ý SEO -->
-            <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white">Gợi ý SEO</div>
-                <div class="card-body">
-                    @if (!string.IsNullOrEmpty(Model.SeoSuggestion))
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var suggestion in Model.SeoSuggestion.Split(new[] { ". " }, StringSplitOptions.RemoveEmptyEntries))
-                            {
-                                <li class="list-group-item">@suggestion.Trim()</li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <p class="text-muted">Không có gợi ý SEO.</p>
-                    }
-                </div>
-            </div>
-
-            <!-- Nút tạo nội dung AI -->
+        <div class="mt-1">
             <div class="text-center mb-4">
-                <button type="button" class="btn btn-success" id="generateAiContentBtn">Tạo nội dung mẫu AI</button>
+                <button type="button" class="btn btn-success btn-modern" id="generateAiContentBtn">Tạo Nội dung Mẫu AI</button>
             </div>
 
-            <!-- Nội dung mẫu AI (ẩn ban đầu) -->
-            <div class="card mb-4 shadow-sm" id="aiContentCard" style="display: none;">
-                <div class="card-header bg-primary text-white">Nội dung mẫu AI</div>
+            <div class="card mb-4 shadow-sm ai-content-card" id="aiContentCard" style="display: none;">
+                <div class="card-header">Nội dung Mẫu AI</div>
                 <div class="card-body">
-                    <div class="ai-content mb-3" style="white-space: pre-wrap;" id="aiContentOutput">Chưa tạo nội dung.</div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-secondary me-2" onclick="copyAiContent()">Sao chép nội dung</button>
-                        <button class="btn btn-primary" onclick="regenerateAiContent()">Tạo lại</button>
+                    <div class="mb-3">
+                        <textarea class="form-control" id="aiContentOutput" readonly></textarea>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-secondary btn-modern" onclick="copyAiContent()">Sao chép Nội dung</button>
+                        <button class="btn btn-primary btn-modern" onclick="regenerateAiContent()">Tạo lại</button>
                     </div>
                 </div>
             </div>
@@ -154,15 +152,38 @@
     }
 </div>
 
-@section Scripts
-{
+@section Scripts {
+    <!-- CKEditor -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
     <script>
-        // Enable Bootstrap validation
+        // Khởi tạo CKEditor cho Nội dung sẵn
+        ClassicEditor
+            .create(document.querySelector('#contentEditor'), {
+                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo']
+            })
+            .catch(error => {
+                console.error('CKEditor Content Error:', error);
+            });
+
+        // Khởi tạo CKEditor cho Nội dung mẫu AI (readonly)
+        ClassicEditor
+            .create(document.querySelector('#aiContentOutput'), {
+                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
+                readOnly: true
+            })
+            .then(editor => {
+                window.aiContentEditor = editor; // Lưu instance để cập nhật nội dung
+            })
+            .catch(error => {
+                console.error('CKEditor AI Content Error:', error);
+            });
+
+        // Validation Bootstrap
         (function () {
             'use strict';
-            var forms = document.querySelectorAll('.needs-validation');
-            Array.prototype.slice.call(forms).forEach(function (form) {
-                form.addEventListener('submit', function (event) {
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
                     if (!form.checkValidity()) {
                         event.preventDefault();
                         event.stopPropagation();
@@ -172,58 +193,86 @@
             });
         })();
 
-        // Hàm tạo nội dung AI qua AJAX
-        document.getElementById('generateAiContentBtn').addEventListener('click', function () {
-            const query = '@Model.Query'; // Lấy từ model
-            const content = '@Model.Content'; // Lấy từ model
-            const mainIntents = @Html.Raw(Json.Serialize(Model?.MainIntents ?? new List<IntentScore>()));
-            const subIntents = @Html.Raw(Json.Serialize(Model?.SubIntents ?? new List<IntentScore>()));
-            console.log('Sending data:', { query, content, mainIntents, subIntents });
-            if (!query || query === '') {
-                alert('Vui lòng phân tích trước.');
+        // Loading spinner cho form phân tích
+        const analysisForm = document.getElementById('analysisForm');
+        let isSubmitting = false;
+
+        analysisForm.addEventListener('submit', function (e) {
+            if (isSubmitting) {
+                e.preventDefault();
                 return;
             }
-            fetch('/IntentPrediction/GenerateAiContent', {
-                method: 'POST',
-                body: JSON.stringify({
-                    Query: query,
-                    Content: content,
-                    MainIntents: mainIntents,
-                    SubIntents: subIntents
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                console.log('Response status:', response.status); // Debug
-                return response.json();
-            })
-            .then(data => {
+            isSubmitting = true;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        });
+
+        window.addEventListener('load', function () {
+            isSubmitting = false;
+            document.getElementById('loadingOverlay').style.display = 'none';
+        });
+
+        // Hàm tạo nội dung AI qua AJAX
+        async function generateAiContent() {
+            const query = '@Model?.Query';
+            const content = document.querySelector('#contentEditor').value; // Lấy từ CKEditor
+            const mainIntents = @Html.Raw(Json.Serialize(Model?.MainIntents ?? new List<IntentScore>()));
+            const subIntents = @Html.Raw(Json.Serialize(Model?.SubIntents ?? new List<IntentScore>()));
+
+            if (!query || query.trim() === '') {
+                alert('Vui lòng phân tích từ khóa trước.');
+                return;
+            }
+
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            try {
+                const response = await fetch('/IntentPrediction/GenerateAiContent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Query: query,
+                        Content: content,
+                        MainIntents: mainIntents,
+                        SubIntents: subIntents
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById('loadingOverlay').style.display = 'none';
+
                 if (data.success) {
-                    document.getElementById('aiContentOutput').textContent = data.aiContent;
+                    // Đảm bảo hiển thị HTML trong CKEditor
+                    window.aiContentEditor.setData(data.aiContent); // Render HTML
                     document.getElementById('aiContentCard').style.display = 'block';
                 } else {
                     alert(data.message || 'Lỗi khi tạo nội dung.');
                 }
-            })
-            .catch(error => {
+            } catch (error) {
+                document.getElementById('loadingOverlay').style.display = 'none';
                 console.error('Error:', error);
                 alert('Lỗi khi kết nối server.');
-            });
-        });
+            }
+        }
 
+        // Gắn sự kiện cho nút tạo nội dung
+        document.getElementById('generateAiContentBtn').addEventListener('click', generateAiContent);
+
+        // Sao chép nội dung AI
         function copyAiContent() {
-            const aiContent = document.getElementById('aiContentOutput').innerText;
+            const aiContent = window.aiContentEditor.getData(); // Lấy HTML từ CKEditor
             navigator.clipboard.writeText(aiContent).then(() => {
                 alert('Đã sao chép nội dung AI!');
             }).catch(err => {
                 console.error('Lỗi khi sao chép:', err);
+                alert('Lỗi khi sao chép nội dung.');
             });
         }
 
+        // Tạo lại nội dung AI
         function regenerateAiContent() {
-            document.getElementById('generateAiContentBtn').click(); // Gọi lại hàm tạo
+            generateAiContent();
         }
     </script>
 }

@@ -3,6 +3,28 @@
 
 @{
     ViewData["Title"] = "Phân tích Ý định Tìm kiếm";
+    var intentTranslations = new Dictionary<string, string>
+        {
+            { "Access", "Truy cập" },
+            { "Applications/Use Cases", "Ứng dụng/Trường hợp sử dụng" },
+            { "Causes", "Nguyên nhân" },
+            { "Definition/Understanding", "Định nghĩa/Hiểu biết" },
+            { "Effects/Impacts", "Hiệu ứng/Tác động" },
+            { "Examples", "Ví dụ" },
+            { "Feature Analysis", "Phân tích tính năng" },
+            { "Find Official Page", "Tìm trang chính thức" },
+            { "History/Applications", "Lịch sử/Ứng dụng" },
+            { "Product Comparison", "So sánh sản phẩm" },
+            { "Purchase Decision", "Quyết định mua hàng" },
+            { "Recommendations", "Khuyến nghị/Gợi ý" },
+            { "Solutions/How-to", "Giải pháp/Hướng dẫn" },
+            { "Statistics/Facts", "Thống kê/Sự thật" },
+            { "User Reviews", "Đánh giá người dùng" },
+            { "Navigational", "Điều hướng" },
+            { "Informational", "Thông tin" },
+            { "Commercial Investigation", "Nghiên cứu thương mại" },
+            { "Transactional", "Giao dịch" }
+        };
 }
 
 <!-- CSS tùy chỉnh -->
@@ -23,7 +45,29 @@
     }
 </style>
 
-<div class="container py-5">
+<div class="container">
+    <div class="page-header mb-3">
+        <h4 class="fw-bold">Phân tích từ khóa</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a asp-action="Index" asp-controller="Home">
+                    <i class="icon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-controller="SEOProjects" asp-route-projectType="KeywordResearch">Phân tích từ khóa</a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Ý định tìm kiếm</a>
+            </li>
+        </ul>
+    </div>
     <h2 class="section-title mb-5 text-center">Phân tích Ý định Tìm kiếm</h2>
 
     <!-- Form và kết quả phân tích -->
@@ -66,7 +110,8 @@
                                 {
                                     @foreach (var intent in Model.MainIntents)
                                     {
-                                        <span class="">@intent.Intent (Score: @intent.Score.ToString("0.0000"))</span>
+                                        var vietnameseIntent = intentTranslations.ContainsKey(intent.Intent) ? intentTranslations[intent.Intent] : intent.Intent;
+                                        <span class="me-2 mb-2">@vietnameseIntent</span>
                                     }
                                 }
                                 else
@@ -77,7 +122,8 @@
                                 {
                                     @foreach (var intent in Model.SubIntents)
                                     {
-                                        <span class="">@intent.Intent (Score: @intent.Score.ToString("0.0000"))</span>
+                                        var vietnameseIntent = intentTranslations.ContainsKey(intent.Intent) ? intentTranslations[intent.Intent] : intent.Intent;
+                                        <span class="me-2 mb-2">@vietnameseIntent</span>
                                     }
                                 }
                                 else

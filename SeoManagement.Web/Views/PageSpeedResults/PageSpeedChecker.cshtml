@@ -176,7 +176,7 @@
         </div>
     </div>
 
-    <div id="successToast" class="toast d-none">
+    <div id="successToast" class="toast position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-body">
             Kiểm tra thành công!
         </div>
@@ -257,7 +257,6 @@
                 <div class="modal-header">
                     <h5 class="modal-title" id="detailModalLabel">Chi tiết Hiệu suất</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-
                 </div>
                 <div class="modal-body">
                     <p class="text-muted">Các giá trị được đo bằng thời gian thực tế qua các thiết bị, phản ánh hiệu quả truy cập trang.</p>
@@ -275,17 +274,23 @@
                                 <p id="detailLoadTime" class="mb-1"></p>
                             </div>
                             <div class="mb-3">
-                                <span id="lcpIcon" class="text-primary">●</span> <strong>LCP (s)</strong>
+                                <span id="lcpIcon" class="text-primary">●</span> 
+                                <strong>LCP (s) 
+                                    <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="LCP báo cáo thời gian kết xuất của hình ảnh, khối văn bản hoặc video lớn nhất xuất hiện trong khung nhìn, so với thời điểm người dùng truy cập vào trang lần đầu tiên."></i>
+                                    </strong>
                                 <p id="detailLCP" class="mb-1"></p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <span id="fidIcon" class="text-primary">●</span> <strong>FID (ms)</strong>
+                                <span id="fidIcon" class="text-primary">●</span> 
+                                <strong>FID (ms) 
+                                    <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="FID đo lường thời gian từ khi người dùng tương tác lần đầu với một trang cho đến thời điểm mà trình duyệt thực sự có thể bắt đầu xử lý trình xử lý sự kiện để phản hồi tương tác đó."></i>
+                                    </strong>
                                 <p id="detailFID" class="mb-1"></p>
                             </div>
                             <div class="mb-3">
-                                <span id="clsIcon" class="text-primary">●</span> <strong>CLS</strong>
+                                <span id="clsIcon" class="text-primary">●</span> <strong>CLS <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="CLS đo lường độ ổn định của hình ảnh.Để mang lại trải nghiệm tốt cho người dùng, các trang phải duy trì CLS ở mức 0,1 trở xuống."></i></strong>
                                 <p id="detailCLS" class="mb-1"></p>
                             </div>
                         </div>
@@ -296,7 +301,7 @@
                             <p><strong>URL:</strong> <span id="detailUrl"></span></p>
                             <p><strong>Ngày cập nhật:</strong> <span id="detailLastChecked"></span></p>
                             <p><strong>Gợi ý cải thiện:</strong></p>
-                            <div id="detailSuggestions" class="bg-light p-2 rounded" style="max-height: 200px; overflow-y: auto;"></div>
+                            <div id="detailSuggestions" class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto;"></div>
                         </div>
                     </div>
                 </div>
@@ -327,23 +332,38 @@
                     overflow-wrap: break-word;
                 }
 
+        #detailSuggestions ul {
+            list-style-type: decimal;
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        #detailSuggestions li {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+            #detailSuggestions li::before {
+                content: "➤ ";
+                color: #007bff;
+            }
     </style>
     <script>
         const urlData = [
         @for (int i = 0; i < results.Count; i++)
         {
-            var result = results[i];
-            <text>
-                    {
-                        url: '@Html.Raw(HttpUtility.JavaScriptStringEncode(result.Url))',
-                        loadTime: @result.LoadTime.ToString("F2"),
-                        lcp: @(result.LCP?.ToString("F2") ?? "null"),
-                        fid: @(result.FID?.ToString("F2") ?? "null"),
-                        cls: @(result.CLS?.ToString("F2") ?? "null"),
-                        suggestions: '@Html.Raw(HttpUtility.JavaScriptStringEncode(result.Suggestions ?? ""))',
-                        lastChecked: '@result.LastCheckedDate.ToString("dd/MM/yyyy HH:mm")'
-                    }@(i < results.Count - 1 ? "," : "")
-            </text>
+                var result = results[i];
+                <text>
+                        {
+                            url: '@Html.Raw(HttpUtility.JavaScriptStringEncode(result.Url))',
+                            loadTime: @result.LoadTime.ToString("F2"),
+                            lcp: @(result.LCP?.ToString("F2") ?? "null"),
+                            fid: @(result.FID?.ToString("F2") ?? "null"),
+                            cls: @(result.CLS?.ToString("F2") ?? "null"),
+                            suggestions: '@Html.Raw(HttpUtility.JavaScriptStringEncode(result.Suggestions ?? ""))',
+                            lastChecked: '@result.LastCheckedDate.ToString("dd/MM/yyyy HH:mm")'
+                        }@(i < results.Count - 1 ? "," : "")
+                </text>
         }
         ];
 
@@ -358,7 +378,7 @@
             const excelFile = document.getElementById('excelFile');
             const saveButton = document.getElementById('saveButton');
             const loadingOverlay = document.getElementById('loadingOverlay');
-            const successToast = document.getElementById('successToast');
+            const successToast = new bootstrap.Toast(document.getElementById('successToast'));
 
             console.log('Initial inputType:', inputTypeHidden.value);
 
@@ -422,9 +442,7 @@
                 .then(response => {
                     if (response.ok) {
                         loadingOverlay.classList.add('d-none');
-                        successToast.classList.remove('d-none');
-                        successToast.classList.add('show');
-                       
+                        successToast.show(); // Hiển thị toast thành công
                         setTimeout(() => {
                             window.location.reload();
                         }, 2000);
@@ -459,7 +477,15 @@
 
             document.getElementById('detailUrl').textContent = data.url;
             document.getElementById('detailLastChecked').textContent = data.lastChecked;
-            document.getElementById('detailSuggestions').textContent = data.suggestions || "Không có gợi ý";
+
+            // Chuyển đổi gợi ý thành danh sách có định dạng
+            const suggestionsList = data.suggestions.split('\n').filter(s => s.trim() !== '');
+            let suggestionsHtml = '<ul>';
+            suggestionsList.forEach(suggestion => {
+                suggestionsHtml += `<li>${suggestion.trim()}</li>`;
+            });
+            suggestionsHtml += '</ul>';
+            document.getElementById('detailSuggestions').innerHTML = suggestionsHtml || "Hiệu suất trang tốt. Không có gợi ý cải thiện cụ thể.";
 
             const setPerformanceColor = (value, elementId, iconId, unit) => {
                 const numValue = parseFloat(value);
@@ -486,6 +512,16 @@
 
             var detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
             detailModal.show();
+
+            // Xóa lớp phủ khi đóng modal
+            document.getElementById('detailModal').addEventListener('hidden.bs.modal', function () {
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+            });
         }
     </script>
 }

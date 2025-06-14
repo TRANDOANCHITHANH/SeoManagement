@@ -73,52 +73,43 @@ namespace SeoManagement.Web.Controllers
 		[HttpGet]
 		public async Task<IActionResult> CheckBacklinks(int? projectId = null)
 		{
-			ViewBag.ProjectId = projectId;
-			ViewBag.BacklinkResults = new List<(string Url, int TotalBacklinks, int ReferringDomains, int DofollowBacklinks, int DofollowRefDomains, string BacklinksDetails, DateTime LastCheckedDate)>();
-			if (projectId.HasValue)
+			if (!projectId.HasValue)
 			{
-				var backlinkResults = await _backlinkResultService.GetByProjectIdAsync(projectId.Value);
-				if (backlinkResults == null)
-				{
-					_logger.LogWarning("Backlink results returned null for ProjectID: {ProjectId}", projectId.Value);
-				}
-				else
-				{
-					_logger.LogInformation("Retrieved backlink results for ProjectID {ProjectId}: {Count} items", projectId.Value, backlinkResults.Count);
-					ViewBag.BacklinkResults = backlinkResults
-						.Select(b => (
-							Url: b.Url,
-							TotalBacklinks: b.TotalBacklinks,
-							ReferringDomains: b.ReferringDomains,
-							DofollowBacklinks: b.DofollowBacklinks,
-							DofollowRefDomains: b.DofollowRefDomains,
-							BacklinksDetails: b.BacklinksDetails,
-							LastCheckedDate: b.LastCheckedDate
-						))
-						.ToList();
-
-					_logger.LogInformation("ViewBag.BacklinkResults assigned: {Count} items", (ViewBag.BacklinkResults as List<(string, int, int, int, int, string, DateTime)>)?.Count ?? 0);
-				}
-
-				var project = await _projectService.GetByIdAsync(projectId.Value);
-				if (project == null)
-				{
-					_logger.LogWarning("Project not found for ProjectID: {ProjectId}", projectId.Value);
-					ViewBag.ProjectName = "N/A";
-					ViewBag.ProjectDescription = "N/A";
-				}
-				else
-				{
-					ViewBag.ProjectName = project.ProjectName;
-					ViewBag.ProjectDescription = project.Description;
-				}
+				return View(new BacklinkCheckViewModel());
 			}
-			return View(new SEOProjectViewModel());
+
+			var backlinkResults = await _backlinkResultService.GetByProjectIdAsync(projectId.Value) ?? new List<Backlink>();
+			var project = await _projectService.GetByIdAsync(projectId.Value) ?? new SEOProject { ProjectID = projectId.Value };
+
+			var viewModel = new BacklinkCheckViewModel
+			{
+				ProjectId = projectId.Value,
+				ProjectName = project.ProjectName,
+				ProjectDescription = project.Description,
+				BacklinkResults = backlinkResults.Select(b => new BacklinkResultViewModel
+				{
+					Url = b.Url,
+					TotalBacklinks = b.TotalBacklinks,
+					ReferringDomains = b.ReferringDomains ?? 0,
+					DofollowBacklinks = b.DofollowBacklinks ?? 0,
+					DofollowRefDomains = b.DofollowRefDomains ?? 0,
+					BacklinksDetails = b.BacklinksDetails ?? "",
+					LastCheckedDate = (DateTime)b.LastCheckedDate
+				}).ToList()
+			};
+
+			return View(viewModel);
 		}
 
 		[HttpPost]
 		public async Task<IActionResult> CheckBacklinks(string backlinkUrl, int? projectId = null)
 		{
+			if (!projectId.HasValue)
+			{
+				TempData["Error"] = "Không tìm thấy ID dự án.";
+				return RedirectToAction("Index");
+			}
+
 			if (string.IsNullOrWhiteSpace(backlinkUrl))
 			{
 				TempData["Error"] = "Vui lòng nhập URL để kiểm tra backlink.";
@@ -135,72 +126,97 @@ namespace SeoManagement.Web.Controllers
 			{
 				return RedirectToAction("Login", "Account");
 			}
+
 			var project = await _projectService.GetByIdAsync(projectId.Value);
 			if (!await _userService.CanPerformActionAsync(user.Id, ActionType.BacklinkChecker.ToString()))
 			{
 				TempData["Error"] = "Bạn đã vượt quá giới hạn kiểm tra backlink mỗi ngày.";
 				return RedirectToAction("CheckBacklinks", new { projectId = project.ProjectID });
 			}
+
 			try
 			{
+				var existingResults = await _backlinkResultService.GetByProjectIdAsync(projectId.Value);
+				if (existingResults.Any() && !existingResults.Any(b => b.Url == backlinkUrl))
+				{
+					_logger.LogWarning("Attempted to check a different URL: {backlinkUrl} for projectId: {projectId}. Only one URL is allowed.", backlinkUrl, projectId);
+					return Json(new { success = false, message = "Dự án này chỉ được phép kiểm tra một URL duy nhất. Vui lòng sử dụng URL đã được thiết lập." });
+				}
+
 				_logger.LogInformation("Checking backlinks for URL: {Url}", backlinkUrl);
 				var (totalBacklinks, referringDomains, dofollowBacklinks, dofollowRefDomains, backlinksDetails) = await _backlinkService.CheckBacklinksAsync(backlinkUrl);
 				_logger.LogInformation("Backlink check completed: TotalBacklinks={TotalBacklinks}, ReferringDomains={ReferringDomains}", totalBacklinks, referringDomains);
 
-				if (projectId.HasValue)
+				var backlinkResult = new Backlink
 				{
-					var backlinkResult = new Backlink
+					ProjectID = projectId.Value,
+					Url = backlinkUrl,
+					TotalBacklinks = totalBacklinks,
+					ReferringDomains = referringDomains,
+					DofollowBacklinks = dofollowBacklinks,
+					DofollowRefDomains = dofollowRefDomains,
+					BacklinksDetails = backlinksDetails,
+					LastCheckedDate = DateTime.UtcNow
+				};
+
+				_logger.LogInformation("Attempting to add Backlink: {@Backlink}", backlinkResult);
+				await _backlinkResultService.AddAsync(backlinkResult);
+				_logger.LogInformation("Backlink added successfully for URL: {Url}", backlinkUrl);
+				await _userService.IncrementActionCountAsync(user.Id, ActionType.BacklinkChecker.ToString());
+
+				// Trả về view với dữ liệu mới
+				var updatedResults = await _backlinkResultService.GetByProjectIdAsync(projectId.Value) ?? new List<Backlink>();
+				var viewModel = new BacklinkCheckViewModel
+				{
+					ProjectId = projectId.Value,
+					ProjectName = project.ProjectName,
+					ProjectDescription = project.Description,
+					BacklinkResults = updatedResults.Select(b => new BacklinkResultViewModel
 					{
-						ProjectID = projectId.Value,
-						Url = backlinkUrl,
-						TotalBacklinks = totalBacklinks,
-						ReferringDomains = referringDomains,
-						DofollowBacklinks = dofollowBacklinks,
-						DofollowRefDomains = dofollowRefDomains,
-						BacklinksDetails = backlinksDetails,
-						LastCheckedDate = DateTime.UtcNow
-					};
+						Url = b.Url,
+						TotalBacklinks = b.TotalBacklinks,
+						ReferringDomains = b.ReferringDomains ?? 0,
+						DofollowBacklinks = b.DofollowBacklinks ?? 0,
+						DofollowRefDomains = b.DofollowRefDomains ?? 0,
+						BacklinksDetails = b.BacklinksDetails ?? "",
+						LastCheckedDate = (DateTime)b.LastCheckedDate
+					}).ToList()
+				};
 
-					_logger.LogInformation("Attempting to add Backlink: {@Backlink}", backlinkResult);
-					await _backlinkResultService.AddAsync(backlinkResult);
-					_logger.LogInformation("Backlink added successfully for URL: {Url}", backlinkUrl);
-					await _userService.IncrementActionCountAsync(user.Id, ActionType.BacklinkChecker.ToString());
-
-					var updatedResults = await _backlinkResultService.GetByProjectIdAsync(projectId.Value);
-					if (updatedResults == null || !updatedResults.Any())
-					{
-						_logger.LogWarning("No backlink results retrieved for ProjectID: {ProjectId} after adding", projectId.Value);
-					}
-					else
-					{
-						_logger.LogInformation("Retrieved {Count} backlink results for ProjectID {ProjectId} after adding: {@Results}", updatedResults.Count, projectId.Value, updatedResults);
-					}
-					ViewBag.BacklinkResults = updatedResults
-						.Select(b => (
-							Url: b.Url,
-							TotalBacklinks: b.TotalBacklinks,
-							ReferringDomains: b.ReferringDomains ?? 0,
-							DofollowBacklinks: b.DofollowBacklinks ?? 0,
-							DofollowRefDomains: b.DofollowRefDomains ?? 0,
-							 BacklinksDetails: b.BacklinksDetails ?? "",
-							LastCheckedDate: b.LastCheckedDate
-						))
-						.ToList();
-
-					ViewBag.ProjectId = projectId;
-					ViewBag.ProjectName = project.ProjectName;
-					ViewBag.ProjectDescription = project.Description;
-				}
-
-				TempData["Success"] = "Kiểm tra backlink thành công!";
-				return RedirectToAction("CheckBacklinks", new { projectId });
+				return Json(new { success = true, message = "Kiểm tra backlink thành công!", data = viewModel });
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "Lỗi khi kiểm tra backlink cho URL: {Url}", backlinkUrl);
-				TempData["Error"] = "Đã xảy ra lỗi khi kiểm tra backlink: " + ex.Message;
-				return RedirectToAction("CheckBacklinks", new { projectId });
+				return Json(new { success = false, message = "Đã xảy ra lỗi khi kiểm tra backlink: " + ex.Message });
 			}
+		}
+
+		[HttpGet]
+		public async Task<IActionResult> BacklinkDetail(int projectId)
+		{
+			var backlinkResults = await _backlinkResultService.GetByProjectIdAsync(projectId);
+			if (backlinkResults == null || !backlinkResults.Any())
+			{
+				return NotFound("Không tìm thấy dữ liệu backlink cho dự án này.");
+			}
+
+			var viewModel = new BacklinkDetailViewModel
+			{
+				ProjectId = projectId,
+				BacklinkResults = backlinkResults.Select(r => new BacklinkResultViewModel
+				{
+					Url = r.Url,
+					LastCheckedDate = (DateTime)r.LastCheckedDate,
+					TotalBacklinks = r.TotalBacklinks,
+					DofollowBacklinks = r.DofollowBacklinks,
+					ReferringDomains = r.ReferringDomains,
+					DofollowRefDomains = r.DofollowRefDomains,
+					BacklinksDetails = r.BacklinksDetails
+				}).ToList()
+			};
+
+			return View(viewModel);
 		}
 
 		[HttpPost]

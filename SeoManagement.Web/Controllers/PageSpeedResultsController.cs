@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using SeoManagement.Core.Entities;
 using SeoManagement.Core.Interfaces;
 using SeoManagement.Infrastructure.Services;
 using SeoManagement.Web.Models.ViewModels;
+using System.Collections.Concurrent;
 
 namespace SeoManagement.Web.Controllers
 {
@@ -75,7 +77,7 @@ namespace SeoManagement.Web.Controllers
 				CLS: r.CLS,
 				Suggestions: r.Suggestions ?? "Không có gợi ý",
 				LastCheckedDate: r.LastCheckedDate ?? DateTime.MinValue
-			))
+			)).OrderByDescending(p => p.LastCheckedDate)
 			.ToList();
 
 				var project = await _projectService.GetByIdAsync(projectId.Value);
@@ -89,6 +91,7 @@ namespace SeoManagement.Web.Controllers
 		public async Task<IActionResult> PageSpeedChecker(string urls, int? projectId = null, string inputType = "manual", IFormFile excelFile = null)
 		{
 			List<string> urlList = new List<string>();
+			var memoryCache = new MemoryCache(new MemoryCacheOptions());
 
 			if (inputType == "excel" && excelFile != null && excelFile.Length > 0)
 			{
@@ -164,72 +167,86 @@ namespace SeoManagement.Web.Controllers
 
 			try
 			{
-				var results = new List<(string Url, double LoadTime, double? LCP, double? FID, double? CLS, string Suggestions, DateTime LastCheckedDate)>();
+				var results = new ConcurrentBag<(string Url, double LoadTime, double? LCP, double? FID, double? CLS, string Suggestions, DateTime LastCheckedDate)>();
+				var options = new ParallelOptions { MaxDegreeOfParallelism = 4 }; // Giới hạn 4 tác vụ đồng thời
 
-				foreach (var url in urlList)
+				await Parallel.ForEachAsync(urlList, options, async (url, ct) =>
 				{
-					try
+					var cacheKey = $"PageSpeed_{url}";
+					if (memoryCache.TryGetValue(cacheKey, out var cachedResult) && cachedResult is (double, double, double, double, string, DateTime))
 					{
-						var (loadTime, lcp, fid, cls, suggestions) = await _pageSpeedService.CheckPageSpeedAsync(url);
-						results.Add((url, loadTime, lcp, fid, cls, suggestions, DateTime.UtcNow));
-
-						if (projectId.HasValue)
+						var (cachedLoadTime, cachedLcp, cachedFid, cachedCls, cachedSuggestions, cachedDate) = ((double, double?, double?, double?, string, DateTime))cachedResult;
+						results.Add((url, cachedLoadTime, cachedLcp, cachedFid, cachedCls, cachedSuggestions, cachedDate));
+					}
+					else
+					{
+						try
 						{
-							var pageSpeedResult = new PageSpeedResult
+							var (loadTime, lcp, fid, cls, suggestions) = await _pageSpeedService.CheckPageSpeedAsync(url);
+							var result = (url, loadTime, lcp, fid, cls, suggestions, DateTime.UtcNow);
+							results.Add(result);
+
+							if (projectId.HasValue)
 							{
-								ProjectID = projectId.Value,
-								Url = url,
-								LoadTime = loadTime,
-								LCP = lcp,
-								FID = fid,
-								CLS = cls,
-								Suggestions = suggestions,
-								LastCheckedDate = DateTime.UtcNow
-							};
-							await _pageSpeedResultService.AddAsync(pageSpeedResult);
+								var pageSpeedResult = new PageSpeedResult
+								{
+									ProjectID = projectId.Value,
+									Url = url,
+									LoadTime = loadTime,
+									LCP = lcp,
+									FID = fid,
+									CLS = cls,
+									Suggestions = suggestions,
+									LastCheckedDate = DateTime.UtcNow
+								};
+								await _pageSpeedResultService.AddAsync(pageSpeedResult);
+							}
+
+							// Cache kết quả trong 1 giờ
+							memoryCache.Set(cacheKey, result, TimeSpan.FromHours(1));
+						}
+						catch (Exception ex)
+						{
+							_logger.LogError(ex, "Lỗi khi kiểm tra tốc độ tải trang cho URL: {Url}", url);
+							results.Add((url, 0, null, null, null, "Không thể kiểm tra: " + ex.Message, DateTime.UtcNow));
+
+							if (projectId.HasValue)
+							{
+								var pageSpeedResult = new PageSpeedResult
+								{
+									ProjectID = projectId.Value,
+									Url = url,
+									LoadTime = 0,
+									LCP = null,
+									FID = null,
+									CLS = null,
+									Suggestions = "Không thể kiểm tra: " + ex.Message,
+									LastCheckedDate = DateTime.UtcNow
+								};
+								await _pageSpeedResultService.AddAsync(pageSpeedResult);
+							}
 						}
 					}
-					catch (Exception ex)
-					{
-						_logger.LogError(ex, "Lỗi khi kiểm tra tốc độ tải trang cho URL: {Url}", url);
-						results.Add((url, 0, null, null, null, "Không thể kiểm tra: " + ex.Message, DateTime.UtcNow));
+				});
 
-						if (projectId.HasValue)
-						{
-							var pageSpeedResult = new PageSpeedResult
-							{
-								ProjectID = projectId.Value,
-								Url = url,
-								LoadTime = 0,
-								LCP = null,
-								FID = null,
-								CLS = null,
-								Suggestions = "Không thể kiểm tra: " + ex.Message,
-								LastCheckedDate = DateTime.UtcNow
-							};
-							await _pageSpeedResultService.AddAsync(pageSpeedResult);
-						}
-					}
-					await Task.Delay(100);
-				}
-
-				TempData["Success"] = "Thêm URL thành công!";
+				TempData["Success"] = "Kiểm tra tốc độ tải trang thành công!";
 
 				if (projectId.HasValue)
 				{
 					var allResults = await _pageSpeedResultService.GetByProjectIdAsync(projectId.Value);
 					var combinedResults = allResults
-				.Select(r => (
-					Url: r.Url,
-					LoadTime: r.LoadTime ?? 0.0,
-					LCP: r.LCP,
-					FID: r.FID,
-					CLS: r.CLS,
-					Suggestions: r.Suggestions ?? "Không có gợi ý",
-					LastCheckedDate: r.LastCheckedDate ?? DateTime.MinValue
-				))
-				.DistinctBy(r => r.Url)
-				.ToList();
+						.Select(r => (
+							Url: r.Url,
+							LoadTime: r.LoadTime ?? 0.0,
+							LCP: r.LCP,
+							FID: r.FID,
+							CLS: r.CLS,
+							Suggestions: r.Suggestions ?? "Không có gợi ý",
+							LastCheckedDate: r.LastCheckedDate ?? DateTime.MinValue
+						))
+						.OrderByDescending(r => r.LastCheckedDate)
+						.DistinctBy(r => r.Url)
+						.ToList();
 					ViewBag.Results = combinedResults;
 
 					return RedirectToAction("PageSpeedChecker", new { projectId });

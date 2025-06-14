@@ -96,6 +96,7 @@ namespace SeoManagement.Web.Controllers
 			if (check == null)
 			{
 				TempData["Error"] = "Không thể tải dữ liệu kiểm tra.";
+				_logger.LogWarning("Failed to deserialize SEOOnPageCheck with ID {ID}", id);
 				return NotFound();
 			}
 
@@ -109,6 +110,8 @@ namespace SeoManagement.Web.Controllers
 			}
 			else
 			{
+				var errorContent = await analysisResponse.Content.ReadAsStringAsync();
+				_logger.LogError("Failed to analyze SEO On-Page for CheckID {ID}. Status: {StatusCode}, Content: {Content}", id, analysisResponse.StatusCode, errorContent);
 				ViewBag.AnalysisResult = new SEOOnPageAnalysisResultViewModel { Summary = "Không thể phân tích SEO On-Page. Vui lòng thử lại sau." };
 			}
 

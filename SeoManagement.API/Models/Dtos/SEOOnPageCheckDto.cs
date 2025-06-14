@@ -31,5 +31,11 @@
 		public int PageSpeedScoreDesktop { get; set; }
 		public int PageSpeedScoreMobile { get; set; }
 		public string Summary { get; set; }
+		public bool HasViewport { get; internal set; }
+		public bool HasMetaRobots { get; internal set; }
+		public bool HasOpenGraph { get; internal set; }
+		public string UrlStructureFeedback { get; internal set; }
+		public int DuplicateContentCount { get; internal set; }
+		public bool HasTwitterCards { get; internal set; }
 	}
 }

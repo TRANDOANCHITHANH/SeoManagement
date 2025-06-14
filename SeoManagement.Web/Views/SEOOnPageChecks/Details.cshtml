@@ -441,6 +441,123 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Viewport -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.HasViewport ? "Có" : "Thiếu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-mobile fa-2x me-3 @(analysisResult.HasViewport ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Meta Viewport</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.HasViewport ? "Có" : "Thiếu")
+                                                @if (!analysisResult.HasViewport)
+                                                {
+                                                    <span class="text-danger"> - Thêm <code>&lt;meta name='viewport' content='width=device-width, initial-scale=1'&gt;</code>.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Meta Robots -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.HasMetaRobots ? "Có" : "Thiếu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-robot fa-2x me-3 @(analysisResult.HasMetaRobots ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Meta Robots</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.HasMetaRobots ? "Có" : "Thiếu")
+                                                @if (!analysisResult.HasMetaRobots)
+                                                {
+                                                    <span class="text-danger"> - Thêm <code>&lt;meta name='robots' content='index, follow'&gt;</code>.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Open Graph -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.HasOpenGraph ? "Có" : "Thiếu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-share-alt fa-2x me-3 @(analysisResult.HasOpenGraph ? "text-success" : "text-warning")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Open Graph Tags</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.HasOpenGraph ? "Có" : "Thiếu")
+                                                @if (!analysisResult.HasOpenGraph)
+                                                {
+                                                    <span class="text-warning"> - Thêm meta OG cho chia sẻ.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Twitter Cards -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.HasTwitterCards ? "Có" : "Thiếu")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-twitter fa-2x me-3 @(analysisResult.HasTwitterCards ? "text-success" : "text-warning")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Twitter Cards</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @(analysisResult.HasTwitterCards ? "Có" : "Thiếu")
+                                                @if (!analysisResult.HasTwitterCards)
+                                                {
+                                                    <span class="text-warning"> - Thêm meta Twitter.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- URL Structure Feedback -->
+                            <div class="col-12">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@analysisResult.UrlStructureFeedback">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-link fa-2x me-3 @(string.IsNullOrEmpty(analysisResult.UrlStructureFeedback) || analysisResult.UrlStructureFeedback.Contains("tối ưu") ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Cấu Trúc URL</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @if (!string.IsNullOrEmpty(analysisResult.UrlStructureFeedback))
+                                                {
+                                                    @analysisResult.UrlStructureFeedback
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-success">URL tối ưu.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Duplicate Content Count -->
+                            <div class="col">
+                                <div class="card h-100 border-0 bg-light rounded-3 shadow-sm hover-effect" data-bs-toggle="tooltip" data-bs-title="@(analysisResult.DuplicateContentCount == 0 ? "Không có nội dung trùng lặp" : $"{analysisResult.DuplicateContentCount} đoạn trùng lặp")">
+                                    <div class="card-body d-flex align-items-center p-3">
+                                        <i class="fa fa-copy fa-2x me-3 @(analysisResult.DuplicateContentCount == 0 ? "text-success" : "text-danger")"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="text-dark">Nội Dung Trùng Lặp</strong>
+                                            <p class="mb-0 text-muted small">
+                                                @analysisResult.DuplicateContentCount đoạn
+                                                @if (analysisResult.DuplicateContentCount > 0)
+                                                {
+                                                    <span class="text-danger"> - Loại bỏ nội dung trùng lặp.</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     }
                     else

@@ -1,0 +1,401 @@
+﻿@model SeoManagement.Web.Models.ViewModels.BacklinkDetailViewModel
+@using System.Text.Json
+@using System.Web
+
+@{
+    ViewData["Title"] = "Báo cáo chi tiết Backlink";
+}
+
+<div class="container">
+    <div class="page-header mb-3">
+        <h4 class="fw-bold">Backlinks</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a asp-action="Index" asp-controller="Home">
+                    <i class="icon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a asp-action="Index" asp-controller="SEOProjects" asp-route-projectType="BacklinkChecker">Kiểm tra Backlink</a>
+            </li>
+            <li class="separator">
+                <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Báo cáo chi tiết</a>
+            </li>
+        </ul>
+    </div>
+    <h2 class="text-center mb-4">Báo cáo chi tiết Backlink - Dự án ID: @Model.ProjectId</h2>
+
+    @if (Model.BacklinkResults == null || !Model.BacklinkResults.Any())
+    {
+        <div class="alert alert-warning text-center">Không có dữ liệu backlink cho dự án này.</div>
+    }
+    else
+    {
+        <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px;">
+            <div class="card-body">
+                <h4 class="card-title">Tổng quan xu hướng <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Biểu đồ hiển thị xu hướng backlink theo thời gian kiểm tra."></i></h4>
+                <div class="chart-container">
+                    <canvas id="backlinkTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4 border-0" style="border-radius: 15px;">
+            <div class="card-body">
+                <h4 class="card-title">Danh sách Backlink <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Bảng hiển thị danh sách backlink với các thông tin chi tiết."></i></h4>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="urlTable">
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>Ngày kiểm tra</th>
+                                <th>Total Backlinks</th>
+                                <th>Dofollow Backlinks</th>
+                                <th>Referring Domains</th>
+                                <th>Dofollow Ref. Domains</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.BacklinkResults.Count; i++)
+                            {
+                                var result = Model.BacklinkResults[i];
+                                <tr>
+                                    <td title="@result.Url" class="text-break"><a href="@result.Url" target="_blank">@result.Url</a></td>
+                                    <td>@result.LastCheckedDate</td>
+                                    <td>
+                                        <button class="btn btn-info btn-sm detail-btn" data-bs-toggle="modal" data-bs-target="#backlinkDetailModal"
+                                                data-index="@i">
+                                            @result.TotalBacklinks
+                                        </button>
+                                    </td>
+                                    <td>@result.DofollowBacklinks</td>
+                                    <td>@result.ReferringDomains</td>
+                                    <td>@result.DofollowRefDomains</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex justify-content-end mb-4">
+        <a asp-controller="BacklinkCheckers" asp-action="CheckBacklinks" asp-route-projectId="@Model.ProjectId" class="btn btn-secondary">
+            Quay lại
+        </a>
+    </div>
+
+    <!-- Modal Chi tiết Backlink -->
+    <div class="modal fade" id="backlinkDetailModal" tabindex="-1" aria-labelledby="backlinkDetailModalLabel" aria-hidden="true" data-bs-backdrop="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="backlinkDetailModalLabel">Chi tiết Backlink</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <p><strong>URL:</strong> <span id="backlinkDetailUrl"></span></p>
+                        <p><strong>Ngày cập nhật:</strong> <span id="backlinkDetailLastChecked"></span></p>
+                    </div>
+                    <h5>Top Anchor <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Hiển thị 5 anchor text phổ biến nhất trong backlink."></i></h5>
+                    <table class="table table-striped mb-4">
+                        <thead>
+                            <tr>
+                                <th>Anchor</th>
+                                <th>Số lần xuất hiện</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topAnchorTable"></tbody>
+                    </table>
+                    <h5>Biểu đồ phân phối TLD <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Biểu đồ hiển thị phân phối của các Top-Level Domain (TLD) trong backlink."></i></h5>
+                    <div class="chart-container">
+                        <canvas id="tldDistributionChart"></canvas>
+                    </div>
+                    <h5>Danh sách Backlink Chi tiết <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Bảng hiển thị chi tiết các backlink với khả năng click vào Source URL."></i></h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="backlinkDetailTable">
+                            <thead>
+                                <tr>
+                                    <th>Source URL</th>
+                                    <th>Domain Rating <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Chỉ số đánh giá sức mạnh của backlink so với các website khác trên thang điểm 100 theo xếp hạng của Ahrefs."></i></th>
+                                    <th>Anchor <i class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Một phần văn bản chứa liên kết giúp chuyển hướng người dùng đến một trang web/ url mới."></i></th>
+                                </tr>
+                            </thead>
+                            <tbody id="backlinkDetailBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="noBacklinksMessage" class="text-center text-muted" style="display: none;">Không có backlink nào được tìm thấy.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table th, .table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .clickable-label {
+            color: #007bff;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Khởi tạo backlinkData từ Model
+        const backlinkData = [
+            @for (int i = 0; i < (Model.BacklinkResults?.Count ?? 0); i++)
+            {
+                var result = Model.BacklinkResults[i];
+                <text>
+                    {
+                        url: '@Html.Raw(HttpUtility.JavaScriptStringEncode(result.Url))',
+                        totalBacklinks: @result.TotalBacklinks,
+                        referringDomains: @result.ReferringDomains,
+                        dofollowBacklinks: @result.DofollowBacklinks,
+                        dofollowRefDomains: @result.DofollowRefDomains,
+                        backlinksDetails: @Html.Raw(JsonSerializer.Serialize(result.BacklinksDetails)),
+                        lastChecked: '@result.LastCheckedDate.ToString("dd/MM/yyyy HH:mm")'
+                    }@(i < Model.BacklinkResults.Count - 1 ? "," : "")
+                </text>
+            }
+        ];
+
+        console.log('Backlink data initialized:', backlinkData);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Khởi tạo tooltip
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
+
+            // Vẽ biểu đồ xu hướng sử dụng backlinkData
+            if (backlinkData && backlinkData.length > 0) {
+                const labels = backlinkData.map(r => r.lastChecked);
+                const totalBacklinksData = backlinkData.map(r => r.totalBacklinks);
+                const dofollowBacklinksData = backlinkData.map(r => r.dofollowBacklinks);
+                const referringDomainsData = backlinkData.map(r => r.referringDomains);
+                const dofollowRefDomainsData = backlinkData.map(r => r.dofollowRefDomains);
+
+                new Chart(document.getElementById('backlinkTrendChart').getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Total Backlinks',
+                                data: totalBacklinksData,
+                                borderColor: '#FF6384',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                fill: true,
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Dofollow Backlinks',
+                                data: dofollowBacklinksData,
+                                borderColor: '#36A2EB',
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                fill: true,
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Referring Domains',
+                                data: referringDomainsData,
+                                borderColor: '#FFCE56',
+                                backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                                fill: true,
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Dofollow Ref. Domains',
+                                data: dofollowRefDomainsData,
+                                borderColor: '#4BC0C0',
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                fill: true,
+                                tension: 0.1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { title: { display: true, text: 'Thời gian kiểm tra' } },
+                            y: { beginAtZero: true, title: { display: true, text: 'Số lượng' } }
+                        },
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Gắn sự kiện cho các nút "Xem chi tiết"
+            document.querySelectorAll('.detail-btn').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const index = this.getAttribute('data-index');
+                    showBacklinkDetail(index);
+                });
+            });
+
+            function showBacklinkDetail(index) {
+                const data = backlinkData[index];
+                document.getElementById('backlinkDetailUrl').textContent = data.url;
+                document.getElementById('backlinkDetailLastChecked').textContent = data.lastChecked;
+
+                const backlinkDetailBody = document.getElementById('backlinkDetailBody');
+                const noBacklinksMessage = document.getElementById('noBacklinksMessage');
+                const topAnchorTable = document.getElementById('topAnchorTable');
+                const tldDistributionChart = document.getElementById('tldDistributionChart');
+
+                // Kiểm tra null trước khi truy cập style
+                if (!backlinkDetailBody || !topAnchorTable || !tldDistributionChart) {
+                    console.error('One or more DOM elements not found:', {
+                        backlinkDetailBody, topAnchorTable, tldDistributionChart
+                    });
+                    return;
+                }
+                if (!noBacklinksMessage) {
+                    console.warn('noBacklinksMessage not found, creating placeholder');
+                    const placeholder = document.createElement('div');
+                    placeholder.id = 'noBacklinksMessage';
+                    placeholder.className = 'text-center text-muted';
+                    placeholder.style.display = 'none';
+                    placeholder.textContent = 'Không có backlink nào được tìm thấy.';
+                    document.querySelector('.modal-body').appendChild(placeholder);
+                }
+
+                backlinkDetailBody.innerHTML = '';
+                noBacklinksMessage.style.display = 'none';
+                topAnchorTable.innerHTML = '';
+                tldDistributionChart.style.display = 'block';
+
+                let backlinks;
+                try {
+                    backlinks = JSON.parse(data.backlinksDetails);
+                    console.log('Parsed backlinks:', backlinks);
+                } catch (e) {
+                    console.error('Error parsing JSON:', e, 'Raw backlinksDetails:', data.backlinksDetails);
+                    noBacklinksMessage.style.display = 'block';
+                    backlinkDetailBody.style.display = 'none';
+                    tldDistributionChart.style.display = 'none';
+                    return;
+                }
+
+                if (backlinks && Array.isArray(backlinks) && backlinks.length > 0) {
+                    // Danh sách Backlink Chi tiết
+                    backlinks.forEach(link => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><a href="${link.url}" target="_blank" class="clickable-label">${link.url}</a></td>
+                            <td>${link.domain_rating || 0}</td>
+                            <td>${link.anchor || 'N/A'}</td>
+                        `;
+                        backlinkDetailBody.appendChild(row);
+                    });
+
+                    // Top Anchor
+                    const anchorCount = {};
+                    backlinks.forEach(link => {
+                        anchorCount[link.anchor || 'N/A'] = (anchorCount[link.anchor || 'N/A'] || 0) + 1;
+                    });
+                    const topAnchors = Object.entries(anchorCount)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 5);
+                    topAnchors.forEach(([anchor, count]) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td>${anchor}</td><td>${count}</td>`;
+                        topAnchorTable.appendChild(row);
+                    });
+
+                    // Biểu đồ phân phối TLD
+                    const tldCount = {};
+                    backlinks.forEach(link => {
+                        const url = new URL(link.url);
+                        const tld = url.hostname.split('.').pop().toLowerCase();
+                        tldCount[tld] = (tldCount[tld] || 0) + 1;
+                    });
+                    const tldChartData = {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(tldCount),
+                            datasets: [{
+                                data: Object.values(tldCount),
+                                backgroundColor: [
+                                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                                    '#FF9F40', '#C9CBCF'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.raw || 0;
+                                            return `${label}: ${value} backlinks`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    const existingTldChart = Chart.getChart(tldDistributionChart);
+                    if (existingTldChart) existingTldChart.destroy();
+                    if (tldDistributionChart) {
+                        new Chart(tldDistributionChart.getContext('2d'), tldChartData);
+                    } else {
+                        console.error('Canvas element not found for TLD Distribution');
+                        tldDistributionChart.style.display = 'none';
+                    }
+                } else {
+                    console.warn('Backlinks condition failed:', backlinks);
+                    noBacklinksMessage.style.display = 'block';
+                    backlinkDetailBody.style.display = 'none';
+                    tldDistributionChart.style.display = 'none';
+                }
+            }
+        });
+    </script>
+}

@@ -5,7 +5,7 @@ namespace SeoManagement.Web.Models.ViewModels
 	public class IntentViewModel
 	{
 		public string Query { get; set; }
-		public string Content { get; set; }
+		public string Content { get; set; } = string.Empty;
 		public string SeoSuggestion { get; set; } = string.Empty;
 		public string AiContentSuggestion { get; set; } = string.Empty;
 		public bool IsAiContentGenerated { get; set; }

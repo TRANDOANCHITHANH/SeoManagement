@@ -31,10 +31,31 @@ namespace SeoManagement.Infrastructure.Services
 				httpClient.Timeout = TimeSpan.FromSeconds(100);
 
 				// Prompt tối ưu
-				var prompt = $"Viết nội dung ngắn gọn bằng tiếng Việt cho query '{query}' với ý định '{intent}', 50-100 từ, sử dụng định dạng HTML. " +
-							$"Chỉ sử dụng nội dung sẵn '{(string.IsNullOrEmpty(existingContent) ? "không có" : existingContent)}' nếu nó liên quan trực tiếp đến query, nếu không thì bỏ qua. " +
-							$"Ý phụ: {(subIntents?.Any() == true ? string.Join(", ", subIntents.Select(s => s.Intent)) : "không có")}. " +
-							"Tạo tiêu đề với thẻ <b> hoặc <strong>, nêu 2-3 điểm chính trong thẻ <ul><li>, và đưa ra gợi ý hành động cụ thể liên quan đến query. ";
+				var prompt = $@"
+						Viết bài hoàn chỉnh chuẩn SEO bằng tiếng Việt cho từ khóa '{query}' với ý định chính '{intent}' (Transaction, Purchase Decision), độ dài 300-500 từ, sử dụng định dạng HTML hợp lệ. 
+
+						Nếu có nội dung sẵn '{(string.IsNullOrEmpty(existingContent) ? "không có" : existingContent)}', hãy:
+						- Phân tích nội dung sẵn, giữ ý nghĩa chính, cải thiện cấu trúc với duy nhất 1 thẻ <h1> chứa từ khóa, sử dụng <h2> hoặc <h3> cho các mục phụ.
+						- Bổ sung từ khóa '{query}' với mật độ 1-3% (ít nhất 5 lần), mở rộng thêm 200-300 từ với thông tin liên quan.
+						- Thêm meta title (≤60 ký tự) và meta description (≤160 ký tự) chứa từ khóa, đặt ngay sau <h1>.
+
+						Nếu không có nội dung sẵn, tạo bài mới với cấu trúc:
+						- <h1> tiêu đề chứa từ khóa.
+						- <meta name='title' content='...'> và <meta name='description' content='...'> ngay sau <h1>.
+						- Đoạn mở đầu 100-150 từ giới thiệu từ khóa và các ý định.
+						- <h2> cho 3-5 mục chính dựa trên ý định, nội dung chi tiết 200-300 từ.
+						- Kết thúc bằng gợi ý hành động.
+
+						Tích hợp ý phụ '{(subIntents?.Any() == true ? string.Join(", ", subIntents.Select(s => s.Intent)) : "không có")}' nếu có, ví dụ: nếu có 'Feature Analysis', thêm phân tích tính năng chi tiết.
+
+						Yêu cầu SEO:
+						- Chèn từ khóa '{query}' vào <h1>, đoạn mở đầu, và ít nhất 5 lần trong nội dung.
+						- Sử dụng duy nhất 1 <h1>, các <h2> hoặc <h3> để phân cấp.
+						- Tránh trùng lặp thẻ <h1> hoặc nội dung sao chép nguyên bản, viết lại và làm phong phú nhưng vẫn chuẩn SEO .
+						- Kết thúc bằng gợi ý hành động cụ thể dựa trên ý định.
+
+						Trả về HTML hợp lệ, không chứa lỗi cú pháp, đảm bảo cấu trúc rõ ràng và tối ưu cho công cụ tìm kiếm.
+						";
 
 				var payload = new
 				{

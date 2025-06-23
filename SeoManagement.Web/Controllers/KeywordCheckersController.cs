@@ -7,7 +7,6 @@ using SeoManagement.Core.Enum;
 using SeoManagement.Core.Interfaces;
 using SeoManagement.Infrastructure.Services;
 using SeoManagement.Web.Models.ViewModels;
-
 namespace SeoManagement.Web.Controllers
 {
 	[Authorize(AuthenticationSchemes = "MainAuth")]
@@ -42,8 +41,8 @@ namespace SeoManagement.Web.Controllers
 				ViewBag.Results = previousResults
 					.Select(r => new
 					{
-						Keyword = r.KeywordName,
-						Domain = r.Domain,
+						Keyword = r.KeywordName ?? "Unknown Keyword",
+						Domain = r.Domain ?? "Unknown Domain",
 						CurrentPosition = r.TopPosition.HasValue ? r.TopPosition.Value : -1,
 						PreviousPosition = r.KeywordHistories != null && r.KeywordHistories.Any()
 							? r.KeywordHistories.OrderByDescending(h => h.RecordedDate).Skip(1).FirstOrDefault()?.Rank ?? -1
@@ -56,7 +55,14 @@ namespace SeoManagement.Web.Controllers
 							: (r.TopPosition.HasValue && r.TopPosition.Value > 0 ? r.TopPosition.Value : -1),
 						TopVolume = r.TopVolume ?? 0,
 						LastUpdate = r.LastUpdate.ToString("yyyy-MM-dd"),
-						SerpResultsJson = r.SerpResultsJson
+						SerpResultsJson = r.SerpResultsJson,
+						KeywordHistories = r.KeywordHistories?.Select(h => new KeywordHIstoryViewModel
+						{
+							HistoryID = h.HistoryID,
+							KeywordID = h.KeywordID,
+							Rank = h.Rank,
+							RecordedDate = h.RecordedDate // Sử dụng DateTime trực tiếp, không cần ToString
+						}).ToList() ?? new List<KeywordHIstoryViewModel>()
 					})
 					.DistinctBy(r => new { r.Keyword, r.Domain })
 					.ToList();
@@ -117,7 +123,14 @@ namespace SeoManagement.Web.Controllers
 							: (r.TopPosition.HasValue && r.TopPosition.Value > 0 ? r.TopPosition.Value : -1),
 						TopVolume = r.TopVolume ?? 0,
 						LastUpdate = r.LastUpdate.ToString("yyyy-MM-dd"),
-						SerpResultsJson = r.SerpResultsJson
+						SerpResultsJson = r.SerpResultsJson,
+						KeywordHistories = r.KeywordHistories?.Select(h => new KeywordHIstoryViewModel
+						{
+							HistoryID = h.HistoryID,
+							KeywordID = h.KeywordID,
+							Rank = h.Rank,
+							RecordedDate = h.RecordedDate
+						}).ToList() ?? new List<KeywordHIstoryViewModel>()
 					})
 					.DistinctBy(r => new { r.Keyword, r.Domain })
 					.ToList();

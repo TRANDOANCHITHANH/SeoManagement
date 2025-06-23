@@ -71,7 +71,6 @@
                             </div>
                         </div>
                     </div>
-                 
                     <div class="col-12 col-md-4">
                         <p class="card-text mb-0"><strong>Vị trí:</strong> Việt Nam</p>
                     </div>
@@ -99,8 +98,8 @@
         </div>
     </form>
     <div class="card shadow p-4 mb-4">
-        <h4 class="mb-3">Biểu đồ tăng trưởng từ khóa</h4>
-        <div class="chart-container">
+        <h4 class="mb-3">Biểu đồ thứ hạng từ khóa</h4>
+        <div class="chart-container" style="height: 400px;">
             <canvas id="keywordGrowthChart"></canvas>
         </div>
     </div>
@@ -128,7 +127,6 @@
                 <tbody>
                     @foreach (var result in ViewBag.Results)
                     {
-                      
                         <tr>
                             <td>@result.Keyword</td>
                             <td>@result.Domain</td>
@@ -212,7 +210,7 @@
                                             <tr>
                                                 <td>@(hasPosition ? positionProp.GetInt32() : "N/A")</td>
                                                 <td>@(hasTitle ? titleProp.GetString() : "N/A")</td>
-                                                    <td><a href="@(hasUrl ? urlProp.GetString() : "N/A")" target="_blank">@(hasUrl ? urlProp.GetString() : "N/A")</a></td>
+                                                <td><a href="@(hasUrl ? urlProp.GetString() : "N/A")" target="_blank">@(hasUrl ? urlProp.GetString() : "N/A")</a></td>
                                                 <td>@(hasRank ? rankProp.GetInt64() : "N/A")</td>
                                                 <td>@(hasTraffic ? trafficProp.GetInt32() : "N/A")</td>
                                                 <td>@(hasDomainRating ? drProp.GetInt32() : "N/A")</td>
@@ -236,46 +234,88 @@
         }
     }
 </div>
-@section Scripts{
+@section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    function showDetails(id) {
-        $('#detailsModal_' + id).modal('show');
-    }
+    <script>
+        function showDetails(id) {
+            $('#detailsModal_' + id).modal('show');
+        }
+
         document.getElementById('checkForm').addEventListener('submit', function () {
-        document.getElementById('loadingOverlay').style.display = 'flex';
-    });
-         function toggleAutoReport(projectId, isEnabled) {
-                fetch('/KeywordCheckers/AutoReport', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `projectId=${projectId}&isEnabled=${isEnabled}`
-                })
-                .then(response => response.ok ? response.text() : Promise.reject('Error'))
-                .then(() => {
-                   
-                    location.reload();
-                })
-                .catch(error => alert('Có lỗi xảy ra: ' + error));
-            }
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        });
+
+        function toggleAutoReport(projectId, isEnabled) {
+            fetch('/KeywordCheckers/AutoReport', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `projectId=${projectId}&isEnabled=${isEnabled}`
+            })
+            .then(response => response.ok ? response.text() : Promise.reject('Error'))
+            .then(() => {
+                location.reload();
+            })
+            .catch(error => alert('Có lỗi xảy ra: ' + error));
+        }
+
         function drawKeywordGrowthChart() {
-            const results = @Html.Raw(Json.Serialize(ViewBag.Results));
+            const results = @Html.Raw(Json.Serialize(ViewBag.Results)) || [];
             const ctx = document.getElementById('keywordGrowthChart').getContext('2d');
+
+            // Kiểm tra nếu results rỗng hoặc không hợp lệ
+            if (!Array.isArray(results) || results.length === 0) {
+                document.querySelector('.chart-container').innerHTML = '<p class="text-center">Không có dữ liệu để hiển thị biểu đồ.</p>';
+                return;
+            }
+
+            // Lấy tất cả các ngày duy nhất từ KeywordHistories
+            const allDates = results
+                .flatMap(result => {
+                    console.log(`Processing result: ${result.keyword || 'Unknown'} (${result.domain || 'Unknown'})`, result.keywordHistories);
+                    return result.keywordHistories && Array.isArray(result.keywordHistories) && result.keywordHistories.length > 0
+                        ? result.keywordHistories.map(h => {
+                            const dateStr = h.recordedDate; // Sử dụng tên thuộc tính đúng (lowercase)
+                            const date = new Date(dateStr);
+                            const formattedDate = date.toISOString().split('T')[0]; // Đảm bảo định dạng yyyy-MM-dd
+                            return isNaN(date.getTime()) ? null : formattedDate; // Loại bỏ ngày không hợp lệ
+                        }).filter(d => d !== null)
+                        : [];
+                })
+                .filter(date => date && date.trim() !== "");
+            const uniqueDates = allDates.length > 0 ? [...new Set(allDates)] : [new Date().toISOString().split('T')[0]];
+            // Tạo datasets cho mỗi từ khóa
             const datasets = results.map(result => {
-                const labels = result.KeywordHistories ? result.KeywordHistories.map(h => new Date(h.RecordedDate).toLocaleDateString()) : [];
-                const data = result.KeywordHistories ? result.KeywordHistories.map(h => h.Rank) : [];
+                if (!result.keywordHistories || !Array.isArray(result.keywordHistories) || result.keywordHistories.length === 0) {
+                    return null;
+                }
+                const historyMap = new Map(result.keywordHistories.map(h => {
+                    const date = new Date(h.recordedDate); // Sử dụng tên thuộc tính đúng
+                    const formattedDate = date.toISOString().split('T')[0];
+                    return [formattedDate, h.rank]; // Sử dụng tên thuộc tính đúng
+                }));
+                const data = uniqueDates.map(date => historyMap.get(date) || null);
 
                 return {
-                    label: `${result.Keyword} (${result.Domain})`,
+                    label: `${result.keyword || 'Unknown'} (${result.domain || 'Unknown'})`, // Sử dụng tên thuộc tính đúng
                     data: data,
                     borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
                     fill: false,
-                    tension: 0.1
+                    tension: 0.1,
+                    spanGaps: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
                 };
-            });
+            }).filter(dataset => dataset !== null);
+
+            // Nếu không có dữ liệu hợp lệ sau khi lọc, hiển thị thông báo
+            if (datasets.length === 0) {
+                console.log('No valid datasets created. Datasets:', datasets);
+                document.querySelector('.chart-container').innerHTML = '<p class="text-center">Không có dữ liệu lịch sử để hiển thị biểu đồ.</p>';
+                return;
+            }
 
             const chartData = {
-                labels: datasets.length > 0 ? datasets[0].data.map((_, i) => i + 1) : [],
+                labels: uniqueDates,
                 datasets: datasets
             };
 
@@ -284,18 +324,23 @@
                 data: chartData,
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         y: {
-                            reverse: true, 
+                            reverse: true,
+                            beginAtZero: false,
                             title: {
                                 display: true,
                                 text: 'Vị trí'
+                            },
+                            ticks: {
+                                callback: value => value === null || value === -1 ? 'N/A' : value
                             }
                         },
                         x: {
                             title: {
                                 display: true,
-                                text: 'Thời gian (theo thứ tự cập nhật)'
+                                text: 'Ngày cập nhật'
                             }
                         }
                     },
@@ -308,7 +353,7 @@
                                 label: function(context) {
                                     const label = context.dataset.label || '';
                                     const value = context.raw || 0;
-                                    return `${label}: Vị trí ${value} vào ngày ${labels[context.dataIndex]}`;
+                                    return value === null ? `${label}: Không có dữ liệu` : `${label}: Vị trí ${value}`;
                                 }
                             }
                         }
@@ -317,6 +362,6 @@
             });
         }
 
-             document.addEventListener('DOMContentLoaded', drawKeywordGrowthChart);
-</script>
+        document.addEventListener('DOMContentLoaded', drawKeywordGrowthChart);
+    </script>
 }

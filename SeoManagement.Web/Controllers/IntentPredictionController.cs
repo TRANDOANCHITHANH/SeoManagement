@@ -70,7 +70,7 @@ namespace SeoManagement.Web.Controllers
 
 			try
 			{
-				var payload = new { keyword = model.Query, content = model.Content };
+				var payload = new { keyword = model.Query, content = model.Content ?? "" };
 				var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 				var response = await _httpClient.PostAsync("predict", content);
 
